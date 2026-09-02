@@ -1,0 +1,11 @@
+/* RollingText — vertical char scroll animation */
+
+.rolling-text-container {
+  display: inline-block;
+  overflow: visible;
+}
+
+.rolling-char {
+  display: inline-block;
+  will-change: transform, opacity;
+}

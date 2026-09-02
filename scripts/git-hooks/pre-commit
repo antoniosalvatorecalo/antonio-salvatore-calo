@@ -1,0 +1,296 @@
+#!/bin/sh
+# =============================================================================
+# pre-commit — Commit Quality Gate
+# =============================================================================
+# Blocks commits containing forbidden artifacts: build output, cache, logs,
+# temp files, AI tool runtimes, local config, screenshots outside assets, etc.
+#
+# Installation:
+#   cp scripts/git-hooks/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# Skip the hook for a single commit:
+#   git commit --no-verify -m "message"
+# =============================================================================
+
+set -e
+
+# ── Colors ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# ── Check mode ──────────────────────────────────────────────────────────────
+# If run with --check flag, scan working tree instead of staged files.
+# Used by CI or manual audits.
+if [ "$1" = "--check" ]; then
+    FILES=$(git ls-files --others --exclude-standard --cached)
+    SCOPE="working tree"
+else
+    FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+    SCOPE="staged changes"
+fi
+
+BLOCKED=0
+WARNINGS=0
+
+# ── Helper: block a file ────────────────────────────────────────────────────
+block() {
+    BLOCKED=$((BLOCKED + 1))
+    printf "%b  BLOCKED%b  %s  (%s)\n" "$RED" "$NC" "$1" "$2"
+}
+
+# ── Helper: warn about a file ───────────────────────────────────────────────
+warn() {
+    WARNINGS=$((WARNINGS + 1))
+    printf "%b  WARNING%b  %s  (%s)\n" "$YELLOW" "$NC" "$1" "$2"
+}
+
+# ── 1. Build output ─────────────────────────────────────────────────────────
+check_build() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            dist/* | build/*)
+                block "$f" "Build output directory"
+                ;;
+        esac
+    done
+}
+
+# ── 2. Dependencies ─────────────────────────────────────────────────────────
+check_deps() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            node_modules/*)
+                block "$f" "Dependencies directory"
+                ;;
+        esac
+    done
+}
+
+# ── 3. Cache files ──────────────────────────────────────────────────────────
+check_cache() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            *.tsbuildinfo | *.cache/* | .cache/* | coverage/*)
+                block "$f" "Cache or coverage artifact"
+                ;;
+        esac
+    done
+}
+
+# ── 4. Logs ─────────────────────────────────────────────────────────────────
+check_logs() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            *.log | npm-debug.log*)
+                block "$f" "Log file"
+                ;;
+        esac
+    done
+}
+
+# ── 5. Temporary files ──────────────────────────────────────────────────────
+check_temp() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            *.tmp | *.temp | *~)
+                block "$f" "Temporary file"
+                ;;
+        esac
+    done
+}
+
+# ── 6. OS files ─────────────────────────────────────────────────────────────
+check_os() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            .DS_Store | Thumbs.db | desktop.ini)
+                block "$f" "OS metadata file"
+                ;;
+        esac
+    done
+}
+
+# ── 7. AI Tooling artifacts ─────────────────────────────────────────────────
+check_ai() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            .opencode/* | .codex/* | .qwen/* | .witsy/*)
+                block "$f" "AI tool runtime directory"
+                ;;
+            agency-agents/*)
+                block "$f" "External AI agent repository"
+                ;;
+            graphify-out/*)
+                block "$f" "Auto-generated knowledge graph"
+                ;;
+            .windsurf/* | .aider/* | .cursor/* | .agent/*)
+                block "$f" "AI tool runtime directory"
+                ;;
+            ai-output/* | ai-experiments/*)
+                block "$f" "AI output directory"
+                ;;
+            _agents/* | _ai/*)
+                block "$f" "AI lock/state directory"
+                ;;
+            skills-lock.json | .mcp.json)
+                block "$f" "AI tool config file (local)"
+                ;;
+            _build_agency_skills.ps1)
+                block "$f" "AI build script (use scripts/ version instead)"
+                ;;
+        esac
+    done
+}
+
+# ── 8. Environment files ────────────────────────────────────────────────────
+check_env() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            .env)
+                block "$f" "Environment file (use .env.example instead)"
+                ;;
+            .env.*)
+                # Allow .env.example, block everything else
+                case "$f" in
+                    .env.example) ;;
+                    *) block "$f" "Environment file (use .env.example instead)" ;;
+                esac
+                ;;
+        esac
+    done
+}
+
+# ── 9. Editor / IDE files ───────────────────────────────────────────────────
+check_editor() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            .vscode/*)
+                case "$f" in
+                    .vscode/extensions.json | .vscode/settings.json) ;;
+                    *) block "$f" "Editor config (allowed: extensions.json, settings.json)" ;;
+                esac
+                ;;
+            .idea/*)
+                block "$f" "JetBrains IDE directory"
+                ;;
+            *.swp | *.swo)
+                block "$f" "Vim swap file"
+                ;;
+        esac
+    done
+}
+
+# ── 10. Planning / personal vault ───────────────────────────────────────────
+check_planning() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            .planning/*)
+                block "$f" "GSD planning directory (local)"
+                ;;
+            "Maximum Effort"/*)
+                block "$f" "Obsidian personal vault"
+                ;;
+
+            .vercel)
+                block "$f" "Vercel local config"
+                ;;
+        esac
+    done
+}
+
+# ── 11. Screenshots outside assets ──────────────────────────────────────────
+check_screenshots() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            *.png | *.jpg | *.jpeg | *.gif)
+                case "$f" in
+                    public/* | src/assets/*) ;;
+                    *) block "$f" "Image outside public/ or src/assets/" ;;
+                esac
+                ;;
+        esac
+    done
+}
+
+# ── 12. Playwright test artifacts ───────────────────────────────────────────
+check_test_artifacts() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            stages/04_testing/test-results/* | stages/04_testing/playwright-report/*)
+                block "$f" "Test run artifacts"
+                ;;
+        esac
+    done
+}
+
+# ── 13. Large files warning ─────────────────────────────────────────────────
+check_large_files() {
+    echo "$FILES" | while IFS= read -r f; do
+        if [ -f "$f" ]; then
+            SIZE=$(wc -c < "$f" 2>/dev/null || echo 0)
+            if [ "$SIZE" -gt 10485760 ] 2>/dev/null; then  # 10 MB
+                warn "$f" "File exceeds 10 MB ($((SIZE / 1048576)) MB)"
+            elif [ "$SIZE" -gt 1048576 ] 2>/dev/null; then  # 1 MB
+                warn "$f" "File exceeds 1 MB ($((SIZE / 1048576)) MB)"
+            fi
+        fi
+    done
+}
+
+# ── 14. Binary files in src/ warning ────────────────────────────────────────
+check_binary_src() {
+    echo "$FILES" | while IFS= read -r f; do
+        case "$f" in
+            src/*.png | src/*.jpg | src/*.jpeg | src/*.gif | src/*.webp | src/*.ico)
+                warn "$f" "Binary file in src/ (consider public/ instead)"
+                ;;
+        esac
+    done
+}
+
+# =============================================================================
+# Run all checks
+# =============================================================================
+
+printf "%b── Commit Quality Gate ──────────────────────────────────%b\n" "$CYAN" "$NC"
+printf "  Checking %s...\n\n" "$SCOPE"
+
+check_build
+check_deps
+check_cache
+check_logs
+check_temp
+check_os
+check_ai
+check_env
+check_editor
+check_planning
+check_screenshots
+check_test_artifacts
+check_large_files
+check_binary_src
+
+# ── Summary ─────────────────────────────────────────────────────────────────
+echo ""
+if [ "$BLOCKED" -gt 0 ] || [ "$WARNINGS" -gt 0 ]; then
+    printf "%b── Summary ────────────────────────────────────────────%b\n" "$CYAN" "$NC"
+    if [ "$BLOCKED" -gt 0 ]; then
+        printf "  %b%d BLOCKED%b  — fix and re-stage before committing\n" "$RED" "$BLOCKED" "$NC"
+    fi
+    if [ "$WARNINGS" -gt 0 ]; then
+        printf "  %b%d WARNINGS%b  — review before committing\n" "$YELLOW" "$WARNINGS" "$NC"
+    fi
+fi
+
+if [ "$BLOCKED" -gt 0 ]; then
+    echo ""
+    printf "  %bTo skip the gate (emergency only): git commit --no-verify%b\n" "$YELLOW" "$NC"
+    printf "  %bSee: docs/repository/COMMIT_GUIDELINES.md%b\n" "$CYAN" "$NC"
+    exit 1
+fi
+
+printf "  %b✓ Commit gate passed%b\n" "$CYAN" "$NC"
+exit 0

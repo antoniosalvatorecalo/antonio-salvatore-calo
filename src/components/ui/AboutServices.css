@@ -1,0 +1,106 @@
+/* AboutServices — Section 4 */
+
+/* ── Container ─────────────────────────────────────────────────── */
+.services-container {
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding-top: clamp(2.25rem, 4vw, 3rem);
+  padding-bottom: clamp(2.25rem, 4vw, 3rem);
+  transition: background-color 0.3s ease;
+}
+
+/* ── Label ─────────────────────────────────────────────────────── */
+.services-label-wrap {
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+}
+
+.services-label {
+  display: block;
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  will-change: opacity, transform, filter;
+}
+
+/* ── Grid ──────────────────────────────────────────────────────── */
+.services-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+/* ── Card ──────────────────────────────────────────────────────── */
+.service-card {
+  background-color: var(--bg-tertiary);
+  aspect-ratio: 4 / 3;
+  container-type: inline-size;
+  min-height: 9.5rem;
+  border-radius: var(--radius-none);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: background-color 0.2s ease;
+  will-change: opacity, transform, filter;
+}
+
+.service-card:hover {
+  background-color: var(--bg-secondary);
+}
+
+@media (hover: hover) {
+  .service-card:hover {
+    background-color: var(--bg-secondary);
+  }
+}
+
+/* ── Icon ───────────────────────────────────────────────────────── */
+.service-icon {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  color: var(--text-primary);
+  will-change: transform;
+}
+
+/* ── Bottom label/description stack ────────────────────────────── */
+.service-card-bottom {
+  position: absolute;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  right: var(--space-4);
+  pointer-events: none;
+}
+
+.service-label {
+  display: block;
+  max-width: none;
+  white-space: nowrap;
+  font-size: clamp(0.72rem, 1.25vw, var(--text-sm));
+  line-height: 1.08;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: var(--text-primary);
+  will-change: transform;
+}
+
+.service-desc-mask {
+  position: absolute;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-4);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.service-desc {
+  margin: 0;
+  font-size: clamp(0.72rem, 1vw, 0.82rem);
+  line-height: 1.32;
+  color: var(--text-muted);
+  will-change: transform, opacity;
+  pointer-events: none;
+}

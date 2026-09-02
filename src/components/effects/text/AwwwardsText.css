@@ -1,0 +1,21 @@
+/* AwwwardsText */
+.awwwards-container {
+  width: 100%;
+  perspective: 1200px;
+}
+
+.awwwards-title {
+  margin: 0;
+  break-words: word-break;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  hyphens: auto;
+}
+
+/* line-mask injected by JS — needed here for the reveal effect */
+.line-mask {
+  overflow: hidden;
+  display: block;
+}

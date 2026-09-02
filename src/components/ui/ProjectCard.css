@@ -1,0 +1,160 @@
+/* ProjectCard */
+.project-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .project-card {
+    margin-bottom: var(--space-6);
+  }
+}
+
+.project-card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .project-card-inner {
+    margin-bottom: var(--space-6);
+  }
+}
+
+.project-img-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  aspect-ratio: 2 / 1;
+}
+
+.project-img-overlay {
+  position: absolute;
+  bottom: var(--space-2);
+  left: var(--space-2);
+  display: flex;
+  align-items: center;
+  padding: var(--space-1);
+  opacity: 1;
+  pointer-events: auto;
+  border-radius: var(--radius-sm);
+}
+
+.overlay-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  width: fit-content;
+  max-width: calc(100vw - var(--space-8));
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .overlay-link:hover .project-client::after {
+    transform: scaleX(1);
+  }
+}
+
+.overlay-link:focus-visible {
+  outline: 2px solid var(--glass-nav-focus);
+  outline-offset: 3px;
+}
+
+.overlay-link:focus-visible .project-client::after {
+  transform: scaleX(1);
+}
+
+.project-client {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.project-client::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0.02em;
+  left: 0;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.project-title-swap .letter-space {
+  flex: 0 0 0.34em;
+  width: 0.34em;
+}
+
+.project-img-reveal-matte {
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--bg-inverse) 18%,
+      var(--bg-inverse) 78%,
+      transparent 100%
+    );
+  mix-blend-mode: normal;
+  transform: skewX(-12deg) translateX(-118%);
+}
+
+.project-tagline {
+  white-space: nowrap;
+  font-size: var(--text-xs);
+}
+
+@media (min-width: 768px) {
+  .project-tagline {
+    font-size: var(--text-sm);
+  }
+}
+
+.project-caption {
+  margin-top: var(--space-2);
+  padding-left: var(--space-1);
+  padding-right: var(--space-1);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.caption-meta {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.project-title-swap {
+  font-weight: 300;
+  transition: font-weight var(--transition-fast);
+}
+
+/* tighter kerning for project titles */
+.project-title-swap .letter-char-wrap {
+  margin-right: 0.008em;
+}
+
+.overlay-link:hover .project-title-swap {
+  font-weight: 700;
+}

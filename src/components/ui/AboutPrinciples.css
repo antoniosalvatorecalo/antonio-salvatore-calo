@@ -1,0 +1,71 @@
+/* AboutPrinciples.css */
+
+/* ── Container ─────────────────────────────────────────────────── */
+.principles-container {
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-md);
+  padding-top: clamp(2.25rem, 4vw, 3rem);
+  padding-bottom: clamp(2.25rem, 4vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease;
+}
+
+.principles-label-wrap {
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+}
+
+.principles-label {
+  display: block;
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  will-change: opacity, transform, filter;
+}
+
+.principles-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.75rem, 3vw, 2.5rem);
+  margin-top: var(--space-4);
+}
+
+.principle-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  will-change: opacity, transform, filter;
+}
+
+.principle-title-wrap {
+  overflow: hidden;
+}
+
+.principle-title {
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+.principle-desc {
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 58ch;
+  text-wrap: pretty;
+}
+
+/* Hide initially, GSAP reveals */
+.principles-container [data-reveal="label"] {
+  opacity: 0;
+}
+
+.blur-word {
+  display: inline-block;
+  will-change: opacity, transform, filter;
+}

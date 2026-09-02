@@ -1,0 +1,11 @@
+/* ScrollingProjectText */
+.scrolling-text-container {
+  position: relative;
+  min-height: 30vh;
+}
+
+.scrolling-project-text {
+  position: relative;
+}
+
+

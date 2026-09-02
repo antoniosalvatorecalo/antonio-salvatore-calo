@@ -1,0 +1,21 @@
+/* AnimatedLink */
+.animated-link {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.animated-link--light {
+  color: var(--text-inverse);
+}
+
+.animated-link--dark {
+  color: var(--text-primary);
+}
+
+@media (hover: hover) {
+  .animated-link:hover {
+    color: inherit;
+  }
+}

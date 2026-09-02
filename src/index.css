@@ -1,0 +1,798 @@
+@import "tailwindcss";
+@import "./styles/hover.css";
+
+/* TT Interphases Pro Trial - Local Font Faces */
+@font-face {
+  font-family: "TT Interphases Pro";
+  src: url("/fonts/tt-interphases-pro/TT Interphases Pro Trial Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TT Interphases Pro";
+  src: url("/fonts/tt-interphases-pro/TT Interphases Pro Trial Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TT Interphases Pro";
+  src: url("/fonts/tt-interphases-pro/TT Interphases Pro Trial Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TT Interphases Pro";
+  src: url("/fonts/tt-interphases-pro/TT Interphases Pro Trial DemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TT Interphases Pro";
+  src: url("/fonts/tt-interphases-pro/TT Interphases Pro Trial Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TT Interphases Pro";
+  src: url("/fonts/tt-interphases-pro/TT Interphases Pro Trial Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+/* stylelint-disable-next-line at-rule-no-unknown */
+@theme {
+  --font-sans: "TT Interphases Pro", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ——— Antonio Salvatore Calò — Design Tokens ——————————————————————————————— */
+
+/*
+ * Three-tier Responsive System:
+ * Mobile: <768px - single-column, tab navigation, swipe gestures
+ * Tablet: 768px-1024px - single-column, tab navigation, swipe gestures
+ * Desktop: >1024px - dual-column, no tabs, scroll-linked sections
+ *
+ * Note: Tablet shares single-column behavior with mobile, not desktop.
+ * The isDesktop breakpoint was redefined from >=768px to >=1024px.
+ */
+
+:root {
+  /* Color — surfaces */
+  --bg-primary:         #FFFFFF;
+  --bg-secondary:       #F0F0F0;
+  --bg-tertiary:        #E8E8E8;
+  --bg-inverse:         #141414;
+  --bg-inverse-subtle:  #1F1F1F;
+
+  /* Color — text (all WCAG AA compliant) */
+  --text-primary:       #0A0A0A;  /* 19.6:1 on bg-primary */
+  --text-secondary:     #3D3D3D;  /* 9.73:1 on bg-primary */
+  --text-muted:         #6B6B6B;  /* 5.74:1 on bg-primary */
+  --text-inverse:       #F5F5F5;  /* 15.3:1 on bg-inverse */
+  --text-inverse-muted: #A0A0A0;  /* 5.21:1 on bg-inverse */
+
+  /* Color — borders */
+  --border-subtle:  #E2E2E2;
+  --border-default: #C8C8C8;
+  --border-strong:  #0A0A0A;
+  --border-inverse: rgba(245, 245, 245, 0.1);
+
+  /* Radius — brutalist: square by default */
+  --radius-none: 0px;
+  --radius-sm:   2px;
+  --radius-md:   4px;
+  --radius-pill: 9999px;
+
+  /* Spacing */
+  --space-1:  0.25rem;   /*  4px */
+  --space-2:  0.5rem;    /*  8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-24: 6rem;      /* 96px */
+  --space-32: 8rem;      /* 128px */
+
+  /* Section padding — fluid */
+  --section-xs: clamp(2rem,   4vw, 3rem);    /* 32â€“48px  */
+  --section-sm: clamp(3rem,   6vw, 4rem);    /* 48â€“64px  */
+  --section-md: clamp(4rem,   8vw, 6rem);    /* 64â€“96px  */
+  --section-lg: clamp(6rem,  10vw, 8rem);
+
+  /* Page breathing room — global top and lateral padding */
+  --page-top-pad:     clamp(1.5rem, 3vw, 2.5rem);
+  --page-lateral-pad: clamp(1.25rem, 3.5vw, 3rem);    /* 96â€“128px */
+
+  /* ── Z-Index Scale ───────────────────────────────────────────────
+   * Stacking order reference (lowest → highest):
+   *   Base layers    : default (0)
+   *   Dropdown       :  20  — ContactBuilder dropdown
+   *   Mobile nav     :  50  — MobileBottomNav
+   *   Project shell  :  60  — ProjectBrutalistLayout (page overlay)
+   *   Floating nav   :  70  — ProjectMobileNav, BackToTop, mobile ThemeToggle
+   *   View switcher  :  90  — WorkViewSwitcher (just below main nav)
+   *   Main nav       : 100  — CentralNavMenu, desktop ThemeToggle
+   *   Skip link      : 999  — topmost layer (WCAG 2.4.1)
+   *
+   * Invariants:
+   *   nav (100)        > project shell (60)
+   *   skip link (999)  > all other layers (must be visible when focused)
+   */
+  --z-dropdown:         20;
+  --z-mobile-bottom-nav: 50;
+  --z-project-shell:     60;
+  --z-nav-floating:      70;
+  --z-view-switcher:     90;
+  --z-nav:              100;
+  --z-skip-link:        999;
+
+  /* Type scale — Minor Third (base 16px × 1.200) — fluid */
+  --text-display-xl: clamp(3rem, 6vw + 0.5rem, 5rem);    /* 48→’80px */
+  --text-display:    clamp(2.063rem, 4vw + 0.5rem, 3.625rem);   /* 33→’58px */
+  --text-h1:         clamp(1.75rem, 3.5vw + 0.25rem, 3rem);     /* 28→’48px */
+  --text-h2:         clamp(1.5rem, 2.8vw + 0.25rem, 2.5rem);    /* 24→’40px */
+  --text-h3:         clamp(1.25rem, 2.2vw + 0.2rem, 2.063rem);  /* 20→’33px */
+  --text-h4:         clamp(1.125rem, 1.8vw + 0.125rem, 1.75rem); /* 18→’28px */
+  --text-h5:         clamp(1rem, 1.5vw + 0.1rem, 1.438rem);     /* 16→’23px */
+  --text-h6:         clamp(0.875rem, 1.2vw + 0.1rem, 1.188rem); /* 14→’19px */
+  --text-base:       1rem;      /* 16px — fixed */
+  --text-sm:         0.813rem;  /* 13px — fixed */
+  --text-xs:         0.688rem;  /* 11px — fixed */
+}
+
+/* â”€â”€ Dark Mode Token Overrides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+html[data-theme="dark"] {
+  /* surfaces — inverted */
+  --bg-primary:         #141414;
+  --bg-secondary:       #1F1F1F;
+  --bg-tertiary:        #2A2A2A;
+  --bg-inverse:         #F5F5F5;
+  --bg-inverse-subtle:  #F0F0F0;
+
+  /* text — inverted, all WCAG AA on dark surfaces */
+  --text-primary:       #F5F5F5;  /* 15.3:1 on bg-primary */
+  --text-secondary:     #A0A0A0;  /* 5.21:1 on bg-primary */
+  --text-muted:         #888888;  /* 5.35:1 on bg-primary */
+  --text-inverse:       #0A0A0A;  /* 19.6:1 on bg-inverse */
+  --text-inverse-muted: #3D3D3D;  /* 9.73:1 on bg-inverse */
+
+  /* borders — inverted */
+  --border-subtle:  rgba(245, 245, 245, 0.08);
+  --border-default: rgba(245, 245, 245, 0.15);
+  --border-strong:  #F5F5F5;
+  --border-inverse: rgba(10, 10, 10, 0.15);
+}
+
+/* â”€â”€ Glass Nav Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Image spacing - ensure photos don't touch right edge */
+.project-img-mask {
+  margin-right: var(--space-4);
+}
+/* Plain overlay for specific project cards (no glass) */
+.plain-overlay {
+  background: rgba(0, 0, 0, 0.6); /* dark semiâ€‘transparent backdrop for contrast (light mode) */
+  color: var(--text-inverse);       /* whiteâ€‘ish text for readability */
+}
+
+/* Darkâ€‘mode override for plain overlay â€“ use light backdrop and dark text */
+html[data-theme="dark"] .plain-overlay {
+  background: rgba(255, 255, 255, 0.6); /* light semiâ€‘transparent for dark theme */
+  color: var(--text-inverse);       /* dark text for readability */
+}
+
+/* Ensure overlay link inherits overlay colour */
+.plain-overlay .overlay-link {
+  color: inherit;
+}
+
+
+:root {
+  --glass-nav-bg:        transparent;
+  --glass-nav-border:    transparent;
+  --glass-nav-highlight: transparent;
+  --glass-nav-shadow:    none;
+  --glass-nav-text:      #0A0A0A;
+  --glass-nav-btn-hover: transparent;
+  --glass-nav-btn-active: transparent;
+  --glass-nav-divider:   transparent;
+  --glass-nav-text-inactive: #626262;
+  --glass-nav-focus:     rgba(10, 10, 10, 0.55);
+}
+
+html[data-theme="dark"] {
+  --glass-nav-bg:        transparent;
+  --glass-nav-border:    transparent;
+  --glass-nav-highlight: transparent;
+  --glass-nav-shadow:    none;
+  --glass-nav-text:      #F5F5F5;
+  --glass-nav-btn-hover: transparent;
+  --glass-nav-btn-active: transparent;
+  --glass-nav-divider:   transparent;
+  --glass-nav-text-inactive: #AAAAAA;
+  --glass-nav-focus:     rgba(245, 245, 245, 0.65);
+}
+
+.glass-nav {
+  background: var(--glass-nav-bg);
+  color: var(--glass-nav-text);
+}
+
+.glass-nav button:focus-visible,
+.glass-nav a:focus-visible {
+  outline: 2px solid var(--glass-nav-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.glass-chip {
+  color: var(--glass-nav-text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.2s cubic-bezier(0.22,1,0.36,1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-3);
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.glass-chip:hover {
+  opacity: 0.85;
+  transform: scale(1.03);
+}
+
+.glass-chip:focus-visible {
+  outline: 2px solid var(--glass-nav-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* â”€â”€ FIX 1: Prevent scrollbar width shift â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* NOTE: scrollbar-gutter removed to eliminate white space on right side.
+   Lenis handles smooth scrolling without native scrollbar interference. */
+html {
+  overflow: hidden;
+}
+
+/* â”€â”€ Full-width body: no margins, full viewport coverage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "TT Interphases Pro", sans-serif;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Reserve vertical space for the fixed footer so page content
+   never slides underneath it. Matches the footer's total height
+   (top padding clamp(0.75rem, 1.5vw, 1.25rem) + bottom padding
+   clamp(2rem, 4vw, 3.5rem) + a little breathing room). */
+.page-with-footer {
+  padding-bottom: clamp(4rem, 7vw, 5.5rem);
+}
+
+/* â”€â”€ will-change utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Z-Index utility classes ──────────────────────────────────────────────────── */
+/* Use these instead of scattered inline z-[50]/z-[60]/z-[70]/z-[100]/z-[200] */
+.z-dropdown         { z-index: var(--z-dropdown); }
+.z-mobile-bottom-nav { z-index: var(--z-mobile-bottom-nav); }
+.z-project-shell    { z-index: var(--z-project-shell); }
+.z-nav-floating     { z-index: var(--z-nav-floating); }
+.z-view-switcher    { z-index: var(--z-view-switcher); }
+.z-nav              { z-index: var(--z-nav); }
+.z-skip-link        { z-index: var(--z-skip-link); }
+
+.will-change-transform {
+  will-change: transform;
+}
+
+.blur-word {
+  display: inline-block;
+  will-change: opacity, transform, filter;
+}
+
+/* â”€â”€ SVG utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.svg-visibility-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* â”€â”€ SplitMergePreview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.carousel-track {
+  width: var(--carousel-track-width, 100%);
+}
+
+.carousel-slide {
+  width: var(--slide-width, 100%);
+}
+
+/* â”€â”€ ContactBuilder cursor blink â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@keyframes contact-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.contact-builder-cursor {
+  animation: contact-blink 1s step-end infinite;
+}
+
+/* â”€â”€ Global Animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@keyframes breathe {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: calc(1 - var(--breathe-intensity, 0.03));
+  }
+}
+
+@keyframes rotateAmbient {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scrollPulse {
+
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scaleY(0.6);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scaleY(1.0);
+  }
+}
+
+/* â”€â”€ Breathing Wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.breathing-wrapper {
+  --breathe-intensity: 0.03;
+  --breathe-duration: 4000ms;
+  animation: breathe ease-in-out infinite;
+  animation-duration: var(--breathe-duration);
+}
+
+/* â”€â”€ Rotating Ambient â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.rotating-ambient {
+  background: conic-gradient(from 0deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 15%,
+      transparent 30%,
+      rgba(255, 255, 255, 0.2) 50%,
+      transparent 65%,
+      rgba(255, 255, 255, 0.3) 85%,
+      transparent 100%);
+  animation: rotateAmbient 20s linear infinite;
+}
+
+.rotating-ambient--dim {
+  opacity: 0.05;
+}
+
+/* â”€â”€ Scrollbar Hide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+}
+
+@supports (scrollbar-width: none) {
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+/* GUARD 3: Hard fallback — se Lenis non parte, lo scroll nativo funziona comunque */
+.lenis-fallback {
+  scroll-behavior: smooth !important;
+  overflow-y: auto !important;
+}
+
+/* â”€â”€ AwwwardsText â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.awwwards-text-container {
+  perspective: 1200px;
+}
+
+/* â”€â”€ Contact field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.contact-field {
+  container-type: inline-size;
+}
+
+/* â”€â”€ Contact link underline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.text-part {
+  position: relative;
+  display: inline-block;
+}
+
+.text-part::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hover-enabled .contact-link:hover .text-part::after {
+  opacity: 1;
+}
+
+/* â”€â”€ Contact arrow rotation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.arrow {
+  transform: rotate(0deg);
+  transform-origin: center center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-enabled .contact-link:hover .arrow {
+  transform: rotate(-45deg);
+}
+
+/* â”€â”€ Column panels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.col-panel {
+  width: var(--col-width, 100%);
+}
+
+.col-panel>.hide-scrollbar.absolute {
+  inset: 0;
+}
+
+/* â”€â”€ Scroll pulse hint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.scroll-pulse-bar {
+  animation: scrollPulse 1.4s ease-in-out infinite;
+}
+
+/* â”€â”€ Circular Text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.circular-text {
+  margin: 0 auto;
+  border-radius: 50%;
+  position: relative;
+  color: var(--text-inverse);
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  line-height: 1.15;
+  -webkit-transform-origin: 50% 50%;
+  transform-origin: 50% 50%;
+}
+
+.circular-text span {
+  position: absolute;
+  display: inline-block;
+  inset: 0;
+  font-size: 24px;
+  transition: all 0.5s cubic-bezier(0, 0, 0, 1);
+}
+
+/* â”€â”€ CurvedLoop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.curved-loop-jacket {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.curved-loop-svg {
+  width: 100%;
+  min-width: 100%;
+  overflow: visible;
+  display: block;
+  fill: currentColor;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  line-height: 1.15;
+  font-size: clamp(42px, 12vh, 120px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* â”€â”€ FIX: Portfolio column scroll height â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ensure right column scroll container calculates height correctly */
+.portfolio-scroll-wrapper {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.portfolio-scroll-wrapper>div {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* â”€â”€ FIX: Scroll content height calculation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ensure scroll-content children don't constrain parent height */
+.scroll-content {
+  min-height: min-content;
+}
+
+/* â”€â”€ FIX 11: Prevent project card flash on initial render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Hide project cards by default until GSAP/Lenis is fully initialized */
+/* NOTE: No !important - GSAP needs to override this during animation */
+.project-card-wrapper {
+  opacity: 0;
+  transform: translateY(40px);
+  will-change: opacity, transform;
+}
+
+/* Class added by GSAP after animation completes */
+.project-card-wrapper.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* â”€â”€ Scroll Stagger Animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Desktop defaults */
+[data-stagger] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+[data-stagger].animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Medium layer for labels */
+[data-stagger-medium] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+[data-stagger-medium].animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Shallow layer for list items/values */
+[data-stagger-shallow] {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+[data-stagger-shallow].animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Mobile styles (<768px) - single-column layout, reduced animations */
+@media (max-width: 767px) {
+  /* Smaller hero titles on mobile to prevent truncation */
+  :root {
+    --text-display-xl: clamp(1.75rem, 7vw + 0.5rem, 2.5rem); /* 28px→’40px on mobile */
+  }
+
+  [data-stagger] {
+    transform: translateY(12px);
+    transition:
+      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  [data-stagger-medium] {
+    transform: translateY(12px);
+    transition:
+      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  [data-stagger-shallow] {
+    transform: translateY(8px);
+    transition:
+      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .project-hero-title {
+    font-size: clamp(1.1rem, 3.5vw + 0.2rem, 1.4rem) !important;
+    overflow-wrap: anywhere;
+    white-space: nowrap;
+  }
+}
+
+/* Tablet + Desktop styles (>=768px) - shared base for larger viewports */
+@media (min-width: 768px) {
+  /* Placeholder: adjust typographic CSS variables for desktop if needed */
+}
+
+/* Desktop styles (>=1024px) — column is 30% viewport, cap font to fit */
+@media (min-width: 1024px) {
+  .project-hero-title {
+    /* Adjusted hero title size for narrower left column (20% width) */
+    font-size: clamp(1.65rem, 2.1vw + 0.1rem, 2.15rem) !important;
+    white-space: normal;
+  }
+}
+
+/* Tablet-specific styles (768px-1024px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .project-hero-title {
+    font-size: clamp(1.1rem, 2.5vw + 0.2rem, 1.4rem) !important;
+    overflow-wrap: anywhere;
+    white-space: nowrap;
+  }
+
+  /* Tablet typography scale - coherent across components */
+  :root {
+    --text-tablet-xs: 0.75rem;    /* 12px - fine print */
+    --text-tablet-sm: 0.875rem;   /* 14px - labels, meta */
+    --text-tablet-base: 1rem;     /* 16px - body text */
+    --text-tablet-lg: 1.125rem;   /* 18px - lead text */
+    --text-tablet-xl: 1.25rem;    /* 20px - small headings */
+    --text-tablet-2xl: 1.5rem;    /* 24px - section titles */
+    --text-tablet-3xl: 1.875rem;  /* 30px - page titles */
+    --text-tablet-4xl: 2.25rem;   /* 36px - hero titles */
+  }
+
+  /* Project section image container - full width with padding */
+  .project-image-container {
+    width: 100%;
+    padding-left: var(--tablet-padding, 1rem);
+    padding-right: var(--tablet-padding, 1rem);
+  }
+
+  .project-image-container img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+  [data-stagger],
+[data-stagger-medium],
+[data-stagger-shallow] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  scroll-behavior: auto;
+  transition-duration: 0.01ms;
+  transition-delay: 0ms;
+  animation-duration: 0.01ms;
+  animation-iteration-count: 1;
+}
+
+/* â”€â”€ Reveal Animation System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Applied during animation - hardware acceleration */
+[data-reveal="title"],
+[data-reveal="paragraph"],
+[data-reveal="cta"] {
+  will-change: opacity, filter, transform;
+}
+
+/* Removed after animation completes - prevents performance hit */
+[data-reveal="title"].reveal-complete,
+[data-reveal="paragraph"].reveal-complete,
+[data-reveal="cta"].reveal-complete {
+  will-change: auto;
+}
+
+/* Legacy reveal types */
+[data-reveal="label"],
+[data-reveal="word"],
+[data-reveal="item"] {
+  will-change: opacity, filter, transform;
+}
+
+[data-reveal="label"].reveal-complete,
+[data-reveal="word"].reveal-complete,
+[data-reveal="item"].reveal-complete {
+  will-change: auto;
+}
+
+/* Project card hover arrow animation */
+.arrow-icon { transform: rotate(0deg); transition: transform 0.3s ease-out; }
+.overlay-link:hover .arrow-icon {
+  transform: rotate(-45deg) translateY(-3px);
+}
+
+
+/* â”€â”€ Service card hover â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Description hidden by default, slides in on hover (desktop only) */
+.service-hover-desc {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  max-height: 0;
+  overflow: hidden;
+}
+
+.service-hover-label {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .service-hover-card:hover .service-hover-desc {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 80px;
+  }
+
+  .service-hover-card:hover .service-hover-label {
+    transform: translateY(-4px);
+  }
+}
+
+/* Mobile tap-to-reveal — .is-active class toggled via JS on touch devices */
+.service-hover-card.is-active .service-hover-desc {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 60px;
+}
+
+.service-hover-card.is-active .service-hover-label {
+  transform: translateY(-4px);
+}
+
+.service-hover-card.is-active {
+  background-color: var(--bg-secondary);
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+*
+,
+*::before,
+*::after {
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+scroll-behavior: auto !important;
+}
+}
+
+
+
+

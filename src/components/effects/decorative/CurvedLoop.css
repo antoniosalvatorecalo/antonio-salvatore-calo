@@ -1,0 +1,26 @@
+/* CurvedLoop */
+.curved-loop-jacket {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.curved-loop-svg {
+  width: 100%;
+  min-width: 100%;
+  overflow: visible;
+  display: block;
+  fill: currentColor;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  line-height: 1.15;
+  font-size: clamp(42px, 12vh, 120px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}

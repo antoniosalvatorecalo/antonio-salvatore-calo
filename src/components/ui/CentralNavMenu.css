@@ -1,0 +1,98 @@
+/* CentralNavMenu */
+.nav-container {
+  position: fixed;
+  bottom: var(--space-6);
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px;
+  z-index: var(--z-nav);
+  max-width: calc(100vw - 32px);
+}
+
+.nav-container--desktop {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-container--mobile {
+  left: var(--space-4);
+}
+
+/* ── Shared button base ──────────────────────────────── */
+.central-nav-btn {
+  position: relative;
+  overflow: visible;
+}
+
+/* Arrow hidden by default, appears on button hover */
+.central-nav-btn .nav-pill-arrow-icon {
+  opacity: 0;
+  transform: translateY(110%) rotate(22deg);
+  transition:
+    opacity 0.22s ease,
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.central-nav-btn:hover .nav-pill-arrow-icon {
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
+}
+
+/* Underline on text only */
+.central-nav-btn .nav-pill-text-wrap::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.central-nav-btn:hover .nav-pill-text-wrap::after,
+.central-nav-btn:focus-visible .nav-pill-text-wrap::after {
+  transform: scaleX(1);
+}
+
+/* ── Tab variations ──────────────────────────────────── */
+.nav-tab-btn {
+  shrink: 0;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  letter-spacing: 0.06em;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.nav-tab-btn--active {
+  font-weight: 500;
+  color: var(--glass-nav-text);
+}
+
+.nav-tab-btn--inactive {
+  font-weight: 400;
+  color: var(--glass-nav-text-inactive);
+}
+
+@media (hover: hover) {
+  .nav-tab-btn--inactive:hover {
+    color: var(--glass-nav-text);
+  }
+}
+
+.nav-divider {
+  width: 1px;
+  height: 14px;
+  background-color: var(--glass-nav-divider);
+  shrink: 0;
+}

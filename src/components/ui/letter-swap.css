@@ -1,0 +1,53 @@
+/* LetterSwapForward / LetterSwapBlock / LetterSwapPingPong */
+.letter-swap-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.letter-char-wrap {
+  position: relative;
+  display: inline-flex;
+  clip-path: inset(0);
+  padding-bottom: 0.15em;
+}
+
+.letter::before,
+.letter-secondary::before {
+  content: attr(data-char);
+}
+
+.letter-char-kern {
+  width: auto;
+  margin-right: 0.04em;
+}
+
+.letter-char-kern--kerned {
+  padding-left: 0.01em;
+  padding-right: 0.01em;
+}
+
+.letter-front {
+  position: relative;
+  font-weight: 400;
+  display: block;
+  line-height: 1.1;
+}
+
+.letter-back {
+  position: absolute;
+  font-weight: 500;
+  display: block;
+  inset: 0;
+  line-height: 1.1;
+}
+
+/* LetterSwapBlock multi-line */
+.letter-block-line {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}

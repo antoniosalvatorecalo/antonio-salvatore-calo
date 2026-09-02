@@ -1,0 +1,28 @@
+/* Hover underline — instant, text-width only */
+.hover-underline {
+  position: relative;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.hover-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 1px;
+  width: 100%;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+@media (hover: hover) {
+  .hover-underline:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+.hover-underline:focus-visible::after {
+  transform: scaleX(1);
+}

@@ -1,0 +1,44 @@
+/* WorkViewSwitcher */
+.view-switcher {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-4);
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  z-index: var(--z-view-switcher);
+  border-radius: var(--radius-sm);
+}
+
+.view-tab-btn {
+  shrink: 0;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.view-tab-btn--active {
+  color: var(--glass-nav-text);
+}
+
+.view-tab-btn--inactive {
+  color: var(--glass-nav-text-inactive);
+}
+
+@media (hover: hover) {
+  .view-tab-btn--inactive:hover {
+    color: var(--glass-nav-text);
+  }
+}
+
+.view-tab-icon {
+  width: 16px;
+  height: 16px;
+}

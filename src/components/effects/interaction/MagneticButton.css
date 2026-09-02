@@ -1,0 +1,26 @@
+/* MagneticButton */
+.magnetic-btn {
+  flex: 1;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: var(--text-base);
+  transition: all 0.2s ease;
+  padding: 0 var(--space-5);
+}
+
+.magnetic-btn--active {
+  font-weight: 500;
+  color: var(--glass-nav-text);
+}
+
+.magnetic-btn--inactive {
+  font-weight: 400;
+  color: var(--glass-nav-text-inactive);
+}
+
+@media (hover: hover) {
+  .magnetic-btn--inactive:hover {
+    color: var(--glass-nav-text);
+  }
+}

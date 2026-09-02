@@ -1,0 +1,40 @@
+/* BackToTop */
+.back-to-top-container {
+  position: fixed;
+  top: var(--space-4);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-nav-floating);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.back-to-top-container--project {
+  right: var(--space-8);
+}
+
+.back-to-top-container--default {
+  right: var(--space-6);
+}
+
+.back-to-top-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  color: var(--glass-nav-text-inactive);
+  transition: color 0.2s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .back-to-top-btn:hover {
+    color: var(--glass-nav-text);
+  }
+}
