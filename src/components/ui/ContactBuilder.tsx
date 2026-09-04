@@ -271,6 +271,7 @@ export const ContactBuilder = () => {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const entranceRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(entranceRef, {
     selector: '[data-entrance-item]',
     y: 14,
@@ -294,6 +295,13 @@ export const ContactBuilder = () => {
       return () => clearTimeout(t);
     }
   }, [isCurrentConnectorTyped, step]);
+
+  // Reset scroll to top when success shows
+  useEffect(() => {
+    if (submissionState === 'success' && contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [submissionState]);
 
   const markConnectorTyped = useCallback((stepId: StepId) => {
     setTypedConnectors((prev) => (prev[stepId] ? prev : { ...prev, [stepId]: true }));
@@ -374,20 +382,19 @@ export const ContactBuilder = () => {
     <div ref={entranceRef} className="flex flex-col h-full min-h-0 justify-between">
       {/* Step counter — at TOP first */}
       {!isDone && step && submissionState === 'idle' && (
-        <div data-entrance-item className="shrink-0 pt-2 pb-3 flex items-center gap-3">
+        <div data-entrance-item className="shrink-0 pt-16 md:pt-24 pb-8 flex items-center gap-3">
           <span className="text-[var(--text-xs)] text-[var(--text-muted)] tracking-[0.12em] font-[500] tabular-nums">
             {stepIndex + 1}
           </span>
           <span className="w-px h-3 bg-[var(--border-default)]" />
-          <span className="text-[var(--text-xs)] text-[var(--text-muted)] tracking-[0.12em] uppercase font-[500]">
+          <span className="text-[var(--text-xs)] text-[var(--text-primary)] tracking-[0.12em] uppercase font-[500]">
             {step.label}
           </span>
         </div>
       )}
 
       {/* Form content — scrollable */}
-      <div data-entrance-item className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pt-2 pb-4">
-
+      <div ref={contentRef} data-entrance-item className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pb-4 pt-2">
         {/* Success state */}
         {submissionState === 'success' && (
           <motion.div
@@ -398,7 +405,7 @@ export const ContactBuilder = () => {
             <p
               className="font-[400] text-[var(--text-primary)] mb-4"
               style={{
-                fontSize: 'clamp(1.35rem, 3.2vw + 0.3rem, 3.6rem)',
+                fontSize: 'clamp(1.1rem, 2.5vw + 0.2rem, 2.4rem)',
                 letterSpacing: '-0.015em',
                 lineHeight: '1.35',
               }}
@@ -432,7 +439,7 @@ export const ContactBuilder = () => {
             <p
               className="font-[400] text-[var(--text-primary)] mb-4"
               style={{
-                fontSize: 'clamp(1.35rem, 3.2vw + 0.3rem, 3.6rem)',
+                fontSize: 'clamp(1.1rem, 2.5vw + 0.2rem, 2.4rem)',
                 letterSpacing: '-0.015em',
                 lineHeight: '1.35',
               }}
@@ -481,7 +488,7 @@ export const ContactBuilder = () => {
             <p
               className="font-[400] text-[var(--text-primary)] mb-2"
               style={{
-                fontSize: 'clamp(1.35rem, 3.2vw + 0.3rem, 3.6rem)',
+                fontSize: 'clamp(1.1rem, 2.5vw + 0.2rem, 2.4rem)',
                 letterSpacing: '-0.015em',
                 lineHeight: '1.35',
               }}
@@ -502,7 +509,7 @@ export const ContactBuilder = () => {
         <div
           className="leading-[1.4] font-[400] text-[var(--text-primary)]"
           style={{
-            fontSize: 'clamp(1.35rem, 3.2vw + 0.3rem, 3.6rem)',
+            fontSize: 'clamp(1.1rem, 2.5vw + 0.2rem, 2.4rem)',
             letterSpacing: '-0.008em',
             overflowWrap: 'break-word',
             wordBreak: 'normal',

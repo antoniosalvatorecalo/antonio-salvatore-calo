@@ -5,7 +5,44 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'api-mock',
+        configureServer(server) {
+          server.middlewares.use('/api/contact', (req, res) => {
+            if (req.method === 'POST') {
+              let body = '';
+              req.on('data', chunk => { body += chunk; });
+              req.on('end', () => {
+                try {
+                  const data = JSON.parse(body);
+                  // Simula successo e ritorna mailto fallback
+                  const subject = encodeURIComponent(`New project: ${data.projectType || 'inquiry'}`);
+                  const text = `Hi Antonio, my name is ${data.name}.\n\nI need a ${data.projectType || 'project'} for a ${data.clientType || 'client'}, focused on ${data.focus || 'design'}.\nBudget ${data.budget || 'TBD'}, in ${data.timeline || 'TBD'}.\n\nReach me at ${data.email || 'your@email.com'}.`;
+                  const bodyEncoded = encodeURIComponent(text);
+                  const mailtoHref = `mailto:antonio.salvatore.calo@gmail.com?subject=${subject}&body=${bodyEncoded}`;
+
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({
+                    success: true,
+                    fallback: 'mailto',
+                    mailtoHref,
+                  }));
+                } catch {
+                  res.statusCode = 400;
+                  res.end(JSON.stringify({ error: 'Invalid request body' }));
+                }
+              });
+            } else {
+              res.statusCode = 405;
+              res.end(JSON.stringify({ error: 'Method not allowed' }));
+            }
+          });
+        }
+      }
+    ],
     build: {
       rollupOptions: {
         output: {
