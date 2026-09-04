@@ -1,16 +1,18 @@
 # Animation System
 
-**Files**: GSAP + Motion + AnimationOrchestrator | **Owner**: Engineering
+**Files**: GSAP + Motion + entrance hooks | **Owner**: Engineering
 
 ## Architecture
 
-Two engines, strict domain split. Three orchestration levels.
+Two engines, strict domain split. Reduced motion handled via `MotionPreferenceProvider` + `runOrSetFinal`.
 
 | Level | Tech | Scope |
 |-------|------|-------|
 | Infrastructure | GSAP + ScrollTrigger | Timelines, scroll-linked, plugin registration |
 | Primitives | Motion v12 | Springs, gestures, AnimatePresence |
-| Orchestration | AnimationProvider + orchestrator | Section cascade state machine |
+| Reduced motion | `MotionPreferenceProvider` + `runOrSetFinal` | OS detection + final-state fallback |
+
+There is no `AnimationProvider` or `AnimationOrchestrator` — page-level reveals go through `useEntranceReveal` and `useProjectTextScroll`.
 
 ## GSAP Setup
 
@@ -39,45 +41,24 @@ return () => ctx.revert();
 
 | Animation | Where | Mechanism |
 |-----------|-------|-----------|
-| Section cascade (left column) | PortfolioLayout → AnimationProvider | ScrollTrigger → orchestrator (idle→visible→playing→done) |
-| Project card 3D entrance | PortfolioLayout GSAP context | Staggered timeline (0.16s per card), perspective transform |
-| ScrollingProjectText | ProjectBrutalistLayout | ScrollTrigger per section, y:24→0, opacity |
-| Scroll reveal (blur + y) | useEntranceReveal hook | ScrollTrigger + stagger |
-| Media stack reveal | LayoutSplitTextMediaStack | ScrollTrigger per stack |
+| Project card 3D entrance | `PortfolioLayout` GSAP context | Staggered timeline (0.16s per card), perspective transform |
+| ScrollingProjectText | `ProjectBrutalistLayout` | ScrollTrigger per section, y:24→0, opacity |
+| Scroll reveal (blur + y) | `useEntranceReveal` hook | ScrollTrigger + stagger |
+| Media stack reveal | `ProjectSection` | ScrollTrigger per stack |
 
 ## Motion Animations
 
 | Animation | Where | Mechanism |
 |-----------|-------|-----------|
-| Route transitions | AppRouter | AnimatePresence mode="wait", fade 0.25s |
-| Magnetic buttons | CentralNavMenu | Spring stiffness 150, damping 15 |
-| Theme toggle icon | CentralNavMenu | AnimatePresence + rotate spring |
-| Project card scroll skew | ProjectCard | useScroll → useTransform → useSpring |
-| Nav tab parallax | Nav components | Spring x/y on cursor proximity |
-| Mobile nav underline | ProjectMobileNav | scaleX spring 0→1 |
-
-## AnimationOrchestrator
-
-**File**: `src/animations/orchestrator.ts`
-
-Deterministic state machine for left-column section cascade:
-
-```
-idle → visible → playing → done
-```
-
-5 sections: hero (instant) → bio → principles → services → contact (standard). Strict order — N plays only after N-1 done.
-
-```typescript
-const status = new Map<SectionId, SectionState>();
-// Module-level Map, not React state — avoids render cycle delay
-```
-
-**Key ops**: `markVisible(id)`, `markComplete(id)`, `registerPlayFn(id, fn)`, `reset()`
+| Route transitions | `AppRouter` | AnimatePresence mode="wait", fade 0.25s |
+| Magnetic buttons | `SiteHeader` | Spring stiffness 150, damping 15 |
+| Theme toggle icon | `SiteHeader` | AnimatePresence + rotate spring |
+| Letter swap | `letter-swap/` | LetterSwapForward, LetterSwapBlock |
+| Nav tab parallax | `SiteHeader` | Spring x/y on cursor proximity |
 
 ## useEntranceReveal Hook
 
-**File**: `src/hooks/animation/useEntranceReveal.ts`
+**File**: `src/hooks/useEntranceReveal.ts`
 
 Reusable scroll-reveal. GSAP blur + translateY per element group.
 
@@ -95,44 +76,44 @@ useEntranceReveal(containerRef, {
 
 Supports multi-phase reveals with `phases[]` array for complex sequences.
 
-## Presets
-
-**File**: `src/motion/presets/presets.ts`
-
-```typescript
-default: { y: 24, blur: 10, duration: 0.9, ease: 'power4.out' }
-soft:    { y: 16, blur: 6,  duration: 1.1, ease: 'power3.out' }
-sharp:   { y: 32, blur: 14, duration: 0.7, ease: 'power4.inOut' }
-```
-
 ## Reduced Motion
 
 4-layer cascade:
 
-1. **CSS**: `html[data-motion="reduced"]` forces 0.01ms transitions
-2. **Motion**: `useReducedMotionPreference()` → `instantTransition` (duration 0)
-3. **GSAP**: Check preference → `gsap.set()` to final state instead of `gsap.to()`
-4. **Provider**: `MotionPreferenceProvider` listens for live MediaQueryList changes
+1. **CSS**: `html[data-motion="reduced"]` forces 0.01ms transitions.
+2. **Motion**: `useReducedMotionPreference()` → `instantTransition` (duration 0).
+3. **GSAP**: Check preference → `runOrSetFinal` jumps to final state via `gsap.set()`.
+4. **Provider**: `MotionPreferenceProvider` listens for live MediaQueryList changes.
+
+```typescript
+export const runOrSetFinal = (reducedMotion, targets, finalState, animate) => {
+  if (reducedMotion) {
+    gsap.set(targets, { ...finalState, duration: 0 });
+    return;
+  }
+  animate();
+};
+```
 
 ## Lifecycle
 
-1. **Module load**: `initGSAP()` registers ScrollTrigger. Multi-stage refresh
-2. **Component mount**: `gsap.context()` creates scoped timeline. ScrollTrigger creates trigger
-3. **Scroll**: ScrollTrigger fires → orchestrator `markVisible()` → plays section
-4. **Navigate**: Route exit → AnimatePresence fade out → component unmount → `ctx.revert()` kills tweens
-5. **Reduced motion toggle**: MediaQueryList event → `data-motion` attribute updates → CSS kills animations
+1. **Module load**: `initGSAP()` registers ScrollTrigger. Multi-stage refresh.
+2. **Component mount**: `gsap.context()` creates scoped timeline. ScrollTrigger creates trigger.
+3. **Scroll**: ScrollTrigger fires → plays reveal.
+4. **Navigate**: Route exit → `AnimatePresence` fade out → component unmount → `ctx.revert()` kills tweens.
+5. **Reduced motion toggle**: MediaQueryList event → `data-motion` attribute updates → CSS kills animations.
 
 ## Dependencies
 
-- `gsap` v3 — ScrollTrigger, contexts, timelines
-- `motion` v12 — AnimatePresence, spring, useScroll/useTransform
-- `ScrollProvider` — isDesktop for animation scaling
-- `MotionPreferenceProvider` — reduced motion detection
+- `gsap` v3 — ScrollTrigger, contexts, timelines.
+- `motion` v12 — AnimatePresence, spring, useScroll/useTransform.
+- `ScrollProvider` — isDesktop for animation scaling.
+- `MotionPreferenceProvider` — reduced motion detection.
+- `src/lib/reduced-motion.ts` — `runOrSetFinal`.
 
 ## Extension Points
 
-- **New scroll reveal**: Add `[data-entrance-item]` elements + call `useEntranceReveal`
-- **New preset**: Add entry to `cascadePresets` in `presets.ts`
-- **New section animation**: Register section in orchestrator, add ScrollTrigger in AnimationProvider
-- **Custom timeline**: Use `gsap.timeline()` inside `gsap.context()` — follows cleanup pattern
-- **Per-breakpoint animation**: GSAP `matchMedia()` for responsive timeline changes
+- **New scroll reveal**: Add `[data-entrance-item]` elements + call `useEntranceReveal`.
+- **New easing curve**: Add to `easing.ts`. Import in component.
+- **Custom timeline**: Use `gsap.timeline()` inside `gsap.context()` — follows cleanup pattern.
+- **Per-breakpoint animation**: GSAP `matchMedia()` for responsive timeline changes.

@@ -13,7 +13,7 @@ The responsive system operates at three tiers:
 |------|-----------|--------|--------|
 | **Mobile** | < 768px | Single column | Native scroll |
 | **Tablet** | 768px–1024px | Single column | Native scroll |
-| **Desktop** | >= 1024px | Dual column | Lenis per column |
+| **Desktop** | >= 1024px | Desktop layout | Lenis (where mounted) |
 
 ### Breakpoint Detection
 
@@ -24,7 +24,7 @@ const DESKTOP_BREAKPOINT = 1024;
 const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
 ```
 
-This is set once at mount time and stored in context. Components don't re-evaluate on resize — it's the component's responsibility to handle resize if needed (some do via useGSAP dependencies).
+`isDesktop` is set once at mount time and stored in context. Components don't re-evaluate on resize — it's the component's responsibility to handle resize if needed.
 
 ### CSS Media Queries
 
@@ -38,120 +38,71 @@ This is set once at mount time and stored in context. Components don't re-evalua
 
 ---
 
-## 2. Desktop Layout
+## 2. Home Layout (`PortfolioLayout`)
 
-```
-┌───────────┬─────────────────────────────┐
-│ Left (30%)│       Right (70%)           │
-│           │                             │
-│ Scrolls   │  Scrolls independently      │
-│ via Lenis │  via Lenis                  │
-│           │                             │
-│ 5 sections│  Project cards carousel     │
-│ (hero,    │  with GSAP-optimized        │
-│  bio,     │  pointer events             │
-│  prin,    │                             │
-│  serv,    │                             │
-│  contact) │                             │
-│           │                             │
-│ Smooth    │  Scroll-driven skew/scale   │
-│ cascade   │  on project cards           │
-│ reveal    │                             │
-└───────────┴─────────────────────────────┘
-```
-
-Both columns have:
-- Fixed height: `100dvh` (dynamic viewport height)
-- Independent Lenis smooth scroll
-- No scrollbar (handled by Lenis)
-
----
-
-## 3. Tablet Layout
+`PortfolioLayout` renders a single-column scroll on every tier:
 
 ```
 ┌─────────────────────────────────────────┐
-│              Single Column              │
+│   SiteHeader                            │
+├─────────────────────────────────────────┤
 │                                         │
-│  Vertical stack:                        │
-│  ┌─────────────────────────────────┐    │
-│  │ Project card 1 (full width)     │    │
-│  ├─────────────────────────────────┤    │
-│  │ Section: Hero, Bio, Prin, ...   │    │
-│  ├─────────────────────────────────┤    │
-│  │ Project card 2 (full width)     │    │
-│  ├─────────────────────────────────┤    │
-│  │ ...                             │    │
-│  └─────────────────────────────────┘    │
+│   ProjectIndex                          │
+│   └── ProjectGrid                       │
 │                                         │
-│  Fixed bottom nav (MobileBottomNav)     │
 └─────────────────────────────────────────┘
 ```
 
-- Single column, vertical stacking
-- Native scroll (no Lenis)
-- Fixed bottom navigation bar
-- Tabs switch between "Work" and "About" content
-- Project cards stack vertically at full width
+The home is the same DOM on all tiers — no tab switching, no dual-column shell. On desktop, the layout wires its own Lenis instance; on mobile/tablet it falls back to native scroll.
 
 ---
 
-## 4. Mobile Layout
+## 3. Project Layout (`ProjectBrutalistLayout`)
+
+`ProjectBrutalistLayout` is the only place with a true left/right split. On mobile/tablet, the split collapses to a single column with a tab switcher between the project content and the credits tab.
+
+### Desktop (>=1024px)
 
 ```
-┌─────────────────────────────────────────┐
-│              Single Column              │
-│                                         │
-│  Same as tablet but:                    │
-│  - Smaller padding (16px vs 24px)       │
-│  - Smaller type scale                   │
-│  - Touch-optimized targets (44px)       │
-│  - Full-width cards                     │
-│  - Swipe navigation between projects    │
-└─────────────────────────────────────────┘
+┌───────────────┬──────────────────────────────┐
+│ Left (20%)    │       Right (80%)            │
+│               │                              │
+│ Hero Text     │  Lenis scroll container      │
+│ ScrollingProj │  ├── ProjectGallery          │
+│ ectText       │  ├── ProjectSection × N      │
+│               │  └── ProjectCreditsSection   │
+│ (synced to    │                              │
+│  right col)   │                              │
+└───────────────┴──────────────────────────────┘
 ```
 
-Mobile shares the same layout structure as tablet but with tighter spacing and smaller type.
+### Mobile/Tablet (<1024px)
+
+`ProjectBrutalistLayout` switches to a tab-based mobile layout:
+
+- A single scroll column visible at a time (project tab or credits tab).
+- Tab derived from `location.pathname` (`endsWith('/credits')`).
+- Native scroll — no Lenis.
+- `ProjectSection` blocks stack vertically inside the scroll column.
+
+---
+
+## 4. Mobile (<768px)
+
+Same single-column behavior as tablet. Tighter spacing (16px padding vs 24px). Smaller type. Touch targets >= 44px (WCAG 2.5.8). Swipe gestures between projects active via `useSwipeNavigation` (50px threshold).
 
 ---
 
 ## 5. Component Responsive Behavior
 
-### Column Visibility
+### `SiteHeader`
 
-`PortfolioLayout` toggles column visibility based on tablet tab state:
+Adapts across tiers — same component, different layout. Logo, nav links, language toggle, and theme toggle remain visible on all tiers; on mobile the layout compresses but the component tree does not change.
 
-```typescript
-const [activeTab, setActiveTab] = useState<'work' | 'about'>('work');
+### Project Card / Gallery
 
-// Desktop: both visible
-// Tablet/mobile: only active tab's column visible
-const leftVisible = isDesktop || activeTab === 'about';
-const rightVisible = isDesktop || activeTab === 'work';
-```
-
-### Project Card
-
-- **Desktop**: Responsive grid in right column
-  - 1 card (initially) or multiple cards shown
-  - Pointer-based drag
-  - Scroll-driven skew/scale effect
-- **Tablet/Mobile**: Full-width stack
-  - No drag interaction
-  - Tap to navigate to project page
-  - Standard vertical scroll reveal
-
-### Navigation
-
-| Component | Desktop | Tablet | Mobile |
-|-----------|---------|--------|--------|
-| CentralNavMenu | Fixed header in left column | Hidden | Hidden |
-| MobileBottomNav | Hidden | Fixed bottom bar | Fixed bottom bar |
-| ProjectMobileNav | Hidden (sidebar replaces it) | Floating bottom tabs | Floating bottom tabs |
-
-### Theme Toggle
-
-Embedded in `CentralNavMenu` (desktop) or `MobileBottomNav` (tablet/mobile). Same component, different parent.
+- **Desktop**: Full animations (blur reveals, 3D card entries).
+- **Tablet/Mobile**: Simplified entrance, no blur reveals.
 
 ---
 
@@ -165,14 +116,12 @@ body, html {
 }
 ```
 
-Using `dvh` instead of `vh` prevents the mobile browser chrome collapse/expand from causing layout jumps. This is critical for the dual-column layout where both columns must be exactly viewport height.
+Using `dvh` instead of `vh` prevents the mobile browser chrome collapse/expand from causing layout jumps. This is critical for layouts where the scroll container must match viewport height.
 
 ### Touch Optimization
 
-- Minimum touch target: 44x44px (WCAG 2.5.8 Target Size)
-- Navigation tabs are larger on mobile
-- Bottom nav bar has `padding: 8px` above and below to prevent accidental touches
-- Swipe gesture threshold: 50px to prevent accidental triggers
+- Minimum touch target: 44x44px (WCAG 2.5.8).
+- Swipe gesture threshold: 50px to prevent accidental triggers.
 
 ### Viewport Meta
 
@@ -188,22 +137,19 @@ Using `dvh` instead of `vh` prevents the mobile browser chrome collapse/expand f
 
 ### Animation Scaling
 
-- **Desktop**: Full animations (blur reveals, stagger cascades, 3D card entries)
-- **Tablet/Mobile**: Reduced animation complexity
-  - No blur reveals (single column doesn't benefit from the visual layering)
-  - Simplified entrance: opacity + translateY only
-  - No ScrollTrigger cascade per-section
+- **Desktop**: Full animations (blur reveals, stagger cascades, 3D card entries).
+- **Tablet/Mobile**: Simplified entrance. No blur reveals, no per-section cascade.
 
 ### Reduced Motion
 
-All animations respect `prefers-reduced-motion` regardless of breakpoint. See [animation system](animation-system.md#10-reduced-motion) for details.
+All animations respect `prefers-reduced-motion` regardless of breakpoint. See [animation system](animation-system.md#7-reduced-motion) for details.
 
 ---
 
 ## 8. Cross-References
 
-- [Layouts](layouts.md) — PortfolioLayout column toggling, responsive layout components
-- [Navigation & Theming](navigation-and-theming.md) — Nav component visibility by breakpoint
+- [Layouts](layouts.md) — Layout-level column behavior
+- [Navigation & Theming](navigation-and-theming.md) — `SiteHeader` adaptation by breakpoint
 - [Scrolling system](scrolling-system.md) — Lenis desktop-only, native scroll on mobile
 - [Animation system](animation-system.md) — Animation scaling by device tier
 - [Performance](performance-and-deployment.md) — Mobile performance considerations

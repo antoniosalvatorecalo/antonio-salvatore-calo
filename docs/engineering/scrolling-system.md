@@ -1,13 +1,13 @@
 # Scrolling System
 
-> Smooth scroll architecture — Lenis per-column, ScrollTrigger integration, synchronization, and fallback behavior.
+> Smooth scroll architecture — Lenis per layout, ScrollTrigger integration, synchronization, and fallback behavior.
 > Owner: Engineering
 
 ---
 
 ## 1. Architecture Overview
 
-The scrolling system uses **Lenis** for smooth scroll interpolation with **GSAP ScrollTrigger** for scroll-linked animations. Each column owns its own Lenis instance — there is never a global Lenis instance.
+The scrolling system uses **Lenis** for smooth scroll interpolation with **GSAP ScrollTrigger** for scroll-linked animations. Layouts that own a Lenis instance wire it through the GSAP ticker; `ScrollProvider` only holds refs and responsive state.
 
 ### Three-Layer Scroll Architecture
 
@@ -16,8 +16,8 @@ The scrolling system uses **Lenis** for smooth scroll interpolation with **GSAP 
 │              React Component              │
 │  (provides refs to DOM containers)        │
 ├───────────────────────────────────────────┤
-│           useSmoothScroll hook            │
-│  (lifecycle management, DOM readiness)    │
+│           Layout-local init               │
+│  (PortfolioLayout / ProjectBrutalistLayout)│
 ├───────────────────────────────────────────┤
 │           lenis-manager (lib)             │
 │  (singleton Map, GSAP ticker binding)     │
@@ -31,23 +31,19 @@ The scrolling system uses **Lenis** for smooth scroll interpolation with **GSAP 
 
 | File | Role |
 |------|------|
-| `src/hooks/animation/useSmoothScroll.ts` | Per-column Lenis lifecycle hook |
 | `src/lib/lenis-manager.ts` | Singleton Lenis manager (init, get, destroy, refresh) |
 | `src/lib/gsap-setup.ts` | GSAP + ScrollTrigger registration |
-| `src/providers/ScrollProvider.tsx` | Column refs held in context |
+| `src/providers/ScrollProvider.tsx` | Column refs held in context (no scroll logic) |
+
+There is no longer a `useSmoothScroll` hook — Lenis is initialized directly inside the layouts that need it (`PortfolioLayout` and `ProjectBrutalistLayout`) using the `lenis-manager` helpers.
 
 ---
 
 ## 2. Module-Level Initialization
 
-**File:** `src/hooks/animation/useSmoothScroll.ts`
+**File:** `src/lib/gsap-setup.ts`
 
-```typescript
-// Module level — runs once when module first imports
-initGSAP();
-```
-
-GSAP + ScrollTrigger are registered when `useSmoothScroll` module first loads, not in `main.tsx`. This defers the 114 kB GSAP vendor chunk until a scroll-dependent component mounts.
+`initGSAP()` registers the ScrollTrigger plugin when the module first loads. This defers the GSAP vendor chunk until a scroll-dependent component mounts.
 
 ---
 
@@ -110,65 +106,33 @@ Every Lenis scroll event triggers `ScrollTrigger.update()` so GSAP animations st
 
 ---
 
-## 4. useSmoothScroll Hook
+## 4. Layout-Level Initialization
 
-**File:** `src/hooks/animation/useSmoothScroll.ts`
+### PortfolioLayout (Home)
 
-### Signature
+`PortfolioLayout` mounts its own Lenis instance through `initLenis()`. The instance is destroyed on unmount via `destroyLenis()`.
 
-```typescript
-function useSmoothScroll(
-  wrapperRef: React.RefObject<HTMLElement | null>,
-  { enabled = true }: SmoothScrollOptions = {},
-)
-```
+### ProjectBrutalistLayout (Project Pages)
 
-### Lifecycle
-
-1. **Mount check**: Guards with `initializedRef` to prevent double init in StrictMode
-2. **DOM readiness**: Looks for `.scroll-content` inside wrapper
-   - If found immediately → calls `doInit()`
-   - If not found → sets up `MutationObserver` with 1500ms timeout fallback
-3. **Init**: `initLenis(wrapper, content)` → ScrollTrigger.refresh()
-4. **Cleanup**: On unmount, disconnects observer, clears timeout, calls `destroyLenis()`
-
-### StrictMode Safety
+`ProjectBrutalistLayout` mounts Lenis on the right column when `isDesktop === true`. Mobile falls back to native scroll.
 
 ```typescript
-const initializedRef = useRef(false);
-// ...
-if (initializedRef.current) return;
-initializedRef.current = true;
-```
-
-The ref persists across StrictMode double-invocation. Second mount attempt is silently skipped.
-
-### DOM Readiness Fallback
-
-If `.scroll-content` is not immediately available (content is lazy-rendered), the hook:
-
-1. Logs a warning
-2. Starts a `MutationObserver` watching the wrapper's `childList`
-3. Sets a 1500ms timeout
-4. On timeout: adds `lenis-fallback` class for native scroll behavior
-
-```css
-.lenis-fallback {
-  scroll-behavior: smooth !important;
-  overflow-y: auto !important;
+if (isDesktop) {
+  const content = container.querySelector('.scroll-content-inner') as HTMLElement;
+  if (content) {
+    const lenis = initLenis(container, content);
+    setLenisInstance(lenis);
+  }
 }
-```
 
-### Column Usage
-
-```typescript
-// PortfolioLayout
-useSmoothScroll(leftScrollRef, { enabled: effectsEnabled });
-useSmoothScroll(rightScrollRef, { enabled: effectsEnabled });
-
-// ProjectBrutalistLayout (desktop only — Lenis for right column)
-// Uses lenis-manager directly, not the hook, since lifecycle is managed manually
-initLenis(container, content);
+return () => {
+  if (isDesktop && container) {
+    destroyLenis(container);
+    ScrollTrigger.getAll().forEach(st => {
+      if (st.vars.scroller === container) st.kill();
+    });
+  }
+};
 ```
 
 ---
@@ -179,10 +143,9 @@ initLenis(container, content);
 
 ScrollTrigger refresh happens at multiple stages to ensure correct measurement:
 
-1. **Module init**: `requestAnimationFrame` + `document.readyState === 'complete'` check
-2. **After Lenis init**: Immediately after `initLenis()` call
-3. **After 200ms delay**: Another refresh to catch layout shifts
-4. **On resize**: ScrollTrigger handles this internally with `invalidateOnRefresh: true`
+1. **Module init**: `requestAnimationFrame` + `document.readyState === 'complete'` check.
+2. **After Lenis init**: Immediately after `initLenis()` call.
+3. **On resize**: ScrollTrigger handles this internally with `invalidateOnRefresh: true`.
 
 ### Per-Component ScrollTrigger
 
@@ -217,16 +180,14 @@ ScrollTrigger.refresh();
 
 ### PortfolioLayout (Home)
 
-- Left column: About sections, scroll cascade (AnimationOrchestrator)
-- Right column: Project cards, independent scroll
-- Columns **do not** synchronize scroll position — each is independent
-- After project cards mount: `refreshAllLenises()` + `ScrollTrigger.refresh()` ensures correct height calculations
+The home page is single-column. There is no per-column scroll synchronization on `/`.
 
 ### ProjectBrutalistLayout (Project Pages)
 
-- Left column: Metadata + `ScrollingProjectText` (GSAP-animated, not scrollable)
-- Right column: Main content with Lenis (desktop) or native scroll (mobile)
+- Left column: Metadata + `ScrollingProjectText` (GSAP-animated, not scrollable).
+- Right column: Main content with Lenis (desktop) or native scroll (mobile).
 - `ScrollingProjectText` in the left column uses ScrollTrigger tied to the right column's scroller:
+
   ```typescript
   scrollTrigger: {
     trigger: sectionEl,
@@ -235,7 +196,8 @@ ScrollTrigger.refresh();
     end: 'bottom top',
   }
   ```
-- Mouse wheel on left column is forwarded to right column Lenis via `handleSidebarWheel`
+
+- Mouse wheel on left column is forwarded to right column Lenis via `handleSidebarWheel`.
 
 ---
 
@@ -245,29 +207,17 @@ All Lenis instances should be refreshed after:
 
 | Event | Method | Location |
 |-------|--------|----------|
-| Project cards mount | `refreshAllLenises()` + `ScrollTrigger.refresh()` | PortfolioLayout effect |
-| Mobile tab switch | `refreshAllLenises()` + `ScrollTrigger.refresh()` | PortfolioLayout effect |
-| Project page tab switch | `ScrollTrigger.refresh()` | ProjectBrutalistLayout effect |
-| Resize | Throttled via requestAnimationFrame | ScrollProvider resize handler |
+| Project cards mount | `refreshAllLenises()` + `ScrollTrigger.refresh()` | `PortfolioLayout` effect |
+| Mobile tab switch | `refreshAllLenises()` + `ScrollTrigger.refresh()` | `PortfolioLayout` effect |
+| Project page tab switch | `ScrollTrigger.refresh()` | `ProjectBrutalistLayout` effect |
+| Resize | Throttled via `requestAnimationFrame` | `ScrollProvider` resize handler |
 | Route transition | Auto via component unmount/remount | Each layout's cleanup |
 
 ---
 
 ## 8. Fallback Strategy
 
-If Lenis fails to initialize (e.g., `.scroll-content` missing, DOM not ready):
-
-1. `lenis-fallback` class is added to the wrapper
-2. Native scroll takes over with `smooth` behavior
-3. A `CustomEvent('lenis-init-failed')` is dispatched for diagnostics
-
-The `lenis-fallback` class provides:
-```css
-.lenis-fallback {
-  scroll-behavior: smooth !important;
-  overflow-y: auto !important;
-}
-```
+If Lenis fails to initialize (e.g., scroll content missing, DOM not ready), the layout falls back to native scroll inside its scroll container. There is no global `.lenis-fallback` gate any more — each layout owns its own fallback behavior.
 
 ---
 
@@ -275,9 +225,9 @@ The `lenis-fallback` class provides:
 
 | Fix | Issue | Resolution |
 |-----|-------|-----------|
-| FIX 5 | GSAP context attachment timing | Observers deferred after layout stabilization via requestAnimationFrame |
-| FIX 16 | Global Lenis in ScrollProvider | Removed — moved to per-column useSmoothScroll |
-| Scrollbar width | White space from scrollbar-gutter | Removed scrollbar-gutter, overflow: hidden on html/body, Lenis handles scroll |
+| FIX 5 | GSAP context attachment timing | Observers deferred after layout stabilization via `requestAnimationFrame` |
+| FIX 16 | Global Lenis in `ScrollProvider` | Removed — moved to layout-level `initLenis()` |
+| Scrollbar width | White space from scrollbar-gutter | Removed `scrollbar-gutter`, `overflow: hidden` on html/body, Lenis handles scroll |
 | Project card flash | Cards visible before GSAP init | `.project-card-wrapper` starts `opacity:0; translateY(40px)` |
 
 ---
@@ -287,13 +237,11 @@ The `lenis-fallback` class provides:
 During development, scroll system events are logged via `logMotionDev`:
 
 ```typescript
-logMotionDev('useSmoothScroll', 'lenis-init-success');
-logMotionDev('useSmoothScroll', 'lenis-destroyed');
 logMotionDev('lenis-manager', 'init-created-instance', { activeInstances });
 logMotionDev('lenis-manager', 'refresh-all-instances', { activeInstances });
 ```
 
-These only log in development mode (checked via `import.meta.env.DEV`).
+These only log in development mode (`import.meta.env.DEV`).
 
 ---
 
@@ -301,6 +249,6 @@ These only log in development mode (checked via `import.meta.env.DEV`).
 
 - [Architecture overview](architecture.md) — Scroll isolation principle, rendering layers
 - [Animation system](animation-system.md) — ScrollTrigger integration, GSAP context pattern
-- [Layouts](layouts.md) — PortfolioLayout, ProjectBrutalistLayout scroll setup
-- [State management](state-management.md) — ScrollProvider refs
+- [Layouts](layouts.md) — `PortfolioLayout`, `ProjectBrutalistLayout` scroll setup
+- [State management](state-management.md) — `ScrollProvider` refs
 - [Performance](performance-and-deployment.md) — Scroll performance, will-change strategy

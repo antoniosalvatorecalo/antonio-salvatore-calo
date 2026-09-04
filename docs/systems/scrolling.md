@@ -1,25 +1,26 @@
 # Scrolling System
 
-**Files**: `useSmoothScroll` → `lenis-manager` → Lenis | **Owner**: Engineering
+**Files**: `lenis-manager` → Lenis | **Owner**: Engineering
 
 ## Architecture
 
-Per-column Lenis. No global instance. 4-layer stack:
+Layout-local Lenis. No global instance. 4-layer stack:
 
 ```
 Component (provides wrapper/content refs)
-  → useSmoothScroll hook (lifecycle, DOM readiness)
+  → Layout-local init (PortfolioLayout / ProjectBrutalistLayout)
     → lenis-manager (singleton Map<HTMLElement, LenisBinding>)
       → Lenis instance (scroll interpolation, velocity)
         → GSAP ticker bridge (same frame)
         → ScrollTrigger.update() on scroll event
 ```
 
+`ScrollProvider` only exposes refs and responsive state — it does **not** wire Lenis itself.
+
 **Key files**:
 
 | File | Role |
 |------|------|
-| `src/hooks/animation/useSmoothScroll.ts` | Per-column Lenis lifecycle hook |
 | `src/lib/lenis-manager.ts` | Singleton Map, init/get/destroy/refresh |
 | `src/lib/gsap-setup.ts` | GSAP + ScrollTrigger registration (once) |
 | `src/providers/ScrollProvider.tsx` | Column refs in context — no scroll logic |
@@ -37,29 +38,43 @@ new Lenis({
 });
 ```
 
-**GSAP ticker bridge**: `gsap.ticker.add(rafCallback)` — Lenis runs on GSAP's RAF, not its own. Both update same frame.
+**GSAP ticker bridge**: `gsap.ticker.add(rafCallback)` — Lenis runs on GSAP's RAF, not its own. Both update the same frame.
 
 **Scroll → ScrollTrigger**: `lenisInstance.on('scroll', () => ScrollTrigger.update())` — GSAP stays synced.
 
-## useSmoothScroll Hook
+## Layout-Level Init
+
+There is no `useSmoothScroll` hook any more. Layouts that need Lenis call `initLenis()` directly inside an effect:
+
+**PortfolioLayout** (home):
 
 ```typescript
-function useSmoothScroll(
-  wrapperRef: React.RefObject<HTMLElement | null>,
-  { enabled = true }: SmoothScrollOptions = {},
-)
+useEffect(() => {
+  const lenis = initLenis(wrapper, content);
+  return () => destroyLenis(wrapper);
+}, [wrapper, content]);
 ```
 
-**Lifecycle**:
+**ProjectBrutalistLayout** (project pages, desktop only):
 
-1. **Mount guard**: `initializedRef` prevents double-init in StrictMode
-2. **DOM readiness**: Look for `.scroll-content` in wrapper
-   - Found → `doInit()`
-   - Not found → `MutationObserver` watching `childList`, 1500ms timeout
-3. **Init**: `initLenis(wrapper, content)` → `ScrollTrigger.refresh()`
-4. **Cleanup**: Disconnect observer, clear timeout, `destroyLenis()`
+```typescript
+if (isDesktop) {
+  const content = container.querySelector('.scroll-content-inner') as HTMLElement;
+  if (content) {
+    const lenis = initLenis(container, content);
+    setLenisInstance(lenis);
+  }
+}
 
-**Timeout fallback**: If `.scroll-content` never appears, add `lenis-fallback` class → native smooth scroll.
+return () => {
+  if (isDesktop && container) {
+    destroyLenis(container);
+    ScrollTrigger.getAll().forEach(st => {
+      if (st.vars.scroller === container) st.kill();
+    });
+  }
+};
+```
 
 ## lenis-manager
 
@@ -71,16 +86,6 @@ Module-level `Map<HTMLElement, LenisBinding>`. StrictMode-safe — same wrapper 
 | `getLenisInstance(wrapper)` | Retrieve without creating |
 | `refreshAllLenises()` | Call `.resize()` on all instances |
 | `destroyLenis(wrapper)` | Remove ticker, detach scroll, destroy |
-
-## Usage in Layouts
-
-**PortfolioLayout**: 2 independent Lenis (left + right columns)
-```typescript
-useSmoothScroll(leftScrollRef, { enabled: effectsEnabled });
-useSmoothScroll(rightScrollRef, { enabled: effectsEnabled });
-```
-
-**ProjectBrutalistLayout**: Direct `initLenis()` in effect (not hook). Desktop only. Mobile = native scroll.
 
 ## ScrollTrigger Refresh Triggers
 
@@ -94,7 +99,7 @@ useSmoothScroll(rightScrollRef, { enabled: effectsEnabled });
 
 ## Sidebar Wheel Forwarding
 
-Left column mouse wheel forwarded to right column Lenis on project pages:
+Left column mouse wheel is forwarded to right column Lenis on project pages:
 
 ```typescript
 const handleSidebarWheel = (event: React.WheelEvent) => {
@@ -106,16 +111,16 @@ const handleSidebarWheel = (event: React.WheelEvent) => {
 
 ## Lifecycle Summary
 
-1. **Module import**: `initGSAP()` runs (module-level in useSmoothScroll)
-2. **Component mount**: Refs created. useSmoothScroll starts DOM readiness check
-3. **DOM ready**: Lenis init → GSAP ticker add → scroll listener → `ScrollTrigger.refresh()`
-4. **Scroll**: Lenis interpolates → `raf` via GSAP ticker → `ScrollTrigger.update()` each frame
-5. **Content change**: `refreshAllLenises()` recalculates heights
-6. **Unmount**: `destroyLenis()` → remove ticker → detach scroll → kill scoped ScrollTriggers
+1. **Module import**: `initGSAP()` runs when a scroll-dependent module loads.
+2. **Layout mount**: Layout effect creates refs and calls `initLenis()`.
+3. **DOM ready**: Lenis init → GSAP ticker add → scroll listener → `ScrollTrigger.refresh()`.
+4. **Scroll**: Lenis interpolates → `raf` via GSAP ticker → `ScrollTrigger.update()` each frame.
+5. **Content change**: `refreshAllLenises()` recalculates heights.
+6. **Unmount**: `destroyLenis()` → remove ticker → detach scroll → kill scoped ScrollTriggers.
 
 ## Extension Points
 
-- **Custom easing**: Modify `lerp`/`duration` in `lenis-manager.ts` `initLenis()`
-- **Scroll analytics**: Add event listener in scroll handler
-- **New scroll container**: Call `useSmoothScroll(ref)` in component. Ensure `.scroll-content` child exists
-- **Programmatic scroll**: Use `getLenisInstance(wrapper)` → `.scrollTo()`
+- **Custom easing**: Modify `lerp`/`duration` in `lenis-manager.ts` `initLenis()`.
+- **Scroll analytics**: Add event listener in scroll handler.
+- **New scroll container**: Call `initLenis(wrapper, content)` in the layout effect. Ensure `.scroll-content-inner` (or equivalent) child exists.
+- **Programmatic scroll**: Use `getLenisInstance(wrapper)` → `.scrollTo()`.

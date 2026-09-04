@@ -14,17 +14,13 @@ Read the [Onboarding Guide](docs/onboarding/README.md) — covers setup, coding 
 ## Quick Reference
 
 ```bash
-npm run dev         # Dev server on :3000
-npm run build       # Production build
-npm run lint        # tsc --noEmit — MUST pass before any commit
-npm run preview     # Preview production build
-npm run clean       # Remove dist/
-```
-
-E2E tests:
-
-```bash
-npm run build && npm run preview & npx playwright test
+npm run dev          # Dev server on :3000
+npm run build        # Production build
+npm run lint         # tsc --noEmit — MUST pass before any commit
+npm run preview      # Preview production build
+npm run clean        # Remove dist/
+npm run hooks:install # Install pre-commit hook
+npm run hooks:check   # Run hook check across working tree
 ```
 
 ---
@@ -35,10 +31,10 @@ Violating these breaks the app:
 
 1. **Hooks**: Never call `useTransform`/`useScroll`/`useSpring` conditionally — top-level only
 2. **GSAP**: Never `!important` on opacity, transform, etc. — GSAP cannot override it
-3. **Lenis**: No global Lenis — `useSmoothScroll` per-column only
-4. **Carousel**: No `motion.div drag="x"` — pointer events + GSAP tweens only
-5. **Router**: No `createBrowserRouter` — `BrowserRouter` + `AnimatePresence` only
-6. **Visibility**: No `visibility:hidden` — let `AnimatePresence` handle transitions
+3. **Scroll**: No global Lenis — `ScrollProvider` carries refs/state, layouts wire Lenis locally
+4. **Router**: No `createBrowserRouter` — `BrowserRouter` + `AnimatePresence` only
+5. **Visibility**: No `visibility:hidden` — let `AnimatePresence` handle transitions
+6. **Providers**: `LanguageProvider` is the only top-level provider — keep the rest local
 
 See [Engineering Rules](docs/engineering/rules.md) for full details.
 
@@ -70,7 +66,6 @@ See [Commit Conventions](docs/onboarding/workflow.md#commit-conventions).
 ```bash
 npm run lint     # MUST pass
 npm run build    # MUST pass
-npx playwright test  # MUST pass
 ```
 
 ### 4. PR
@@ -92,6 +87,7 @@ Open a pull request to `main`. Include what, why, and testing verification.
 | **Rules** | [`docs/engineering/rules.md`](docs/engineering/rules.md) |
 | **QA** | [`docs/qa/README.md`](docs/qa/) |
 | **Design System** | [`docs/design-system/README.md`](docs/design-system/) |
+| **Animations** | [`docs/animations/README.md`](docs/animations/README.md) |
 | **Full Index** | [`docs/INDEX.md`](docs/INDEX.md) |
 
 ---

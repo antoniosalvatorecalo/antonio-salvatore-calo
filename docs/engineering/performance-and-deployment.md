@@ -24,21 +24,24 @@ This produces four vendor chunks plus the main application bundle:
 
 | Chunk | Size (gzip approx) | Contents |
 |-------|--------------------|----------|
-| `vendor-react` | 38 kB | React 19, react-dom, react-router-dom |
-| `vendor-motion` | 16 kB | Motion library |
-| `vendor-gsap` | 32 kB | GSAP 3 + ScrollTrigger plugin |
-| `vendor-lenis` | 8 kB | Lenis smooth scroll |
+| `vendor-react` | ~38 kB | React 19, react-dom, react-router-dom |
+| `vendor-motion` | ~16 kB | Motion library |
+| `vendor-gsap` | ~32 kB | GSAP 3 + ScrollTrigger plugin |
+| `vendor-lenis` | ~8 kB | Lenis smooth scroll |
 | `main` | varies | App code, components, layouts, content |
 
 ### Lazy Loading
 
-All project pages are lazy-loaded:
+`PortfolioLayout` is lazy-loaded from `App.tsx`. Project pages and the contact page are also lazy-loaded:
 
 ```typescript
-const ProjectPage = React.lazy(() => import('@/pages/ProjectPage'));
+const PortfolioLayout = React.lazy(() => import('@/layouts/PortfolioLayout'));
+const BugoniaPage = React.lazy(() => import('@/pages/projects/bugonia/ProjectPage'));
+const NewsquestPage = React.lazy(() => import('@/pages/projects/newsquest/ProjectPage'));
+const ContactPage = React.lazy(() => import('@/pages/contact/ContactPage'));
 ```
 
-This ensures the ProjectPage code (layouts, media grid, content sections) is only loaded when the user navigates to `/projects/:slug`.
+This ensures the heavy code (layouts, project sections) is only loaded when the user navigates to the corresponding route.
 
 ### Dynamic Import Structure
 
@@ -46,8 +49,8 @@ This ensures the ProjectPage code (layouts, media grid, content sections) is onl
 Entry (main.tsx) → ~30 kB initial
 ├── vendor-react     → loaded immediately
 ├── vendor-motion    → loaded immediately (AnimatePresence on route wrapper)
-├── vendor-gsap      → deferred until useSmoothScroll module loads
-├── vendor-lenis     → deferred until useSmoothScroll module loads
+├── vendor-gsap      → deferred until first scroll-dependent component mounts
+├── vendor-lenis     → deferred until first scroll-dependent component mounts
 └── ProjectPage      → deferred until /projects/:slug route
 ```
 
@@ -65,10 +68,10 @@ html.ready {
 }
 ```
 
-- `<html>` starts with class `loading` (opacity: 0)
-- Swapped to `ready` on window `load` event
-- Prevents flash of unstyled content
-- Has minimal CLS impact (0.2s opacity transition)
+- `<html>` starts with class `loading` (opacity: 0).
+- Swapped to `ready` on window `load` event.
+- Prevents flash of unstyled content.
+- Has minimal CLS impact (0.2s opacity transition).
 
 ---
 
@@ -116,9 +119,9 @@ This prevents memory bloat from permanent `will-change` on hundreds of elements.
 
 ### ScrollTrigger Throttling
 
-- Lenis runs via GSAP ticker (shared RAF loop) — prevents multiple tickers competing
-- `ScrollTrigger.update()` called on Lenis scroll, not every frame
-- `invalidateOnRefresh: true` on ScrollTriggers prevents stale measurements
+- Lenis runs via GSAP ticker (shared RAF loop) — prevents multiple tickers competing.
+- `ScrollTrigger.update()` called on Lenis scroll, not every frame.
+- `invalidateOnRefresh: true` on ScrollTriggers prevents stale measurements.
 
 ### Passive Event Listeners
 
@@ -129,9 +132,9 @@ wrapper.addEventListener('wheel', handler, { passive: true });
 
 ### Layout Thrashing Prevention
 
-- Batch DOM reads and writes separately
-- Avoid forced synchronous layouts (no reading offsetHeight after writing style changes)
-- ScrollTrigger refresh deferred to RAF to batch recalculation
+- Batch DOM reads and writes separately.
+- Avoid forced synchronous layouts (no reading `offsetHeight` after writing style changes).
+- ScrollTrigger refresh deferred to RAF to batch recalculation.
 
 ---
 
@@ -154,7 +157,10 @@ dist/
     vendor-motion-xxxx.js    (~40 kB)
     vendor-gsap-xxxx.js      (~80 kB)
     vendor-lenis-xxxx.js     (~20 kB)
-    ProjectPage-xxxx.js      (~15 kB, async)
+    PortfolioLayout-xxxx.js  (async)
+    BugoniaPage-xxxx.js      (async)
+    NewsquestPage-xxxx.js    (async)
+    ContactPage-xxxx.js      (async)
 ```
 
 All vendor chunks are long-lived (fingerprinted with content hash). `vendor-react` rarely changes.
@@ -167,7 +173,9 @@ All vendor chunks are long-lived (fingerprinted with content hash). `vendor-reac
 | `npm run preview` | `vite preview` | Serve `dist/` locally |
 | `npm run lint` | `tsc --noEmit` | Type check without emitting |
 | `npm run dev` | `vite --port 3000` | Dev server |
-| `npm run clean` | `rimraf dist` | Clean build output |
+| `npm run clean` | `rm -rf dist` | Clean build output |
+| `npm run hooks:install` | `node scripts/git-hooks/pre-commit-check.mjs --hook-install` | Install pre-commit hook |
+| `npm run hooks:check` | `node scripts/git-hooks/pre-commit-check.mjs --check` | Run hook check on the working tree |
 
 ---
 
@@ -212,8 +220,8 @@ All vendor chunks are long-lived (fingerprinted with content hash). `vendor-reac
 
 ### Asset Caching
 
-- **Static assets** (`/assets/`): 1 year, immutable
-- **HTML** (`index.html`): no-cache (ensures users get latest JS/CSS)
+- **Static assets** (`/assets/`): 1 year, immutable.
+- **HTML** (`index.html`): no-cache (ensures users get latest JS/CSS).
 
 ### SPA Routing
 

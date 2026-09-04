@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 type Theme = 'light' | 'dark';
 
 const getStoredOrSystemTheme = (): Theme => {
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
 
   try {
     const stored = window.localStorage.getItem('me-theme') as Theme | null;
     if (stored === 'light' || stored === 'dark') return stored;
   } catch {}
 
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return 'dark';
 };
 
 export function useTheme() {

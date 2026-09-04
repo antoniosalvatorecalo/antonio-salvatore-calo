@@ -39,7 +39,7 @@ All clean → commit proceeds
 | **External AI repos** | `agency-agents/` | Externally cloned |
 | **Environment** | `.env`, `.env.*` (except `.env.example`) | Secrets |
 | **Editor config** | `.vscode/`, `.idea/`, `*.swp` | Personal prefs |
-| **Planning/vault** | `.planning/`, `Maximum Effort/`, `.vercel` | Process artifacts |
+| **Planning/vault** | `.planning/`, `.vercel` | Process artifacts |
 | **Images outside assets** | `*.png`, `*.jpg`, `*.webp`, `*.svg` not in `public/` or `src/assets/` | Asset hygiene |
 | **Test artifacts** | `stages/04_testing/` | Phase output |
 

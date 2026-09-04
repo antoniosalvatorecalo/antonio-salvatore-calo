@@ -119,11 +119,8 @@
    * Stacking order reference (lowest → highest):
    *   Base layers    : default (0)
    *   Dropdown       :  20  — ContactBuilder dropdown
-   *   Mobile nav     :  50  — MobileBottomNav
    *   Project shell  :  60  — ProjectBrutalistLayout (page overlay)
-   *   Floating nav   :  70  — ProjectMobileNav, BackToTop, mobile ThemeToggle
-   *   View switcher  :  90  — WorkViewSwitcher (just below main nav)
-   *   Main nav       : 100  — CentralNavMenu, desktop ThemeToggle
+   *   Main nav       : 100  — SiteHeader (desktop + mobile)
    *   Skip link      : 999  — topmost layer (WCAG 2.4.1)
    *
    * Invariants:
@@ -131,12 +128,9 @@
    *   skip link (999)  > all other layers (must be visible when focused)
    */
   --z-dropdown:         20;
-  --z-mobile-bottom-nav: 50;
-  --z-project-shell:     60;
-  --z-nav-floating:      70;
-  --z-view-switcher:     90;
-  --z-nav:              100;
-  --z-skip-link:        999;
+  --z-project-shell:    60;
+  --z-nav:             100;
+  --z-skip-link:       999;
 
   /* Type scale — Minor Third (base 16px × 1.200) — fluid */
   --text-display-xl: clamp(3rem, 6vw + 0.5rem, 5rem);    /* 48→’80px */
@@ -290,14 +284,11 @@ body {
 
 /* â”€â”€ will-change utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* ── Z-Index utility classes ──────────────────────────────────────────────────── */
-/* Use these instead of scattered inline z-[50]/z-[60]/z-[70]/z-[100]/z-[200] */
-.z-dropdown         { z-index: var(--z-dropdown); }
-.z-mobile-bottom-nav { z-index: var(--z-mobile-bottom-nav); }
-.z-project-shell    { z-index: var(--z-project-shell); }
-.z-nav-floating     { z-index: var(--z-nav-floating); }
-.z-view-switcher    { z-index: var(--z-view-switcher); }
-.z-nav              { z-index: var(--z-nav); }
-.z-skip-link        { z-index: var(--z-skip-link); }
+/* Use these instead of scattered inline z-[N] */
+.z-dropdown      { z-index: var(--z-dropdown); }
+.z-project-shell { z-index: var(--z-project-shell); }
+.z-nav           { z-index: var(--z-nav); }
+.z-skip-link     { z-index: var(--z-skip-link); }
 
 .will-change-transform {
   will-change: transform;
@@ -412,12 +403,7 @@ body {
   overflow-y: auto !important;
 }
 
-/* â”€â”€ AwwwardsText â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.awwwards-text-container {
-  perspective: 1200px;
-}
-
-/* â”€â”€ Contact field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Contact field ─────────────────────────────────────────────────────────────── */
 .contact-field {
   container-type: inline-size;
 }

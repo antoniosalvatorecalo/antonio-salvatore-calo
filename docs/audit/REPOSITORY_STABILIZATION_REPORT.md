@@ -1,5 +1,8 @@
 # Repository Stabilization Report
 
+> **Status**: Historical document — describes the state of the repository as of 2026-06-03.
+> Not maintained as current documentation. See [`docs/repository/REPOSITORY_POLICY.md`](../repository/REPOSITORY_POLICY.md) for the current policy.
+>
 > **Date**: 2026-06-03
 > **Branch**: `release/awwwards-prep` (1 commit ahead of origin)
 > **Commit**: `8e1ca27` — chore: repository stabilization

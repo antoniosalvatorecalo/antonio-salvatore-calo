@@ -19,24 +19,15 @@ Built around independent rendering surfaces, deterministic animation pipelines, 
 
 ### Motion as Infrastructure
 
-Animation is treated as rendering infrastructure rather than decorative enhancement. GSAP timelines coordinate spatial continuity, typographic sequencing, and route transitions through context-scoped coordination layers.
+Animation is treated as rendering infrastructure rather than decorative enhancement. GSAP timelines coordinate spatial continuity, typographic sequencing, and in-page transitions through context-scoped coordination layers. Motion primitives remain isolated from layout computation. Scroll interpolation is delegated to dedicated Lenis containers to preserve timing consistency and prevent cross-container interference.
 
-Motion primitives remain isolated from layout computation. Scroll interpolation is delegated to dedicated Lenis containers to preserve timing consistency and prevent cross-container interference.
+### Single-Column Portfolio Composition
 
-### Dual-Pane Spatial Composition
-
-The interface operates as two independent rendering surfaces:
-
-- Profile surface (30%)
-- Work surface (70%)
-
-Each surface maintains isolated scroll state, synchronized only through shared provider context. Layout redistribution occurs through flex-basis interpolation with inverse-scale compensation to preserve perceptual continuity during expansion states.
+The home page composes through `PortfolioLayout` → lazy `ProjectIndex` → `ProjectGrid` (the gallery grid). Project pages use `ProjectBrutalistLayout` (split left/right, desktop only — single-column on mobile) for editorial narrative. Contact uses `ContactPage` with the `ContactBuilder` sentence-builder form. There is no dual-column About/Work shell — the left/right split is exclusive to project pages.
 
 ### Typography System
 
-Typography functions as a navigational layer. Scale progression follows Minor Third modular ratios while reveal sequencing is driven through SplitType segmentation pipelines and clip-path masking systems.
-
-Opacity-based transitions are intentionally avoided to maintain edge definition and perceived density during motion states.
+Typography functions as a navigational layer. Scale progression follows a fluid `clamp()`-based system. Reveal sequencing is driven through GSAP blur + translateY timelines scoped via data attributes. Opacity-only transitions are intentionally avoided to maintain edge definition and perceived density during motion states.
 
 ---
 
@@ -44,67 +35,68 @@ Opacity-based transitions are intentionally avoided to maintain edge definition 
 
 ```
 src/
-├── main.tsx
-├── App.tsx
-└── index.css
+├── main.tsx                          # Application entry — mounts StrictMode, providers, router
+├── App.tsx                           # Home wrapper — lazy-loads PortfolioLayout
+├── index.css                         # Global tokens (Tailwind v4 @theme, font-face, CSS vars)
+├── styles/hover.css                  # Hover micro-interaction utilities
 │
-├── pages/                  # Page-level composition
-│   ├── about/
-│   ├── work/
-│   │   └── views/         # FeaturedProjectsView, GridProjectsView
+├── pages/                            # Page-level composition (route entry)
 │   ├── projects/
-│   │   ├── bugonia/
-│   │   └── newsquest/
-│   └── contact/
+│   │   ├── bugonia/ProjectPage.tsx
+│   │   └── newsquest/ProjectPage.tsx
+│   └── contact/ContactPage.tsx
 │
 ├── components/
-│   ├── effects/            # Animation effects (categorized)
-│   │   ├── text/           # BlurText, RevealText, RevealParagraph, AwwwardsText
-│   │   ├── interaction/    # MagneticButton
-│   │   ├── decorative/     # ConcentricRings, CurvedLoop
-│   │   ├── loaders/        # Preloader
-│   │   ├── layout/         # AnimatedSectionHeader, SectionHeader, RevealLabel
-│   │   └── index.ts        # Root barrel export
-│   ├── ui/                 # Atomic primitives (Button, Card, Link, Icon)
-│   ├── navigation/          # SidebarMenu, CentralNavMenu, MobileBottomNav
-│   ├── layout/             # FullwidthSection, GridContainer
-│   └── shared/             # ErrorBoundary, LinkComponent
+│   ├── home/                         # ProjectIndex, ProjectGrid (gallery rendering)
+│   ├── projects/                     # ProjectPreview (hover overlay)
+│   └── ui/                           # SiteHeader, ContactBuilder, ProjectCreditsSection,
+│                                     # ProjectGallery, ProjectLeftTextReveal, ProjectListRow,
+│                                     # ProjectSection, RollingText, ScrollingProjectText,
+│                                     # letter-swap (LetterSwapForward, LetterSwapBlock), ArrowIcon
 │
-├── hooks/                  # Custom hooks (categorized)
-│   ├── animation/          # useScrollReveal, useSmoothScroll, useTextReveal...
-│   ├── navigation/         # useSwipeNavigation
-│   └── theme/              # useTheme
+├── hooks/
+│   ├── useItalyTime.ts
+│   ├── usePressedState.ts
+│   ├── theme/useTheme.ts             # Light/dark toggle (localStorage + data-theme)
+│   ├── navigation/useSwipeNavigation.ts
+│   ├── animation/
+│   │   ├── useEntranceReveal.ts      # Generic scroll reveal (blur + y)
+│   │   └── useProjectTextScroll.ts   # Project page text/image section index tracking
+│   └── projects/useProjects.ts
 │
-├── motion/                  # Centralized motion system
-│   ├── engine/              # cascadeEngine
-│   ├── presets/             # Animation presets
-│   ├── constants/           # Easing, types
-│   └── utils/               # scrollCascade, titleCascadeRegistry
+├── motion/
+│   ├── constants/                    # Easing + spring constants (EASE_PREMIUM, SPRING_SNAPPY, …)
+│   └── utils/scrollCascade.ts        # Initial/final reveal presets
 │
 ├── lib/
-│   ├── gsap-setup.ts       # GSAP + ScrollTrigger registration (SINGLE canonical source)
-│   ├── lenis-manager.ts    # Lenis initialization
-│   └── utils.ts            # Utility helpers
+│   ├── gsap-setup.ts                 # Canonical GSAP + ScrollTrigger registration
+│   ├── lenis-manager.ts              # Singleton Lenis lifecycle (init/destroy/refresh)
+│   ├── reduced-motion.ts             # instantTransition + runOrSetFinal
+│   ├── motion-dev-diagnostics.ts     # Development-only logging helpers
+│   └── utils.ts                      # cn() (clsx + tailwind-merge)
 │
-├── content/                # Editorial data
-│   ├── projects.ts         # Project metadata + narratives
-│   ├── contact.ts
-│   ├── about/
-│   └── navigation/
+├── content/                          # Editorial data
+│   ├── projects.ts                   # Gallery registry (12 items: bugonia, newsquest, +duplicate variants)
+│   ├── workProjectExtras.ts
+│   ├── projectImageMetadata.ts
+│   ├── projectDetails/
+│   │   ├── bugoniaDetail.ts
+│   │   └── newsquestDetail.ts
+│   └── contact.ts
 │
 ├── layouts/
-│   ├── PortfolioLayout.tsx
-│   └── ProjectBrutalistLayout.tsx
+│   ├── PortfolioLayout.tsx           # Home shell — SiteHeader + ProjectIndex + FilterProvider
+│   └── ProjectBrutalistLayout.tsx    # Project pages — split left/right desktop, Lenis on right column
 │
 ├── providers/
-│   ├── AppRouter.tsx       # BrowserRouter + AnimatePresence
-│   └── ScrollProvider.tsx
+│   ├── AppRouter.tsx                 # Exports `router` (BrowserRouter + Routes). No AnimatePresence.
+│   ├── LanguageProvider.tsx          # EN/IT locale + t(key) function
+│   ├── MotionPreferenceProvider.tsx  # OS prefers-reduced-motion + MotionConfig
+│   ├── ScrollProvider.tsx            # isDesktop, isTablet, activeTab, left/right refs
+│   └── FilterContext.tsx             # Local home filter (all/identity/motion/research/web)
 │
-├── styles/
-│   └── hover.css
-│
-└── types/
-    └── lodash.d.ts
+├── i18n/translations.ts              # EN/IT translation dictionary
+└── types/lodash.d.ts
 ```
 
 ### Design Decisions
@@ -112,52 +104,60 @@ src/
 | Decision | Rationale |
 |----------|-----------|
 | `pages/` over `features/` | Explicit page ownership — clearer navigation |
-| `effects/text/`, `effects/interaction/`... | Organized by animation type — faster findability |
-| `hooks/animation/`, `hooks/navigation/` | Hooks categorized by domain |
-| `motion/` centralized | Single source of truth for animation engine |
+| `components/home/` + `components/ui/` + `components/projects/` | Home-specific + UI primitives + per-project overlays |
+| `motion/constants/` + `motion/utils/` | Pure functions and easing constants, no engine layer |
 | `lib/gsap-setup.ts` canonical | One ScrollTrigger registration point — no duplicates |
 | `content/` over `data/` | Editorial content, not raw data |
+| Providers at layout level | `LanguageProvider` is the only top-level (router-scoped) provider |
 
 ---
 
 ## Architecture Overview
 
 ```
-main.tsx
-└── Initialization
-    ├── GSAP Registry (gsap-setup.ts — single canonical source)
-    ├── ScrollTrigger Configuration
-    └── ScrollProvider
-         └── PortfolioLayout
-              ├── Profile Surface
-              │    ├── Hero (AboutHero)
-              │    ├── Biography (AboutBio)
-              │    ├── Principles (AboutPrinciples)
-              │    └── Contact (AboutContact)
-              │
-              └── Work Surface
-                   ├── Project Index (WorkPage)
-                   │    ├── FeaturedProjectsView
-                   │    └── GridProjectsView
-                   ├── Project Detail (ProjectPage)
-                   └── Interaction Layers
+main.tsx (StrictMode)
+└── MotionPreferenceProvider          # OS reduced-motion listener + <MotionConfig>
+    └── ScrollProvider                # isDesktop, isTablet, refs
+        └── router (BrowserRouter)
+            └── AnimatedRoutes        # plain <Routes> — no AnimatePresence
+                └── LanguageProvider  # top-level (router-scoped) provider
+                    └── <Routes>
+                        ├── "/"                          → App → lazy PortfolioLayout
+                        │                                  ├── SiteHeader
+                        │                                  ├── FilterProvider (local)
+                        │                                  └── ProjectIndex → ProjectGrid
+                        ├── "/projects/bugonia"          → BugoniaPage
+                        ├── "/projects/bugonia/credits"  → BugoniaPage (credits tab)
+                        ├── "/projects/newsquest"        → NewsquestPage
+                        ├── "/projects/newsquest/credits"→ NewsquestPage (credits tab)
+                        └── "/contact"                   → ContactPage
+                                                              └── ContactBuilder
 ```
+
+**Mounted providers per route:**
+
+| Route | Providers (in addition to `MotionPreferenceProvider` + `ScrollProvider`) |
+|-------|----------------------------------------------------------------------------|
+| `/` | `LanguageProvider` (router), `FilterProvider` (inside `PortfolioLayout`) |
+| `/projects/:slug` | `LanguageProvider` (router). `useTheme()` and `useReducedMotionPreference()` consumed in `ProjectBrutalistLayout` |
+| `/contact` | `LanguageProvider` (router) |
+
+**Important:** There is no `AnimatePresence` wrapping `<Routes>`. Route transitions are not animated at the route level — each page handles its own in-page reveal. `useTheme` is a hook (not a provider); the `SiteHeader` invokes it directly and writes `data-theme` to `<html>`.
 
 ### Rendering Layers
 
 | Layer | Responsibility |
 |-------|----------------|
-| Application Root | Provider initialization and orchestration bootstrapping |
-| Scroll Containers | Independent Lenis lifecycle ownership |
-| Motion Layer | Timeline coordination and ScrollTrigger synchronization |
-| Route Layer | Transition lifecycle management |
-| Interaction Layer | Pointer-responsive transform interpolation |
-| Typography Layer | Segmentation and reveal sequencing |
-| Effects Layer | Categorized animation primitives (text, interaction, decorative) |
+| Application Root | `main.tsx` mounts `MotionPreferenceProvider` + `ScrollProvider` + router |
+| Router | `BrowserRouter` + `<Routes>` (no AnimatePresence) |
+| Provider layer | `LanguageProvider` (router-scoped); `FilterProvider` (local to home) |
+| Scroll containers | Lenis lifecycle owned only by `ProjectBrutalistLayout` (right column, desktop) |
+| Motion layer | GSAP contexts, `ScrollTrigger`, `gsap.context()` scope cleanup |
+| UI layer | `SiteHeader`, `ProjectIndex`, `ContactBuilder`, `ProjectBrutalistLayout` |
 
 ### Component Contracts
 
-All renderable primitives expose `forwardRef` interfaces. Imperative animation ownership remains externalized from component internals to preserve coordination composability and predictable teardown behavior.
+All renderable primitives that need animation target access expose DOM nodes through `forwardRef` or `useRef`. Imperative animation ownership remains externalized from component internals to preserve coordination composability and predictable teardown behavior.
 
 ---
 
@@ -165,19 +165,13 @@ All renderable primitives expose `forwardRef` interfaces. Imperative animation o
 
 ### GSAP Orchestration
 
-A **centralized GSAP registry** in `lib/gsap-setup.ts` initializes ScrollTrigger **once** at boot. No other file registers plugins — this prevents duplicate registration errors.
+A **centralized GSAP registry** in `src/lib/gsap-setup.ts` initializes ScrollTrigger **once** at module load. No other file registers plugins — this prevents duplicate registration errors. The `gsap` and `ScrollTrigger` exports from this module are the only canonical imports used across the codebase.
 
 Component timelines operate within isolated `gsap.context()` scopes, guaranteeing cleanup across route transitions and StrictMode cycles.
 
-```
-main.tsx → initGSAP() → lib/gsap-setup.ts (registerPlugin ONCE)
-                              ↓
-         All consumers import from @/lib/gsap-setup
-```
-
 ### Scroll Synchronization
 
-Each rendering surface maintains an independent Lenis controller instance synchronized through the GSAP ticker bridge.
+**`ProjectBrutalistLayout` is the only layout that owns a Lenis instance.** It is initialized in the desktop-only branch via `initLenis(container, content)` from `src/lib/lenis-manager.ts` and destroyed on unmount. The `ScrollProvider` exposes shared scroll context (refs, responsive state) but does not own Lenis itself. `PortfolioLayout` does not initialize Lenis — it only sets `gsap.ticker.lagSmoothing(500, 33)`.
 
 This architecture enables:
 
@@ -186,53 +180,19 @@ This architecture enables:
 - container-specific reveal timing,
 - independent refresh cycles.
 
-### Typography Pipeline
-
-Reveal sequencing follows a four-stage pipeline:
-
-1. SplitType segmentation
-2. Context collection
-3. Clip-path interpolation
-4. Render-state finalization
-
-Animated states remain constrained to GPU-accelerated transform paths throughout the reveal lifecycle. Layout-triggering properties are excluded entirely from animated states.
-
 ### Motion Architecture
 
 | File | Role |
 |------|------|
 | `lib/gsap-setup.ts` | Canonical GSAP + ScrollTrigger registration |
-| `lib/lenis-manager.ts` | Lenis initialization |
-| `motion/engine/cascadeEngine.ts` | Blur-word cascade engine |
-| `motion/utils/scrollCascade.ts` | Canonical scroll reveal constants (INITIAL/FINAL) |
-| `motion/presets/presets.ts` | Animation presets |
-| `hooks/animation/useScrollReveal.ts` | Primary scroll reveal hook |
-| `hooks/animation/useSmoothScroll.ts` | Lenis + GSAP ticker bridge |
-
-### Route Transitions
-
-Route transitions operate through keyed `motion.div` boundaries coordinated by `AnimatePresence`.
-
-Timing remains compressed:
-
-- fast enough to preserve navigation responsiveness,
-- slow enough to maintain spatial continuity.
-
----
-
-## Effects System
-
-Animation effects are categorized by type for organized findability:
-
-| Category | Components | Description |
-|----------|-----------|-------------|
-| `text/` | BlurText, RevealText, RevealParagraph, AwwwardsText | Text reveal and transformation effects |
-| `interaction/` | MagneticButton | Cursor-following interactive elements |
-| `decorative/` | ConcentricRings, CurvedLoop | Background motion and decorative loops |
-| `loaders/` | Preloader | Page load and transition animations |
-| `layout/` | AnimatedSectionHeader, SectionHeader, RevealLabel | Section-level layout effects |
-
-All effects are exported through `components/effects/index.ts` barrel.
+| `lib/lenis-manager.ts` | Singleton Lenis lifecycle (init/destroy/refresh) |
+| `lib/reduced-motion.ts` | `instantTransition`, `runOrSetFinal` |
+| `lib/motion-dev-diagnostics.ts` | Development-only logging helpers |
+| `motion/constants/easing.ts` | `EASE_PREMIUM`, `SPRING_SNAPPY`, `SPRING_CURSOR`, `MOTION_MICRO`, `MOTION_SECTION`, `MOTION_PAGE` |
+| `motion/utils/scrollCascade.ts` | Initial/final reveal presets |
+| `hooks/animation/useEntranceReveal.ts` | Generic scroll-reveal (blur + y) |
+| `hooks/animation/useProjectTextScroll.ts` | Project page text/section index tracking |
+| `providers/MotionPreferenceProvider.tsx` | OS reduced-motion listener + `useReducedMotionPreference()` + `<MotionConfig>` |
 
 ---
 
@@ -250,20 +210,11 @@ Layout-triggering properties are excluded from interpolation paths.
 
 ### Scroll Isolation
 
-Each column owns:
-
-- independent Lenis state,
-- isolated velocity calculation,
-- dedicated refresh lifecycle,
-- autonomous interpolation timing.
-
-Cross-container synchronization occurs exclusively through provider-managed references.
+Lenis instances are owned only by `ProjectBrutalistLayout` on desktop. Cross-container synchronization occurs exclusively through provider-managed references.
 
 ### Concurrent Compatibility
 
-The system is validated against React StrictMode double-invocation semantics.
-
-GSAP contexts:
+The system is validated against React StrictMode double-invocation semantics. GSAP contexts:
 
 - self-revert on teardown,
 - preserve ref stability,
@@ -271,33 +222,23 @@ GSAP contexts:
 
 ### Render Finalization
 
-`will-change` allocation remains temporary.
-
-Motion layers release GPU promotion hints after completion to reduce long-session memory pressure.
-
-### Initial Hydration
-
-Initial rendering is delayed through a minimum-duration preloader (3200ms) to stabilize:
-
-- asset hydration,
-- font metrics,
-- initial layout measurements,
-- ScrollTrigger calibration.
+`will-change` allocation remains temporary. Motion layers release GPU promotion hints after completion to reduce long-session memory pressure.
 
 ---
 
 ## Technology Stack
 
-| Technology | Responsibility |
-|------------|----------------|
-| React 19 | Concurrent rendering and state batching |
-| TypeScript | Strict boundary enforcement |
-| GSAP + ScrollTrigger | Timeline orchestration and scroll synchronization |
-| Motion | Gesture and transform primitives |
-| Lenis | Scroll interpolation |
-| Tailwind CSS v4 | Tokenized styling system |
-| Vite | Native ESM development pipeline |
-| Playwright | End-to-end validation |
+| Technology | Version | Responsibility |
+|------------|---------|----------------|
+| React | 19.x | Concurrent rendering and state batching |
+| TypeScript | 5.8.x | Strict boundary enforcement |
+| GSAP + ScrollTrigger | 3.x | Timeline orchestration and scroll synchronization |
+| Motion | 12.x | Gesture, transform, and `<AnimatePresence>` primitives |
+| Lenis | 1.x | Smooth scroll interpolation |
+| Tailwind CSS | 4.x | Tokenized styling via `@tailwindcss/vite` |
+| Vite | 6.x | Native ESM development pipeline |
+| React Router | 7.x | Client-side routing |
+| Nodemailer | 8.x | Serverless email transport for `/api/contact` |
 
 ---
 
@@ -309,7 +250,7 @@ Rendering order, animation sequencing, and scroll behavior remain predictable ac
 
 ### Ref-Driven Components
 
-All renderable primitives expose DOM visibility through `forwardRef`. No animation system depends on implicit tree traversal.
+All renderable primitives expose DOM visibility through refs. No animation system depends on implicit tree traversal.
 
 ### Interaction Decoupling
 
@@ -351,18 +292,36 @@ Rendering behavior remains consistent across route transitions and viewport stat
 
 ```bash
 npm install          # Install dependencies
-npm run dev         # Vite dev server (port 3000)
-npm run lint        # TypeScript check (blocks deployment)
-npm run build       # Production bundle
-npm run preview     # Local preview
-npm run clean       # Remove dist/
+npm run dev          # Vite dev server (port 3000, --host 0.0.0.0)
+npm run lint         # TypeScript check (tsc --noEmit — blocks deployment)
+npm run build        # Production bundle
+npm run preview      # Local preview
+npm run clean        # Remove dist/
+npm run hooks:install # Install pre-commit hook
+npm run hooks:check   # Run hook check across working tree
 ```
 
-### Validation Pipeline
+---
 
-```bash
-npm run build && npm run preview & npx playwright test
+## API
+
+The contact form posts to `POST /api/contact` (Vercel serverless function at `api/contact.ts`):
+
+```json
+{
+  "name": "string (required)",
+  "projectType": "string (required)",
+  "clientType": "string (required)",
+  "focus": "string (required)",
+  "budget": "string (required)",
+  "timeline": "string (required)",
+  "email": "string (required, valid email format)"
+}
 ```
+
+The endpoint validates the body, attempts SMTP delivery via Nodemailer, and returns either `{ success: true }` or `{ success: true, fallback: "mailto", mailtoHref: "..." }` if SMTP is unconfigured. The client (`ContactBuilder`) opens the `mailto:` link as a fallback.
+
+Environment variables (server-side only): `CONTACT_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`.
 
 ---
 
@@ -370,9 +329,8 @@ npm run build && npm run preview & npx playwright test
 
 | Layer | State | Verification |
 |-------|-------|--------------|
-| Core Architecture | Stable | Dual-pane, per-column Lenis verified |
+| Core Architecture | Stable | Single-column home + split project pages verified |
 | Motion System | Hardened | GSAP contexts isolated, single registration canonical |
 | Typography System | Verified | Fluid scaling, reveal sequencing live |
-| Effects System | Organized | Categorized, barrel exports, no duplicates |
-| Test Suite | Verified | Playwright tests passing |
+| UI Components | Verified | `SiteHeader`, `ContactBuilder`, project pages operational |
 | Deployment Layer | Operational | Production deployment active on Vercel |

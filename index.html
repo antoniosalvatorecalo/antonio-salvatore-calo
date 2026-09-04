@@ -22,6 +22,18 @@
   <meta name="twitter:image" content="/media/antonio-salvatore-calo.webp" />
   <link rel="icon" type="image/png" href="/favicon.png">
 
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('me-theme');
+        var theme = (stored === 'light' || stored === 'dark') ? stored : 'dark';
+        document.documentElement.dataset.theme = theme;
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    })();
+  </script>
+
   <!-- TT Interphases Pro served locally — no external font requests -->
   <link rel="preload" href="/fonts/tt-interphases-pro/TT Interphases Pro Trial Regular.woff2" as="font" type="font/woff2"
     crossorigin>

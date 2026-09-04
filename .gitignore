@@ -26,6 +26,9 @@ coverage/
 stages/04_testing/test-results/
 stages/04_testing/playwright-report/
 
+# Playwright MCP artifacts
+.playwright-mcp/
+
 # =============================================================================
 # OS files
 # =============================================================================

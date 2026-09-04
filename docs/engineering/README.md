@@ -12,11 +12,11 @@
 | [`README.md`](README.md) (this file) | Engineering overview, architecture, conventions |
 | [`architecture.md`](architecture.md) | System architecture, entrypoint chain, rendering layers, component contracts |
 | [`routing-and-pages.md`](routing-and-pages.md) | Routing, page structure, transitions, lazy loading |
-| [`layouts.md`](layouts.md) | PortfolioLayout, ProjectBrutalistLayout, column behaviors |
+| [`layouts.md`](layouts.md) | `PortfolioLayout`, `ProjectBrutalistLayout`, column behaviors |
 | [`state-management.md`](state-management.md) | Providers, contexts, ref patterns, route-derived state |
-| [`animation-system.md`](animation-system.md) | GSAP, Motion, AnimationOrchestrator, entrance reveals, presets |
-| [`scrolling-system.md`](scrolling-system.md) | Lenis per-column, ScrollTrigger, synchronization |
-| [`navigation-and-theming.md`](navigation-and-theming.md) | Navigation components, swipe gestures, dark/light mode |
+| [`animation-system.md`](animation-system.md) | GSAP, Motion, entrance reveals, reduced motion |
+| [`scrolling-system.md`](scrolling-system.md) | Lenis per-layout, ScrollTrigger, synchronization |
+| [`navigation-and-theming.md`](navigation-and-theming.md) | `SiteHeader`, `useTheme`, swipe gestures, language |
 | [`content-architecture.md`](content-architecture.md) | Project registry, media, authoring workflow |
 | [`responsive-system.md`](responsive-system.md) | Three-tier responsive model, breakpoints, touch targets |
 | [`performance-and-deployment.md`](performance-and-deployment.md) | Bundle splitting, GPU acceleration, Vercel deployment, security |
@@ -28,34 +28,28 @@
 
 ## Architecture
 
-### Dual-Column Layout
+### Routes (current)
 
-- Left (30%) = About, Right (70%) = Work.
-- Each column has its own Lenis smooth-scroll instance via `useSmoothScroll`.
-- `ScrollProvider` only holds refs and desktop/mobile state — no scroll logic.
+- `/` → `App` → lazy `PortfolioLayout` → `ProjectIndex` → `ProjectGrid`
+- `/projects/bugonia`, `/projects/bugonia/credits` → `BugoniaPage`
+- `/projects/newsquest`, `/projects/newsquest/credits` → `NewsquestPage`
+- `/contact` → `ContactPage`
+
+### Provider Tree
+
+`LanguageProvider` is the **only** top-level provider. `MotionPreferenceProvider`, `ScrollProvider`, `ThemeProvider` are mounted at the page/layout that needs them. `FilterProvider` lives inside `PortfolioLayout`.
 
 ### Entrypoint Chain
 
 ```
-main.tsx → initGSAP() → ScrollProvider → App (preloader) → PortfolioLayout
+main.tsx (StrictMode) → LanguageProvider → BrowserRouter → AnimatedRoutes
 ```
 
 ### Routing
 
 - `BrowserRouter` + `AnimatePresence mode="wait"` wraps all `<Routes>`.
 - Each route is a `motion.div` keyed by pathname.
-- Home: fade 0.25s. Project pages: fade 0.25s.
-
-### Preloader
-
-- `MIN_DURATION_MS = 3200`
-- `isFirstLoad` module-level flag — skips hero GSAP on back-navigation (route transition handles reveal instead).
-
-### CSS Loading Gate
-
-- `html` starts with class `loading` (opacity: 0), swapped to `ready` on window load.
-- `.project-card-wrapper` starts at `opacity: 0; translateY(40px)` — GSAP reveals them.
-- Do not set these to visible by default or you get a flash.
+- Crossfade ~0.25s.
 
 ### Path Alias
 
@@ -78,8 +72,6 @@ main.tsx → initGSAP() → ScrollProvider → App (preloader) → PortfolioLayo
 | Animation | GSAP + Motion | 3.x / 12.x |
 | Smooth Scroll | Lenis | 1.x |
 | Routing | React Router | 7.x |
-| Text Splitting | SplitType | 0.3.x |
-| Testing | Playwright | 1.59.x |
 
 ---
 
@@ -89,8 +81,8 @@ main.tsx → initGSAP() → ScrollProvider → App (preloader) → PortfolioLayo
 
 | Artifact | Convention | Example |
 |----------|-----------|---------|
-| Components | `PascalCase.tsx` | `ProjectCard.tsx` |
-| Hooks | `useCamelCase.ts` | `useSmoothScroll.ts` |
+| Components | `PascalCase.tsx` | `ProjectGallery.tsx` |
+| Hooks | `useCamelCase.ts` | `useEntranceReveal.ts` |
 | Logic/config | `kebab-case.ts` | `gsap-setup.ts` |
 | Constants | `UPPER_SNAKE_CASE` | `MIN_DURATION_MS` |
 | Booleans | `is`/`has`/`should`/`can` prefix | `isFirstLoad` |
@@ -98,10 +90,10 @@ main.tsx → initGSAP() → ScrollProvider → App (preloader) → PortfolioLayo
 ### Styling
 
 - Brutalist aesthetic: high-contrast, square corners (`--radius-none: 0px`), bold typography.
-- Left column: white bg, black text. Right column: dark theme.
 - Design tokens in `:root` of `src/index.css` — use CSS variables, not raw values.
 - Tailwind v4 with `@tailwindcss/vite` plugin (no `tailwind.config.js`).
 - `cn()` utility in `src/lib/utils.ts` (clsx + tailwind-merge).
+- Tailwind is primarily used to wire up tokens; per-component styles still live in component CSS.
 
 ---
 
@@ -109,7 +101,7 @@ main.tsx → initGSAP() → ScrollProvider → App (preloader) → PortfolioLayo
 
 1. Read the target file fully.
 2. `grep -r "[filename-stem]" src/ --include="*.tsx" --include="*.ts"`
-3. If file touches scroll → trace Lenis ref chain (`useSmoothScroll` → column ref).
+3. If file touches scroll → trace Lenis ref chain (`ScrollProvider` refs → layout-local Lenis init).
 4. If file touches animation → identify `gsap.context()` scope and what it cleans up.
 5. If file touches routing → verify AnimatePresence key strategy.
 6. List every affected component, then edit.
@@ -119,7 +111,7 @@ main.tsx → initGSAP() → ScrollProvider → App (preloader) → PortfolioLayo
 ## Cross-References
 
 - Architecture satisfies **Product** requirements → [`docs/product/`](../product/)
-- Design tokens must match **Design** system → [`docs/design/`](../design/)
+- Design tokens must match **Design** system → [`docs/design-system/`](../design-system/)
 - **QA** validates engineering implementation → [`docs/qa/`](../qa/)
 - See [critical rules](rules.md) before making any code change
 - See [key files](key-files.md) for the source-of-truth file map

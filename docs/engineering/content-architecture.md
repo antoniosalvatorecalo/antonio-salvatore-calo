@@ -70,19 +70,37 @@ function getAdjacentProjects(slug: string): { prev?: Project; next?: Project } {
 ```
 
 These are used in `ProjectBrutalistLayout` to:
-1. Load project data based on `:slug` route param
-2. Render prev/next navigation at the bottom of project pages
+
+1. Load project data based on `:slug` route param.
+2. Render prev/next navigation at the bottom of project pages.
 
 ### Type Safety
 
-Because projects is a typed array and slug is constrained to match `keyof Project`, TypeScript catches:
-- Missing required fields at build time
-- Invalid media types
-- Wrong image paths
+Because `projects` is a typed array and `slug` is constrained to match `keyof Project`, TypeScript catches:
+
+- Missing required fields at build time.
+- Invalid media types.
+- Wrong image paths.
 
 ---
 
-## 3. Project Pages
+## 3. Supplementary Content
+
+### `src/content/workProjectExtras.ts`
+
+Holds additional editorial copy, long-form descriptions, and per-project metadata that does not fit into `projects.ts` (e.g. extended bios, credits).
+
+### `src/content/projectImageMetadata.ts`
+
+Image metadata for the project galleries — alt text, captions, aspect ratios, focal points.
+
+### `src/content/projectDetails/`
+
+Per-project detail modules. Each project can drop a detail file here to attach extra data without bloating the main registry.
+
+---
+
+## 4. Project Pages
 
 ### Route Structure
 
@@ -90,22 +108,14 @@ Because projects is a typed array and slug is constrained to match `keyof Projec
 /projects/:slug
 ```
 
-Each `:slug` routes to `ProjectPage` via `AppRouter`:
-
-```typescript
-<Route path="/projects/:slug" element={<ProjectPage />} />
-```
-
-`ProjectPage` is lazy-loaded with `React.lazy()`.
+Each `:slug` routes to `BugoniaPage` or `NewsquestPage` via `AppRouter`. Each page uses `ProjectBrutalistLayout` as its shell.
 
 ### Page Layout
 
-Project pages use `ProjectBrutalistLayout`, which renders:
+Project pages use `ProjectBrutalistLayout`, which renders a left/right split:
 
 ```
-┌──────────────────────────────────────────┐
-│        Loading state (skeleton)          │
-├─────────────┬────────────────────────────┤
+┌─────────────┬────────────────────────────┐
 │  Left Column│  Right Column              │
 │  (metadata) │  (media + content)         │
 │             │                            │
@@ -121,32 +131,18 @@ Project pages use `ProjectBrutalistLayout`, which renders:
 
 ### Content Sections
 
-Each project's sections are defined in the data:
-
-```typescript
-interface ProjectContentSection {
-  id: string;           // Section identifier
-  type: 'text' | 'media' | 'split' | 'full-image' | 'stats';
-  title?: string;
-  description?: string;
-  media?: ProjectMedia[];
-  stats?: { label: string; value: string }[];
-}
-```
-
-Sections are rendered via a switch/case pattern in `ProjectBrutalistLayout`:
+Each project's sections are defined as data and rendered via `ProjectSection` / `ProjectGallery` / `ProjectLeftTextReveal` inside `ProjectBrutalistLayout`:
 
 | Section Type | Component | Description |
 |-------------|-----------|-------------|
-| `text` | `ProjectSectionText` | Full-width text block with optional title |
-| `media` | `ProjectMediaGrid` | Image/video grid with captions |
-| `split` | `LayoutSplitTextMediaStack` | Split layout: text left, media right |
-| `full-image` | `FullWidthImage` | Full-bleed image with optional caption |
-| `stats` | `ProjectStatsGrid` | Metrics grid (e.g., "10M+ impressions") |
+| `gallery` | `ProjectGallery` | Image/video gallery with editorial captions |
+| `split` | `ProjectSection` | Split layout: text + media |
+| `text` | `ProjectLeftTextReveal` | Left-column text reveal paired with right-column media |
+| `credits` | `ProjectCreditsSection` | Acknowledgments / credits block |
 
 ---
 
-## 4. Media Management
+## 5. Media Management
 
 ### Media Types
 
@@ -200,12 +196,13 @@ Critical images (hero on detail pages) use `fetchpriority="high"`.
 
 ---
 
-## 5. Authoring Workflow
+## 6. Authoring Workflow
 
 Adding a new project requires:
 
-1. **Add images** to `/assets/images/{slug}/`
+1. **Add images** to `/assets/images/{slug}/`.
 2. **Add data** to `src/content/projects.ts`:
+
    ```typescript
    {
      slug: 'new-project',
@@ -219,35 +216,24 @@ Adding a new project requires:
      media: [...],
    }
    ```
-3. **Build + verify**: `npm run build && npm run preview`
+
+3. **Add details** in `src/content/projectDetails/{slug}.ts` if needed.
+4. **Add image metadata** in `src/content/projectImageMetadata.ts`.
+5. **Build + verify**: `npm run build && npm run preview`.
 
 No database migrations, no CMS login, no API endpoints. The bundle statically includes all data.
 
 ---
 
-## 6. Content for Home Page
+## 7. Content for Home Page
 
-### Left Column Sections
-
-The home page left column has 5 sections defined in `PortfolioLayout`:
-
-| Section | Data | Source |
-|---------|------|--------|
-| Hero | Title, subtitle, CTA | Hardcoded in component |
-| Bio | About text, stats | Hardcoded in component |
-| Principles | Design principles list | Component content |
-| Services | Service offering cards | Component content |
-| Contact | ContactBuilder form | Interactive component |
-
-### Right Column
-
-Renders project cards from the `projects` array, filtered/shown in registry order. The carousel wraps at the end (infinite loop).
+The home page renders `ProjectIndex` → `ProjectGrid`. `ProjectGrid` composes `ProjectGallery`, `ProjectListRow`, `ProjectLeftTextReveal`, and `RollingText` to render the registry. The `FilterProvider` (local to `PortfolioLayout`) drives any filtering/sorting the gallery exposes.
 
 ---
 
-## 7. Cross-References
+## 8. Cross-References
 
 - [Architecture overview](architecture.md) — Routing, data flow
 - [Routing and pages](routing-and-pages.md) — Lazy loading, slug parameter handling
-- [Layouts](layouts.md) — ProjectBrutalistLayout content sections
+- [Layouts](layouts.md) — `ProjectBrutalistLayout` content sections
 - [Animation system](animation-system.md) — Content entrance reveals

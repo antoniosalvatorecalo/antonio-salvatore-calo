@@ -6,7 +6,6 @@ import { LanguageProvider } from './LanguageProvider';
 const BugoniaPage = React.lazy(() => import('../pages/projects/bugonia/ProjectPage'));
 const NewsquestPage = React.lazy(() => import('../pages/projects/newsquest/ProjectPage'));
 const ContactPage = React.lazy(() => import('../pages/contact/ContactPage'));
-const AboutPage = React.lazy(() => import('../pages/about/AboutPage'));
 
 const FALLBACK = <div style={{padding: 40, color: 'var(--text-primary)'}}>Loading…</div>;
 
@@ -15,7 +14,6 @@ const AnimatedRoutes: React.FC = () => {
     <LanguageProvider>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="/about" element={<Suspense fallback={FALLBACK}><AboutPage /></Suspense>} />
         <Route path="/projects/bugonia" element={<Suspense fallback={FALLBACK}><BugoniaPage /></Suspense>} />
         <Route path="/projects/newsquest" element={<Suspense fallback={FALLBACK}><NewsquestPage /></Suspense>} />
         <Route path="/projects/bugonia/credits" element={<Suspense fallback={FALLBACK}><BugoniaPage /></Suspense>} />

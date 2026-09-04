@@ -99,6 +99,7 @@ const BugoniaPage: React.FC<BugoniaPageProps> = () => {
           paddingTop={64}
           paddingBottom={0}
           mediaSrcs={[bugoniaDetail.media.image4]}
+          cta={bugoniaDetail.sections[4].cta}
         />
       </div>
 
@@ -108,6 +109,7 @@ const BugoniaPage: React.FC<BugoniaPageProps> = () => {
           paddingTop={64}
           paddingBottom={24}
           mediaSrcs={[bugoniaDetail.media.image5]}
+          cta={bugoniaDetail.sections[5].cta}
         />
       </div>
 

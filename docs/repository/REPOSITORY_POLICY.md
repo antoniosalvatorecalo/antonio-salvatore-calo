@@ -34,7 +34,6 @@ Anything **auto-generated**, **personal**, **ephemeral**, or **configurable per-
 | AI tooling config | `.opencode/`, `.codex/`, `.qwen/`, `.mcp.json`, `skills-lock.json`, `agency-agents/`, `.witsy/` | AI tool state, per-developer context |
 | AI build scripts | `_build_agency_skills.ps1` (root) | Moved to `scripts/`; root copy is legacy |
 | Knowledge graph | `graphify-out/` | Auto-regenerated via `/graphify` |
-| Personal vault | `Maximum Effort/` | Obsidian vault — personal notes, session logs, wiki, clippings |
 | Planning state | `.planning/` | Local GSD planning workspace |
 | Infrastructure | `.vercel` | Platform-local deploy config |
 | Cache | `.cache/`, `*.tmp`, `*.temp` | Ephemeral |
@@ -42,7 +41,7 @@ Anything **auto-generated**, **personal**, **ephemeral**, or **configurable per-
 ## 3. Enforcement Rules
 
 ### 3.1 Do Not Commit
-- **Personal notes, session logs, or Obsidian vaults** — belongs in `Maximum Effort/` (gitignored)
+- **Personal notes, session logs, or Obsidian vaults** — belongs in a local-only vault (gitignored)
 - **AI tooling state** — `.opencode/`, `.codex/`, `.qwen/`, `agency-agents/`, `skills-lock.json`, `.mcp.json`
 - **Auto-generated knowledge graphs** — `graphify-out/` (regenerated on demand)
 - **Machine-local caches** — `node_modules/`, `dist/`, `*.tsbuildinfo`, `coverage/`

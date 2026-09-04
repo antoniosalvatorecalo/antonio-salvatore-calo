@@ -5,13 +5,14 @@
 
 ---
 
-## 📋 Navigation
+## Navigation
 
 | Area | Path | Owner | Description |
 |------|------|-------|-------------|
 | **Product** | [`docs/product/`](./product/) | Product | Vision, purpose, brand, users, design principles |
-| **Design** | [`docs/design/`](./design/) | Design | Design system, color tokens, typography, components |
-| **Engineering** | [`docs/engineering/`](./engineering/) | Engineering | Architecture, routing, layouts, animation, scrolling, state, navigation, theming, content, responsive, performance, deployment, agent orchestration |
+| **Design System** | [`docs/design-system/`](./design-system/) | Design + Engineering | Tokens, colors, typography, components, motion, z-index |
+| **Engineering** | [`docs/engineering/`](./engineering/) | Engineering | Architecture, routing, layouts, animation, scrolling, state, navigation, theming, content, responsive, performance, deployment |
+| **Animations** | [`docs/animations/`](./animations/README.md) | Engineering | GSAP setup, ScrollTrigger, reduced motion, hooks |
 | **Onboarding** | [`docs/onboarding/`](./onboarding/) | All | Setup guide, coding standards, naming conventions, commit rules, PR workflow, deployment, quality gates |
 | **QA** | [`docs/qa/`](./qa/) | Testing | Testing strategy, tools, workflows, validation |
 | **Agents** | [`docs/AGENTS.md`](./AGENTS.md) | All | Entry point for AI agents — commands, critical rules, impact-check protocol |
@@ -34,7 +35,7 @@
 
 ## Cross-Links
 
-- Product principles influence **Design** token decisions → see [`docs/design/`](./design/)
+- Product principles influence **Design** token decisions → see [`docs/design-system/`](./design-system/)
 - Design components are implemented per **Engineering** rules → see [`docs/engineering/rules.md`](./engineering/rules.md)
 - Engineering architecture must satisfy **Product** requirements → see [`docs/product/`](./product/)
 - **QA** validates against all three → see [`docs/qa/`](./qa/)

@@ -1,6 +1,6 @@
 # Animation System
 
-> Comprehensive guide to the animation architecture — GSAP setup, Motion primitives, AnimationOrchestrator, entrance reveals, and animation presets.
+> Comprehensive guide to the animation architecture — GSAP setup, Motion primitives, entrance reveals, reduced motion.
 > Owner: Engineering
 
 ---
@@ -13,7 +13,9 @@ The animation system operates at three distinct levels:
 |-------|-----------|-------|
 | **Infrastructure** | GSAP + ScrollTrigger | Timeline orchestration, scroll-linked animations, plugin registration |
 | **Primitives** | Motion (framer-motion successor) | `motion.div`, springs, AnimatePresence, gesture transforms |
-| **Orchestration** | AnimationProvider + orchestrator | Deterministic section cascade (idle → visible → playing → done) |
+| **Coordination** | `MotionPreferenceProvider` + `runOrSetFinal` | Reduced motion detection + final-state fallback |
+
+There is no longer an `AnimationProvider` / `AnimationOrchestrator` — the section cascade they used to manage (hero → bio → principles → services → contact) was part of the deleted `About*` components. Page-level reveals now go through `useEntranceReveal` and `useProjectTextScroll`.
 
 ---
 
@@ -54,14 +56,7 @@ export function initGSAP() {
 
 ### Init Timing
 
-`initGSAP()` is called when `useSmoothScroll` module first loads (not in `main.tsx`):
-
-```typescript
-// useSmoothScroll.ts — module level
-initGSAP();
-```
-
-This defers GSAP loading until a scroll-dependent component actually mounts, keeping the initial bundle smaller.
+`initGSAP()` is called when a scroll-dependent module first loads. It defers GSAP loading until a scroll-dependent component actually mounts, keeping the initial bundle smaller.
 
 ### GSAP Context Pattern
 
@@ -115,99 +110,9 @@ All Motion components check `prefersReducedMotion` and use `instantTransition` (
 
 ---
 
-## 4. AnimationOrchestrator
+## 4. Entrance Reveal System
 
-**File:** `src/animations/orchestrator.ts`
-
-### State Machine
-
-The orchestrator is a **synchronous, deterministic state machine** managing the left-column section cascade:
-
-```
-idle → visible → playing → done
-```
-
-### Section Order
-
-```typescript
-const SECTIONS: readonly SectionId[] = [
-  'hero',      // Type: 'instant' — completes immediately without playFn
-  'bio',        // Type: 'standard'
-  'principles', // Type: 'standard'
-  'services',   // Type: 'standard'
-  'contact',    // Type: 'standard'
-];
-```
-
-### Execution Guarantee
-
-```
-AnimationProvider.useLayoutEffect runs FIRST → creates ScrollTriggers
-Children's useLayoutEffect runs AFTER → registerPlayFn calls
-ScrollTrigger fires when user scrolls → markVisible triggers play
-```
-
-### Key Operations
-
-| Operation | Purpose |
-|-----------|---------|
-| `markVisible(id)` | Called by ScrollTrigger.onEnter. Transitions `idle` → `visible`. If previous section is `done`, plays immediately. |
-| `markComplete(id)` | Called by timeline `onComplete`. Transitions `playing` → `done`. Tries to advance to next section. |
-| `registerPlayFn(id, fn)` | Late-binding: stores the play function. If section is already visible, fires immediately. |
-| `reset()` | Resets all sections to `idle`. Called on route change or remount. |
-
-### Cascade Logic
-
-```typescript
-_canPlay(id): boolean {
-  const idx = SECTIONS.indexOf(id);
-  const prev = SECTIONS[idx - 1];
-  if (idx === 0) return status.get(id) === 'visible';
-  return status.get(id) === 'visible' && status.get(prev) === 'done';
-}
-```
-
-Sections play **strictly in order**. Section N can only play when section N-1 is `done`. This guarantees predictable reveal sequencing.
-
----
-
-## 5. AnimationProvider
-
-**File:** `src/animations/AnimationProvider.tsx`
-
-### ScrollTrigger Integration
-
-Creates ScrollTrigger instances for each standard section:
-
-```typescript
-SECTIONS.filter((id) => id !== 'hero').forEach((id) => {
-  const el = document.querySelector(`[data-section="${id}"]`);
-  const st = ScrollTrigger.create({
-    trigger: el,
-    scroller,
-    start: id === 'contact' ? 'top 95%' : 'top 90%',
-    once: true,
-    invalidateOnRefresh: true,
-    onEnter: () => orchestrator.markVisible(id),
-  });
-  triggers.push(st);
-});
-
-// Hero is instant — mark immediately
-orchestrator.markVisible('hero');
-```
-
-**Props:**
-- `children` — wrapped content
-- `enabled` — when false, no ScrollTriggers are created (used during initial load)
-
-The `activeTab` and `isDesktop` dependency array ensures triggers are re-created when the mobile tab switches or viewport changes.
-
----
-
-## 6. Entrance Reveal System
-
-**File:** `src/hooks/animation/useEntranceReveal.ts`
+**File:** `src/hooks/useEntranceReveal.ts`
 
 ### Purpose
 
@@ -253,38 +158,17 @@ Each phase can specify `at` (position parameter) for fine-grained timeline contr
 
 | Component | Selector | Preset |
 |-----------|----------|--------|
-| `WorkPage ListViewContainer` | `.project-list-row-wrap` | y:18, blur:4, stagger:0.07 |
-| `WorkPage FeaturedProjectsView` | `.featured-card-v2` | y:20, blur:5, stagger:0.1 |
-| `LayoutSplitTextMediaStack` | `[data-project-stack]` | y:18, blur:0, stagger:0 |
+| Home gallery cards | `.project-list-row-wrap` | y:18, blur:4, stagger:0.07 |
+| `ProjectGallery` thumbnails | `.featured-card-v2` | y:20, blur:5, stagger:0.1 |
+| `ProjectSection` media stacks | `[data-project-stack]` | y:18, blur:0, stagger:0 |
 
 ---
 
-## 7. Animation Presets
+## 5. Project-Specific Animations
 
-**File:** `src/motion/presets/presets.ts`
+### Project Card 3D Entrance (`PortfolioLayout`)
 
-```typescript
-export interface CascadePresetConfig {
-  y: number;
-  blur: number;
-  duration: number;
-  ease: string;
-}
-
-export const cascadePresets: Record<CascadePreset, CascadePresetConfig> = {
-  default: { y: 24, blur: 10, duration: 0.9, ease: 'power4.out' },
-  soft:    { y: 16, blur: 6,  duration: 1.1, ease: 'power3.out' },
-  sharp:   { y: 32, blur: 14, duration: 0.7, ease: 'power4.inOut' },
-};
-```
-
----
-
-## 8. Project-Specific Animations
-
-### Project Card Entry (PortfolioLayout)
-
-3D entrance from a tilted, zoomed-out position behind the right column:
+The home gallery cards perform a 3D entrance animation on first load:
 
 ```
 Timeline (per card, staggered 0.16s):
@@ -296,22 +180,9 @@ Timeline (per card, staggered 0.16s):
   card.caption   → opacity: 1, y: 0             (0.68s, stagger: 0.04)
 ```
 
-### Project Card Scroll Effect (ProjectCard)
+`.revealed` class + `clearProps: 'willChange'` on complete.
 
-During normal scroll, each card subtly skews and scales based on scroll velocity:
-
-```typescript
-const { scrollYProgress } = useScroll({ target: localRef, offset: ["start end", "end start"] });
-const scrollVelocity = useVelocity(scrollYProgress);
-const smoothVelocity = useSpring(scrollVelocity, { damping: 50, stiffness: 400 });
-const skewYTransform = useTransform(smoothVelocity, [-1, 1], [-2, 2]);
-const microScaleTransform = useTransform(smoothVelocity, [-2, 0, 2], [1.02, 1, 0.98]);
-const microRotateTransform = useTransform(smoothVelocity, [-1, 1], [0.5, -0.5]);
-```
-
-This creates a parallax-like micro-motion effect — the card skews slightly in the direction of scroll.
-
-### Project Page Scroll Reveals (ProjectBrutalistLayout)
+### Project Page Scroll Reveals (`ProjectBrutalistLayout`)
 
 Three types of scroll-reveal within the right column:
 
@@ -323,21 +194,13 @@ Three types of scroll-reveal within the right column:
 | Media stack | `.media-stack-item-0/1` | y:24, scale 0.985 → 1, stagger:0.08 | top 88% |
 | Section paragraph | `[data-section-reveal="paragraph"]` | blur(10px) → 0, y:15 → 0, delay:0.4 | top 70% |
 
-### Project Card Caption Reveal (ProjectCard)
+### Project Text Scroll Sync (`useProjectTextScroll`)
 
-Editorial captions (client name, category) fade in when card scrolls into view:
-
-```typescript
-gsap.to(captionEls, {
-  opacity: 1, y: 0,
-  duration: 0.7, stagger: 0.04,
-  scrollTrigger: { trigger: container, scroller, start: 'top 85%' },
-});
-```
+Tracks which image section is visible in the right column and updates `visibleIdx` state. `ScrollingProjectText` in the left column highlights the matching section. 300ms init delay; cleanup kills triggers and reverts context.
 
 ---
 
-## 9. CSS Animations
+## 6. CSS Animations
 
 ### Global Keyframes
 
@@ -350,43 +213,41 @@ gsap.to(captionEls, {
 
 ### Stagger Data Attributes
 
-Left-column sections use CSS transitions triggered by `.animate` class addition:
-
 | Attribute | TranslateY | Used In |
 |-----------|-----------|---------|
 | `data-stagger` | 18px | Section headers |
 | `data-stagger-medium` | 12px | Labels |
 | `data-stagger-shallow` | 8px | List items/values |
 
-The `.animate` class is added via GSAP ScrollTrigger integration (AnimationProvider → orchestrator → markComplete).
-
 ---
 
-## 10. Reduced Motion
+## 7. Reduced Motion
 
 All animations respect the user's `prefers-reduced-motion` preference:
 
-1. **CSS level**: `html[data-motion="reduced"]` forces all transitions/animations to 0.01ms
-2. **Motion level**: `useReducedMotionPreference()` returns boolean; components use `instantTransition` when true
-3. **GSAP level**: Components check the preference and call `gsap.set()` to final state instead of `gsap.to()` when reduced
-4. **Provider level**: `MotionPreferenceProvider` listens for live changes via MediaQueryList event
+1. **CSS level**: `html[data-motion="reduced"]` forces all transitions/animations to 0.01ms.
+2. **Motion level**: `useReducedMotionPreference()` returns boolean; components use `instantTransition` when true.
+3. **GSAP level**: Components check the preference and call `gsap.set()` to the final state instead of `gsap.to()` when reduced.
+4. **Provider level**: `MotionPreferenceProvider` listens for live changes via MediaQueryList event.
+
+The `runOrSetFinal` helper in `src/lib/reduced-motion.ts` standardises the GSAP path.
 
 ---
 
-## 11. Performance Considerations
+## 8. Performance Considerations
 
-- **will-change is temporary**: Added before animation, cleared via `clearProps: 'willChange'` on completion
-- **GPU acceleration**: Animations constrained to `transform`, `opacity`, and `filter` only — no layout-triggering properties
-- **GSAP context scoping**: Every animation group is scoped with `gsap.context()` for proper cleanup
-- **No opacity-only reveals**: The system intentionally avoids opacity-only transitions to maintain edge definition during motion
-- **ScrollTrigger.invalidateOnRefresh**: Set `true` to recalculate on resize without destroying triggers
+- **will-change is temporary**: Added before animation, cleared via `clearProps: 'willChange'` on completion.
+- **GPU acceleration**: Animations constrained to `transform`, `opacity`, and `filter` only — no layout-triggering properties.
+- **GSAP context scoping**: Every animation group is scoped with `gsap.context()` for proper cleanup.
+- **No opacity-only reveals**: The system intentionally avoids opacity-only transitions to maintain edge definition during motion.
+- **ScrollTrigger.invalidateOnRefresh**: Set `true` to recalculate on resize without destroying triggers.
 
 ---
 
-## 12. Cross-References
+## 9. Cross-References
 
 - [Architecture overview](architecture.md) — Rendering layers, component contracts
 - [Scrolling system](scrolling-system.md) — ScrollTrigger integration with Lenis
-- [Layouts](layouts.md) — Project card entry, section cascade, page animations
-- [State management](state-management.md) — AnimationOrchestrator state machine
+- [Layouts](layouts.md) — Gallery entrance, project page reveals
+- [State management](state-management.md) — `MotionPreferenceProvider`, route-derived state
 - [Performance](performance-and-deployment.md) — Bundle splitting, will-change strategy

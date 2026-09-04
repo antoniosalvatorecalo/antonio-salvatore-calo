@@ -12,14 +12,11 @@
 
 **Execute on every session start (in order):**
 
-1. Read `Maximum Effort/Maximum Effort/index.md` → load knowledge context
-2. Read `.planning/STATE.md` → detect GSD phase + active milestone
-3. Read `.claude/memory/MEMORY.md` → load persistent feedback + decisions
+1. Read `docs/INDEX.md` → load documentation map
+2. Read `docs/AGENTS.md` → load agent quick-start
+3. Read `.claude/memory/MEMORY.md` → load persistent feedback + decisions (if it exists)
 
-**After significant work:** Append to `Maximum Effort/Maximum Effort/log.md` using format:
-```
-## [YYYY-MM-DD] [operation] | [description]
-```
+**After significant work:** Update relevant `docs/engineering/` or `docs/design-system/` files to match code changes.
 
 ---
 
@@ -28,56 +25,74 @@
 ```
 1. HOOKS:      Never call useTransform/useScroll/useSpring conditionally
 2. GSAP:       Never use !important on CSS properties GSAP animates
-3. LENIS:      Never create global Lenis — useSmoothScroll per-column only
-4. CAROUSEL:   Never use motion.div with drag="x" — pointer events + GSAP only
-5. ROUTER:     Never use createBrowserRouter — BrowserRouter + AnimatePresence only
-6. VISIBILITY: Never hard visibility:hidden — let AnimatePresence handle transitions
+3. SCROLL:     ProjectBrutalistLayout owns Lenis on the right column (desktop only); no global Lenis
+4. ROUTER:     Never use createBrowserRouter — BrowserRouter + Routes only (no AnimatePresence at route level)
+5. VISIBILITY: Never hard visibility:hidden — let Motion AnimatePresence handle transitions
+6. PROVIDERS:  LanguageProvider is the only top-level (router-scoped) provider; everything else is local
 ```
 
 ---
 
 ## Architecture
 
-### Layout
-- Dual-column: `w-[calc(30%-8px)]` (left) + `w-[calc(70%-8px)]` (right)
-- Equidistant gap: `md:px-4 md:gap-4`
-- Full viewport, `overflow: hidden` on html/body (Lenis owns scroll)
+### Routes (current)
 
-### Scroll System
-- **NO global Lenis** — per-column instances via `useSmoothScroll`
-- `ScrollProvider` provides refs + desktop/mobile state only
-- Each column owns its Lenis lifecycle
+- `/` → `App` → lazy `PortfolioLayout` → `ProjectIndex` → `ProjectGrid`
+- `/projects/bugonia`, `/projects/bugonia/credits` → `BugoniaPage`
+- `/projects/newsquest`, `/projects/newsquest/credits` → `NewsquestPage`
+- `/contact` → `ContactPage`
+
+### Providers
+
+- `MotionPreferenceProvider` — top-level, mounted in `main.tsx`. Reads OS `prefers-reduced-motion`, sets `data-motion` on `<html>`, wraps children in `<MotionConfig>`.
+- `ScrollProvider` — top-level, mounted in `main.tsx`. Holds responsive state (`isDesktop`, `isTablet`) and `activeTab`.
+- `LanguageProvider` — router-scoped (mounted in `AppRouter.tsx` inside `<Routes>`). EN/IT locale + `t(key)`.
+- `FilterProvider` (from `FilterContext`) — local to `PortfolioLayout`. Home filter state.
+- `ThemeProvider` — **does not exist**. Theme is a `useTheme()` hook that reads/writes `localStorage` and `data-theme` on `<html>` directly.
+
+### Home rendering
+
+`PortfolioLayout` is a single-column shell composing `SiteHeader` → `FilterProvider` → `ProjectIndex` → `ProjectGrid`. `ProjectPreview` shows the hovered project cover as an overlay. Click on a project navigates after a 600ms delay.
+
+### Project pages
+
+`ProjectBrutalistLayout` is a 2-column (20% / 80%) split on desktop, single-column with tab switching on mobile. The right column owns a Lenis instance on desktop via `initLenis()` from `lib/lenis-manager.ts`; mobile falls back to native scroll. The left column hosts `ScrollingProjectText` and credits. Active tab is derived from URL pathname (`/projects/:slug` = `project`, `/projects/:slug/credits` = `credits`).
+
+### Contact
+
+`ContactPage` renders `SiteHeader` + `ContactBuilder` — an interactive 7-step sentence-builder form (`name → project type → client → focus → budget → timeline → email`) that posts to `/api/contact`.
 
 ### Routing
-- `BrowserRouter` → flat routes + `AnimatePresence`
-- Home: fade in/out `0.25s`
-- Project pages: slide up/down `0.5s`
-- Keys on `motion.div` for correct AnimatePresence tracking
 
-### Carousel (ProjectCard)
-- Pointer events + GSAP tweens — NOT motion.div drag
-- `power3.out` easing, momentum tracking (`>500px/s` → next slide)
-- 20% drag threshold for snap decision
-- GPU-accelerated via `translate3d`
+- `BrowserRouter` → `<Routes>` (no `AnimatePresence`)
+- Six routes total: `/`, `/projects/bugonia`, `/projects/bugonia/credits`, `/projects/newsquest`, `/projects/newsquest/credits`, `/contact`
+- Active tab on project pages is derived from `location.pathname.endsWith('/credits')`
 
-### Preloader
-- `MIN_DURATION_MS = 3200`
-- `isFirstLoad` detection — skips hero GSAP on back-navigation
-- Back-nav: route transition handles reveal
+### Entrypoint chain
+
+```
+main.tsx
+└── StrictMode
+    └── MotionPreferenceProvider       (top-level)
+        └── ScrollProvider             (top-level)
+            └── router                 (BrowserRouter)
+                └── AnimatedRoutes     (plain <Routes>)
+                    └── LanguageProvider
+                        └── <Routes>…</Routes>
+```
 
 ---
 
 ## Quick Commands
 
 ```bash
-npm run dev      # Vite dev server (port 3000)
-npm run build    # Production build (~6-12s)
-npm run preview  # Preview production build
-npm run lint     # tsc --noEmit — MUST pass before completing any stage
-npm run clean    # Remove dist/
-
-npx playwright test
-npx playwright test --headed
+npm run dev          # Vite dev server (port 3000, host 0.0.0.0)
+npm run build        # Production build (~6-12s)
+npm run preview      # Preview production build
+npm run lint         # tsc --noEmit — MUST pass before completing any stage
+npm run clean        # Remove dist/
+npm run hooks:install # Install pre-commit hook
+npm run hooks:check   # Run hook check across working tree
 ```
 
 ---
@@ -89,23 +104,15 @@ All documentation lives in [`docs/`](docs/INDEX.md):
 | Area | Path |
 |------|------|
 | **Entry point** | [`docs/INDEX.md`](docs/INDEX.md) |
+| **Agent quick-start** | [`docs/AGENTS.md`](docs/AGENTS.md) |
 | **Product** | [`docs/product/`](docs/product/) |
-| **Design** | [`docs/design/`](docs/design/) |
+| **Design System** | [`docs/design-system/`](docs/design-system/) |
 | **Engineering** | [`docs/engineering/`](docs/engineering/) |
+| **Animations** | [`docs/animations/README.md`](docs/animations/README.md) |
 | **QA** | [`docs/qa/`](docs/qa/) |
 | **Agent Orchestration** | [`docs/engineering/agent-brief.md`](docs/engineering/agent-brief.md) |
 | **Key Files** | [`docs/engineering/key-files.md`](docs/engineering/key-files.md) |
 | **Rules** | [`docs/engineering/rules.md`](docs/engineering/rules.md) |
-
----
-
-## Technical Debt
-
-| Issue | Location | Priority |
-|-------|----------|---------|
-| XSS: innerHTML with DOM manipulation | `AboutBio.tsx:28`, `AboutPrinciples.tsx:28` | HIGH |
-| Bundle ~606KB (target <700KB) | All chunks | MEDIUM |
-| Three.js integration | Roadmap | LOW |
 
 ---
 
@@ -122,8 +129,7 @@ All documentation lives in [`docs/`](docs/INDEX.md):
 ## Design Identity
 
 - Brutalist aesthetic, high-contrast
-- Left column: light theme (white bg, black typography)
-- Right column: dark theme
+- Single-column home; left/right split only on project pages (desktop)
 - Typography: bold statements — no generic defaults
 - Motion: purposeful — reveal hierarchy, one memorable moment
 - **Language:** Italian primary for communication, English for code + technical docs
@@ -131,4 +137,4 @@ All documentation lives in [`docs/`](docs/INDEX.md):
 
 ---
 
-*Version 2.1 — Documentation consolidated into `/docs/` | 2026-06-03*
+*Version 3.0 — Documentation rewritten to match actual code (entrypoint chain, providers, routes) | 2026-09-03*

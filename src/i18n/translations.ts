@@ -154,18 +154,24 @@ export const translations: TranslationMap = {
     IT: 'Sono un designer guidato dalla voglia di sfidare le convenzioni. Combino chiarezza visiva e pensiero strategico per trasformare problemi complessi in esperienze digitali audaci, plasmando brand e prodotti in modi inaspettati.',
   },
 
-  // ── Header (expandable menu) ────────────────────────────
-  'header.availability':         { EN: 'Available from September 2026',     IT: 'Disponibile da Settembre 2026' },
-  'header.menu-toggle.open':      { EN: 'Open menu',                    IT: 'Apri menu' },
-  'header.menu-toggle.close':     { EN: 'Close menu',                   IT: 'Chiudi menu' },
-  'header.menu-section.about':    { EN: 'Information',                  IT: 'Informazioni' },
-  'header.menu-section.recognition': { EN: 'Recognition',               IT: 'Riconoscimenti' },
-  'header.menu-section.awards':   { EN: 'Awards',                       IT: 'Premi' },
-  'header.menu-section.profile':  { EN: 'Profile',                      IT: 'Profilo' },
-  'header.menu-section.contact':  { EN: 'Contact',                      IT: 'Contatti' },
-  'header.menu-cta.profile':      { EN: 'Open profile',                IT: 'Apri profilo' },
+  // ── Header (labels hard-coded in SiteHeader) ────────────────
   'header.menu-cta.contact':      { EN: 'Start a project',             IT: 'Inizia un progetto' },
-  'header.menu-cta.about':        { EN: 'Read more',                   IT: 'Leggi di più' },
+
+  // ── Visual Index (home grid + project detail) ──────────────
+  'visualIndex.filterLabel':  { EN: 'Filter projects',          IT: 'Filtra progetti' },
+  'visualIndex.filterAll':    { EN: 'All',                      IT: 'Tutti' },
+  'visualIndex.filterIdentity': { EN: 'Identity',               IT: 'Identity' },
+  'visualIndex.filterMotion': { EN: 'Motion',                   IT: 'Motion' },
+  'visualIndex.filterResearch': { EN: 'Research',               IT: 'Research' },
+  'visualIndex.filterWeb':    { EN: 'Web',                      IT: 'Web' },
+  'visualIndex.openAria':     { EN: 'Open project',             IT: 'Apri progetto' },
+  'visualIndex.empty':        { EN: 'No projects match the current filter.', IT: 'Nessun progetto corrisponde al filtro.' },
+  'visualIndex.backToGrid':   { EN: 'Back to grid',             IT: 'Torna alla griglia' },
+  'visualIndex.aboutProject': { EN: 'About Project',            IT: 'Info Progetto' },
+  'visualIndex.liveSite':     { EN: 'Live Site',                IT: 'Sito Live' },
+  'visualIndex.back':         { EN: 'Back',                     IT: 'Indietro' },
+  'visualIndex.prev':         { EN: 'Prev',                     IT: 'Prec' },
+  'visualIndex.next':         { EN: 'Next',                     IT: 'Succ' },
 
   // ── Awards ─────────────────────────────────────────────────
   'awards.faber-meeting-2026':    { EN: 'Faber Meeting 2026',           IT: 'Faber Meeting 2026' },
@@ -194,7 +200,7 @@ export const translations: TranslationMap = {
     IT: 'L\'empatia è la mia bussola. Ogni componente, flusso e micro-interazione è testato contro comportamenti reali — non supposizioni. Progetto per i margini, le esitazioni, le decisioni in frazioni di secondo che le persone prendono, trasformando l\'attrito in flusso e la confusione in chiarezza.',
   },
 
-  // ── Principles (condensed — AboutPrinciples component) ──────
+  // ── Principles (condensed — page-level section) ──────
   'principles.vc-desc-short': {
     EN: 'Turning complex problems into bold, intuitive digital experiences.',
     IT: 'Trasformare problemi complessi in esperienze digitali audaci e intuitive.',

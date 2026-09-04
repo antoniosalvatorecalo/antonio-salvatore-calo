@@ -1,20 +1,18 @@
 # Layouts System
 
-> Dual-column layout architecture, PortfolioLayout, ProjectBrutalistLayout, and the ScrollerContext.
+> Single-column portfolio layout, project brutalist layout, and the ScrollerContext.
 > Owner: Engineering
 
 ---
 
 ## 1. Overview
 
-The application uses two primary layouts:
+The application has two primary layouts:
 
-| Layout | Route | Columns | Scroll |
-|--------|-------|---------|--------|
-| `PortfolioLayout` | `/` (home) | 2-column (30%/70%) | Per-column Lenis |
-| `ProjectBrutalistLayout` | `/projects/:id` | 2-column (20%/80%) | Desktop: Lenis, Mobile: native |
-
-Both layouts implement a **dual-column structure** where the left column contains metadata/navigation and the right column contains primary content.
+| Layout | Route | Structure | Scroll |
+|--------|-------|-----------|--------|
+| `PortfolioLayout` | `/` (home) | Single-column | Layout-local Lenis |
+| `ProjectBrutalistLayout` | `/projects/:slug` | 2-column (20%/80%) | Desktop: Lenis (right col), Mobile: native |
 
 ---
 
@@ -25,74 +23,36 @@ Both layouts implement a **dual-column structure** where the left column contain
 ### Component Hierarchy
 
 ```
-PortfolioLayout (wrapper — calls useSmoothScroll, passes context)
-└── PortfolioContent (internal — renders UI)
-    ├── AnimationProvider (ScrollTrigger orchestration)
-    ├── CentralNavMenu (desktop only)
-    ├── Left Column (scroll-content)
-    │   ├── AboutHero (instant reveal)
-    │   ├── AboutBio (standard cascade)
-    │   ├── AboutPrinciples (standard cascade)
-    │   ├── AboutServices (standard cascade)
-    │   └── AboutContact (standard cascade)
-    ├── Right Column (scroll-content)
-    │   └── ProjectCard × N (wrapped in .project-card-wrapper)
-    ├── MobileBottomNav (mobile/tablet only)
-    └── BackToTop (desktop only)
+PortfolioLayout
+├── SiteHeader                     (fixed header)
+├── FilterProvider (local)          (home filter state)
+└── ProjectIndex
+    └── ProjectGrid
+        ├── ProjectGallery
+        ├── ProjectListRow
+        ├── ProjectLeftTextReveal
+        └── RollingText
 ```
 
-### Column Configuration
+### Composition
 
-| Property | Left Column | Right Column |
-|----------|-------------|--------------|
-| Width (desktop) | 20–45% (fluid via `--left-col-target`) | remaining |
-| Width (mobile) | 100% (hidden when tab !== 'about') | 100% (hidden when tab !== 'work') |
-| Scroll | `useSmoothScroll(leftScrollRef)` | `useSmoothScroll(rightScrollRef)` |
-| Theme | Light (white bg) | Dark (black bg, via right column) |
+- Single-column scroll. No left/right split.
+- Mounts `SiteHeader`, then `ProjectIndex` → `ProjectGrid`.
+- `FilterProvider` is mounted inside the layout so the home filter state stays scoped to the home page.
+- Wires its own Lenis instance through the GSAP ticker.
 
-### Column Hover Resize (Disabled)
+### Project Grid Entry Animation
 
-The codebase contains a **disabled** column hover resize feature that would expand the left column on hover (20% → 45%). It's commented out to avoid TypeScript unused variable errors. The `columnState` (`'default' | 'left' | 'right'`) and z-index management infrastructure remain in place for future re-enablement.
-
-### Desktop vs Mobile Rendering
-
-Desktop renders both columns simultaneously. Mobile/tablet renders one column at a time controlled by `activeTab`:
-
-```tsx
-{/* LEFT COLUMN */}
-<div className={`h-full ${!isDesktop && activeTab !== 'about' ? 'hidden' : 'block'} ...`}>
-  {/* Left scroll content */}
-</div>
-
-{/* RIGHT COLUMN */}
-<div className={`h-full ${!isDesktop && activeTab !== 'work' ? 'hidden' : 'block'} ...`}>
-  {/* Right scroll content */}
-</div>
-```
-
-### useSmoothScroll Initialization
-
-Both columns initialize Lenis via `useSmoothScroll` at the `PortfolioLayout` level:
-
-```typescript
-useSmoothScroll(leftScrollRef, { enabled: effectsEnabled });
-useSmoothScroll(rightScrollRef, { enabled: effectsEnabled });
-```
-
-See [scrolling system](scrolling-system.md) for details.
-
-### Project Card Entry Animation
-
-On first load, project cards perform a dramatic 3D entrance animation:
+On first load, the home gallery cards perform a 3D entrance animation:
 
 ```
 Initial state:  opacity: 0, x: 72, y: 126, z: -280, rotateX: 9°, rotateY: -6°, scale: 0.88
 Final state:    opacity: 1, x: 0, y: 0, z: 0, rotateX: 0, rotateY: 0, scale: 1
 ```
 
-Each card is staggered by `0.16s` per card. Sub-elements (image mask, image, matte overlay, caption) animate with their own timing curves. On completion, `.project-card-wrapper` gets `.revealed` class and `willChange` is cleared.
+Each card is staggered by `0.16s`. Sub-elements animate with their own timing curves. On completion, `.project-card-wrapper` gets `.revealed` and `willChange` is cleared.
 
-On reduced motion or back-navigation, cards jump directly to final state.
+On reduced motion, cards jump directly to final state.
 
 ---
 
@@ -106,16 +66,13 @@ On reduced motion or back-navigation, cards jump directly to final state.
 ProjectBrutalistLayout
 └── ScrollerContext.Provider
     ├── SkipToContent (WCAG 2.4.1 — keyboard-only)
-    ├── CentralNavMenu (desktop only)
     ├── Left Column (20% width)
-    │   ├── Hero Text (LetterSwapBlock)
-    │   └── ScrollingProjectText / Credits (desktop)
+    │   ├── Hero Text (LetterSwapBlock / LetterSwapForward)
+    │   └── ScrollingProjectText / ProjectCreditsSection (desktop)
     │       └── ProjectCreditsSection (mobile credits tab)
-    ├── Right Column (80% width)
-    │   ├── Desktop: LayoutSplitTextMediaStack × N (scroll-content-inner)
-    │   └── Mobile: ProjectSection × N + ProjectCreditsSection
-    ├── ProjectMobileNav (mobile/tablet only)
-    └── BackToTop
+    └── Right Column (80% width)
+        ├── Desktop: ProjectGallery / ProjectSection × N (scroll-content-inner)
+        └── Mobile: ProjectSection × N + ProjectCreditsSection
 ```
 
 ### ScrollerContext
@@ -132,25 +89,27 @@ interface ScrollerContextType {
 On desktop, `ref` points to the right-column scroll container and `lenis` holds the Lenis instance. On mobile, `ref` points to the mobile scroll container and `lenis` is null (native scroll).
 
 This context is consumed by:
-- `ScrollingProjectText` — syncs left-column text with right-column scroll position
-- `ProjectSection` — binds scroll reveal to the correct scroller
-- `CentralNavMenu` — reads Lenis for scroll-to-top behavior
+
+- `ScrollingProjectText` — syncs left-column text with right-column scroll position.
+- `ProjectSection` — binds scroll reveal to the correct scroller.
 
 ### Desktop vs Mobile Content Strategy
 
 The layout renders completely different DOM on desktop vs mobile:
 
 **Desktop** (`isDesktop === true`):
-- Left column: `ScrollingProjectText` syncs section text with right-column scroll
-- Right column: Full `children` (LayoutSplitTextMediaStack components) in a Lenis-wrapped scroll container
-- Images appear inline within the text/media stacks
+
+- Left column: `ScrollingProjectText` syncs section text with right-column scroll.
+- Right column: Full content (`ProjectGallery`, `ProjectSection` components) inside a Lenis-wrapped scroll container.
+- Images appear inline within the text/media stacks.
 
 **Mobile** (`isDesktop === false`):
-- Single-column: one column visible at a time (project tab or credits tab)
-- Content rendered from `leftColumnSections` as vertical blocks via `ProjectSection`
-- Each `ProjectSection` renders: image → title → description → CTA
-- Credits rendered at the end of project column or full-screen in credits tab
-- Uses native scroll on `<mobileScrollRef>` — no Lenis
+
+- Single-column: one column visible at a time (project tab or credits tab).
+- Content rendered as vertical blocks via `ProjectSection`.
+- Each `ProjectSection` renders: image → title → description → CTA.
+- Credits rendered at the end of project column or full-screen in credits tab.
+- Uses native scroll — no Lenis.
 
 ### Desktop Viewport Division
 
@@ -172,7 +131,7 @@ The layout renders completely different DOM on desktop vs mobile:
 
 ### ScrollingProjectText
 
-`ScrollingProjectText` animates left-column text sections through a series of GSAP/ScrollTrigger animations synchronized to the right-column scroll. Each section scrolls from `y: 24` → `y: 0` with `opacity: 0` → `opacity: 1` at staggered triggers.
+`ScrollingProjectText` animates left-column text sections through GSAP/ScrollTrigger animations synchronized to the right-column scroll. Each section scrolls from `y: 24` → `y: 0` with `opacity: 0` → `opacity: 1` at staggered triggers.
 
 ### Sidebar Wheel Handling
 
@@ -188,7 +147,7 @@ const handleSidebarWheel = (event: React.WheelEvent<HTMLDivElement>) => {
 
 ### Lenis Lifecycle
 
-Lenis is initialized and destroyed per mount:
+Lenis is initialized and destroyed per mount inside `ProjectBrutalistLayout`:
 
 ```typescript
 if (isDesktop) {
@@ -211,7 +170,7 @@ return () => {
 
 ### Tab-Based Routing
 
-The layout derives active tab from the URL pathname:
+The layout derives the active tab from the URL pathname:
 
 ```typescript
 const routeTab: 'project' | 'credits' = location.pathname.endsWith('/credits') ? 'credits' : 'project';
@@ -234,25 +193,25 @@ This ensures URL/bookmark shareability and correct back-button behavior.
 ## 4. CSS Architecture
 
 ### PortfolioLayout CSS (`src/layouts/PortfolioLayout.css`)
-- Column layout: `flex-col md:flex-row` with `md:px-4 md:gap-4 md:py-2`
-- Left column: `w-[calc(30%-8px)]` desktop, full-width mobile
-- Right column: `w-[calc(70%-8px)]` desktop, full-width mobile
-- Responsive column visibility: `hidden` when tab doesn't match
+
+- Single-column, `flex-col` with `md:px-4 md:py-2`.
+- The home content lives inside a single scroll container owned by the layout.
 
 ### ProjectBrutalistLayout CSS (`src/layouts/ProjectBrutalistLayout.css`)
-- Column layout: `flex-col lg:flex-row`
-- Left column: `lg:w-[20%]` desktop, `w-full` mobile
-- Right column: `lg:w-[80%]` desktop, `w-full` mobile
-- Overlay: `fixed inset-0 z-project-shell`
+
+- Column layout: `flex-col lg:flex-row`.
+- Left column: `lg:w-[20%]` desktop, `w-full` mobile.
+- Right column: `lg:w-[80%]` desktop, `w-full` mobile.
+- Overlay: `fixed inset-0 z-project-shell`.
 
 ---
 
 ## 5. Cross-References
 
 - [Architecture overview](architecture.md) — Entrypoint chain, component contracts
-- [Routing and pages](routing-and-pages.md) — Route transitions, isFirstLoad
-- [State management](state-management.md) — ScrollProvider, ScrollerContext
-- [Scrolling system](scrolling-system.md) — useSmoothScroll, Lenis lifecycle
-- [Animation system](animation-system.md) — Project card entry, section cascade
-- [Navigation](navigation-and-theming.md) — CentralNavMenu, MobileBottomNav
+- [Routing and pages](routing-and-pages.md) — Route transitions
+- [State management](state-management.md) — `ScrollProvider`, `ScrollerContext`
+- [Scrolling system](scrolling-system.md) — Lenis lifecycle
+- [Animation system](animation-system.md) — Project page reveals
+- [Navigation](navigation-and-theming.md) — `SiteHeader`, theme toggle
 - [Responsive system](responsive-system.md) — Three-tier breakpoints, tab switching

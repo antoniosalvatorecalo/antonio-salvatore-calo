@@ -14,6 +14,8 @@ import { getProjectImageDimensions } from "../content/projectImageMetadata";
 import { useReducedMotionPreference } from "../providers/MotionPreferenceProvider";
 import { useLanguage } from '../providers/LanguageProvider';
 import { instantTransition } from "../lib/reduced-motion";
+import { ArrowUpRight } from 'lucide-react';
+import { LetterSwapForward } from "../components/ui/letter-swap";
 import './ProjectBrutalistLayout.css';
 
 // ─── Skip-to-Content Link (WCAG 2.4.1) ────────────────────────────────────────
@@ -163,6 +165,7 @@ export const LayoutSplitTextMediaStack = ({
   title,
   col1,
   col2,
+  cta,
   mediaAspects = ["aspect-[3/2]", "aspect-[3/2]"],
   mediaSrcs = [],
   priorityFirstMedia = false,
@@ -172,6 +175,7 @@ export const LayoutSplitTextMediaStack = ({
   title?: React.ReactNode,
   col1?: React.ReactNode,
   col2?: React.ReactNode,
+  cta?: { label: string; href: string },
   mediaAspects?: string[],
   mediaSrcs?: string[],
   priorityFirstMedia?: boolean,
@@ -212,6 +216,28 @@ export const LayoutSplitTextMediaStack = ({
         <div className="flex flex-col gap-4 md:gap-4 order-first">
           <div data-section-reveal="title">{title}</div>
           <div data-section-reveal="paragraph"><BodyTextSmall>{content}</BodyTextSmall></div>
+          {/* CTA */}
+          {cta && (
+            <div data-section-reveal="cta" className="mt-2">
+              <a
+                href={cta.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="project-type-cta"
+              >
+                <span className="project-type-cta-text">
+                  <LetterSwapForward
+                    label={cta.label}
+                    staggerDuration={0.018}
+                    transition={{ type: 'spring', duration: 0.58 }}
+                  />
+                </span>
+                <span className="nav-pill-arrow-mask" aria-hidden="true">
+                  <ArrowUpRight className="nav-pill-arrow-icon" />
+                </span>
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Single Media - Last */}

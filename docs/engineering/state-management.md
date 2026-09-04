@@ -9,10 +9,10 @@
 
 The project intentionally minimizes React state. Most "state" is either:
 
-1. **Route-derived** — computed from `location.pathname`
-2. **Ref-based** — mutable values that don't trigger re-renders
-3. **GSAP-managed** — animation state belongs to GSAP timelines, not React
-4. **CSS-managed** — visual states via data attributes and CSS transitions
+1. **Route-derived** — computed from `location.pathname`.
+2. **Ref-based** — mutable values that don't trigger re-renders.
+3. **GSAP-managed** — animation state belongs to GSAP timelines, not React.
+4. **CSS-managed** — visual states via data attributes and CSS transitions.
 
 This keeps the React render tree lean and avoids synchronization bugs between animation and rendering.
 
@@ -23,11 +23,26 @@ This keeps the React render tree lean and avoids synchronization bugs between an
 ### Provider Tree
 
 ```
-MotionPreferenceProvider
-└── ScrollProvider
-    └── BrowserRouter
-        └── AnimatedRoutes
+LanguageProvider                      (only top-level provider)
+└── BrowserRouter
+    └── AnimatedRoutes
+         ├── "/" → PortfolioLayout
+         │     └── FilterProvider     (local to home)
+         ├── "/projects/:slug" → BugoniaPage / NewsquestPage
+         │     └── ProjectBrutalistLayout
+         │           ├── MotionPreferenceProvider (local)
+         │           ├── ScrollProvider           (local)
+         │           └── ThemeProvider            (local)
+         └── "/contact" → ContactPage
 ```
+
+Only `LanguageProvider` lives at the router root. All other providers are mounted at the page/layout that needs them.
+
+### LanguageProvider
+
+**File:** `src/providers/LanguageProvider.tsx`
+
+Provides the active UI language (Italian / English) and the language toggle. Lives at the top of the tree so every page can read translations.
 
 ### MotionPreferenceProvider
 
@@ -36,12 +51,14 @@ MotionPreferenceProvider
 Reads the OS-level `prefers-reduced-motion` media query and provides it as a boolean context value.
 
 **Responsibilities:**
-- Reads `window.matchMedia('(prefers-reduced-motion: reduce)')` on mount
-- Subscribes to `change` events for live updates
-- Sets `document.documentElement.dataset.motion` to `'reduced'` or `'full'`
-- Provides `useReducedMotionPreference()` hook
+
+- Reads `window.matchMedia('(prefers-reduced-motion: reduce)')` on mount.
+- Subscribes to `change` events for live updates.
+- Sets `document.documentElement.dataset.motion` to `'reduced'` or `'full'`.
+- Provides `useReducedMotionPreference()` hook.
 
 **CSS impact:**
+
 ```css
 html[data-motion="reduced"] *,
 html[data-motion="reduced"] *::before,
@@ -58,6 +75,7 @@ html[data-motion="reduced"] *::after {
 **File:** `src/providers/ScrollProvider.tsx`
 
 **Context value:**
+
 ```typescript
 interface ScrollContextType {
   isDesktop: boolean;        // width >= 1024px
@@ -70,12 +88,25 @@ interface ScrollContextType {
 ```
 
 **Key design decisions:**
-- Holds **refs only** — no Lenis instances, no scroll logic
-- `isDesktop`/`isTablet` updated via `requestAnimationFrame`-throttled resize listener
-- `activeTab` drives column visibility on mobile (which column is shown)
-- The `leftScrollRef` and `rightScrollRef` are created here but Lenis is initialized in `useSmoothScroll`
 
-**Historical note (FIX 16):** A global Lenis instance was previously created in ScrollProvider. It was removed because it conflicted with per-column instances, causing scroll corruption and initialization race conditions on route changes.
+- Holds **refs only** — no Lenis instances, no scroll logic.
+- `isDesktop`/`isTablet` updated via `requestAnimationFrame`-throttled resize listener.
+- `activeTab` drives column visibility on mobile (which column is shown).
+- The `leftScrollRef` and `rightScrollRef` are created here but Lenis is wired locally inside the layout.
+
+**Historical note (FIX 16):** A global Lenis instance was previously created in `ScrollProvider`. It was removed because it conflicted with per-layout instances, causing scroll corruption and initialization race conditions on route changes.
+
+### ThemeProvider
+
+**File:** `src/providers/ThemeProvider.tsx` (via `useTheme`)
+
+Reads `localStorage` + OS `prefers-color-scheme` fallback. Sets the `data-theme` attribute on `<html>`. Persists the toggle across reloads.
+
+### FilterProvider
+
+**File:** `src/providers/FilterProvider.tsx`
+
+Local to `PortfolioLayout`. Owns the home gallery filter state (e.g. by year, by category) consumed by `ProjectGrid` and `ProjectListRow`.
 
 ---
 
@@ -102,16 +133,15 @@ The codebase uses refs extensively for values that change frequently but shouldn
 
 | Ref | File | Purpose |
 |-----|------|---------|
-| `initializedRef` | `useSmoothScroll` | Guards against double Lenis initialization in StrictMode |
-| `isMountedRef` | `useSmoothScroll`, `ProjectBrutalistLayout` | Prevents state updates after unmount |
-| `observerRef` | `useSmoothScroll` | Holds MutationObserver reference for cleanup |
-| `initCleanupRef` | `useSmoothScroll` | Stores cleanup function for deferred initialization |
+| `initializedRef` | layout-local Lenis init | Guards against double Lenis initialization in StrictMode |
+| `isMountedRef` | layout-local Lenis init, `ProjectBrutalistLayout` | Prevents state updates after unmount |
+| `observerRef` | layout-local Lenis init | Holds MutationObserver reference for cleanup |
+| `initCleanupRef` | layout-local Lenis init | Stores cleanup function for deferred initialization |
 | `startX/Y` | `useSwipeNavigation` | Tracks touch start position |
 | `axis` | `useSwipeNavigation` | Determines swipe vs scroll axis lock |
-| `currentHoveredRef` | `PortfolioLayout` | Tracks column hover state for resize animation |
 | `leftScrollRef` / `rightScrollRef` | `ScrollProvider` | DOM refs for column scroll containers |
 
-**Rule:** Never call hooks inside GSAP callbacks, MutationObserver callbacks, or Lenis init. Hook invocations happen only during component render or useEffect.
+**Rule:** Never call hooks inside GSAP callbacks, MutationObserver callbacks, Lenis init, `setTimeout`, or `requestAnimationFrame`. Hook invocations happen only during component render or `useEffect`.
 
 ---
 
@@ -122,8 +152,7 @@ Where possible, state is derived from the URL to eliminate synchronization:
 | State | Source | Computation |
 |-------|--------|-------------|
 | Active tab (project) | `location.pathname` | `.endsWith('/credits')` |
-| Active nav item | `location.pathname` | `startsWith('/work')`, etc. |
-| isFirstLoad | Module-level `let` | `!hasInitiallyLoaded` |
+| Active nav item | `location.pathname` | exact match |
 | Theme | `localStorage` + OS preference | `getStoredOrSystemTheme()` |
 | Active slide | User interaction | `setActiveSlide()` |
 
@@ -131,14 +160,7 @@ Where possible, state is derived from the URL to eliminate synchronization:
 
 ## 6. Pattern: Avoid Render-Triggering Animation State
 
-Animation progress values are stored in GSAP timelines, not React state. The `AnimationOrchestrator` uses a module-level state machine (Map-based, not React) to track section states:
-
-```typescript
-const status = new Map<SectionId, SectionState>();
-// idle → visible → playing → done
-```
-
-This ensures animation execution is synchronous and never delayed by React's render cycle.
+Animation progress values are stored in GSAP timelines, not React state. Animation state belongs to GSAP contexts and the `gsap.context()` cleanup chain — never in a `useState` setter.
 
 ---
 
@@ -147,9 +169,6 @@ This ensures animation execution is synchronous and never delayed by React's ren
 Module-level `let` variables serve as singletons across component instances:
 
 ```typescript
-// App.tsx — prevents re-running initial entrance on back-navigation
-let hasInitiallyLoaded = false;
-
 // lenis-manager.ts — prevents double Lenis initialization
 const lenisInstances = new Map<HTMLElement, LenisBinding>();
 ```
@@ -165,15 +184,15 @@ URL Change
   ├── location.pathname → Route component + key change
   │   └── AnimatePresence triggers exit/enter animations
   │
-  ├── CentralNavMenu reads pathname → sets active NavItem
+  ├── SiteHeader reads pathname → sets active NavItem
   │
   ├── ProjectBrutalistLayout derives routeTab → setActiveTab
   │   └── Column visibility toggles (mobile)
   │
-  ├── Theme Toggle → localStorage + data-theme attribute
+  ├── Theme toggle → localStorage + data-theme attribute
   │   └── CSS variables switch between light/dark definitions
   │
-  └── isFirstLoad flag → GSAP chooses initial or static animation
+  └── FilterProvider → home gallery filter state (PortfolioLayout only)
 ```
 
 ---
@@ -181,7 +200,7 @@ URL Change
 ## 9. Cross-References
 
 - [Architecture overview](architecture.md) — Provider hierarchy, entrypoint chain
-- [Animation system](animation-system.md) — AnimationOrchestrator state machine
-- [Scrolling system](scrolling-system.md) — useSmoothScroll, Lenis lifecycle
+- [Animation system](animation-system.md) — GSAP context, entrance reveals
+- [Scrolling system](scrolling-system.md) — Layout-local Lenis lifecycle
 - [Routing and pages](routing-and-pages.md) — Route-derived state patterns
-- [Layouts](layouts.md) — ScrollProvider usage in layouts
+- [Layouts](layouts.md) — `ScrollProvider` usage in layouts

@@ -108,6 +108,7 @@ const NewsquestPage: React.FC<NewsquestPageProps> = () => {
           paddingTop={64}
           paddingBottom={24}
           mediaSrcs={[newsquestDetail.media.image5]}
+          cta={newsquestDetail.sections[5].cta}
         />
       </div>
 

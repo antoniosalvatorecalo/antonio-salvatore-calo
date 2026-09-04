@@ -26,17 +26,20 @@ const GAP = 6; // must match CSS gap value
   const prefersReducedMotion = useReducedMotionPreference();
   const dragX = useMotionValue(0);
   const containerWidthRef = useRef(0);
+  const [containerWidth, setContainerWidth] = useState(0);
   const pointerStartRef = useRef({ x: 0, y: 0 });
 
   const thumbnailDimensions = getProjectImageDimensions(images[0]);
 
-  // Track container width on resize
+  // Track container width on resize and force re-render for dragConstraints
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const measure = () => {
-      containerWidthRef.current = el.clientWidth;
+      const w = el.clientWidth;
+      containerWidthRef.current = w;
+      setContainerWidth(w);
     };
     measure();
 
@@ -45,7 +48,7 @@ const GAP = 6; // must match CSS gap value
     return () => ro.disconnect();
   }, []);
 
-  // Snap to slide position when activeIndex changes
+  // Snap to slide position when activeIndex or containerWidth changes
   useEffect(() => {
     const w = containerWidthRef.current;
     if (!w) return;
@@ -61,7 +64,7 @@ const GAP = 6; // must match CSS gap value
         mass: 0.85,
       });
     }
-  }, [activeIndex, prefersReducedMotion, dragX]);
+  }, [activeIndex, containerWidth, prefersReducedMotion, dragX]);
 
   const handleDragEnd = useCallback(
     (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
@@ -122,7 +125,7 @@ const GAP = 6; // must match CSS gap value
         className="project-gallery-track"
         drag={prefersReducedMotion ? false : 'x'}
         dragConstraints={{
-          left: -(images.length - 1) * ((containerWidthRef.current || 1) + GAP),
+          left: containerWidth > 0 ? -(images.length - 1) * (containerWidth + GAP) : 0,
           right: 0,
         }}
         dragElastic={0.06}

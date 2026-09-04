@@ -9,12 +9,12 @@
 ```
 BrowserRouter
 └── AnimatedRoutes (AnimatePresence)
-    ├── "/" → App (preloader → PortfolioLayout)
-    ├── "/about" → AboutPage
-    ├── "/work" → WorkPage
-    ├── "/projects/:slug" → ProjectPage
-    │   └── "/projects/:slug/credits" → same page, credits tab
-    └── "/contact" → ContactPage
+    ├── "/"                            → App (PortfolioLayout)
+    ├── "/projects/bugonia"            → BugoniaPage (ProjectBrutalistLayout)
+    │   └── "/projects/bugonia/credits" → same page, credits tab
+    ├── "/projects/newsquest"          → NewsquestPage (ProjectBrutalistLayout)
+    │   └── "/projects/newsquest/credits" → same page, credits tab
+    └── "/contact"                     → ContactPage
 ```
 
 **Ban**: `createBrowserRouter` — breaks AnimatePresence integration.
@@ -31,49 +31,47 @@ const routeMotion = {
 // Reduced motion: duration 0
 ```
 
-**Preloader transition**: `App` renders `Preloader` (3200ms min on first load). `isLoading` → `app-reveal` CSS class fades in PortfolioLayout (opacity + translateY, 1s cubic-bezier).
-
-**isFirstLoad**: Module-level `hasInitiallyLoaded` flag. Back-navigation skips preloader + GSAP entrance. Route transition handles reveal instead.
+**isFirstLoad**: Module-level `hasInitiallyLoaded` flag (in `App.tsx`) — if present, used by the home page to skip first-mount entrance animations on back-navigation.
 
 ## Lazy Loading
 
-All non-home pages use `React.lazy()`:
+All non-trivial pages and layouts use `React.lazy()`:
 
 ```typescript
-const WorkPage = React.lazy(() => import('../pages/work/WorkPage'));
-const ProjectPage = React.lazy(() => import('../pages/projects/ProjectPage'));
+const PortfolioLayout = React.lazy(() => import('../layouts/PortfolioLayout'));
+const BugoniaPage = React.lazy(() => import('../pages/projects/bugonia/ProjectPage'));
+const NewsquestPage = React.lazy(() => import('../pages/projects/newsquest/ProjectPage'));
 const ContactPage = React.lazy(() => import('../pages/contact/ContactPage'));
-const PortfolioLayout = lazy(() => import('../layouts/PortfolioLayout'));
 ```
 
-Wrapped in `<Suspense fallback={null}>`. No loading skeleton — route transition covers gap.
+Wrapped in `<Suspense fallback={null}>`. No loading skeleton — route transition covers the visual gap.
 
 ## Route-Derived State
 
 | State | Source | Derivation |
 |-------|--------|-----------|
 | Active project tab | `pathname` | `.endsWith('/credits')` |
-| Active nav item | `pathname` | `startsWith('/work')` etc |
-| isFirstLoad | Module flag | `!hasInitiallyLoaded` |
+| Active nav item | `pathname` | exact match |
+| Theme | `localStorage` + OS preference | `getStoredOrSystemTheme()` |
 
 No React state for active nav/tab — derived from URL. Eliminates sync bugs.
 
 ## Lifecycle
 
-1. **Mount**: `BrowserRouter` reads URL → matches route → mounts component
-2. **Navigate**: `navigate()` changes URL → AnimatePresence exits old, enters new
-3. **Back**: Browser back triggers same flow — isFirstLoad skips preloader
-4. **Unmount**: Route leaves → AnimatePresence exit animation → component unmounts → GSAP contexts revert
+1. **Mount**: `BrowserRouter` reads URL → matches route → mounts component.
+2. **Navigate**: `navigate()` changes URL → `AnimatePresence` exits old, enters new.
+3. **Back**: Browser back triggers the same flow — `isFirstLoad` skips first-mount entrances.
+4. **Unmount**: Route leaves → `AnimatePresence` exit animation → component unmounts → GSAP contexts revert.
 
 ## Dependencies
 
-- `react-router-dom` v7 — `BrowserRouter`, `Routes`, `Route`, `useLocation`, `useNavigate`
-- `motion` v12 — `AnimatePresence`, `motion.div`
-- `React.lazy` + `Suspense` — code splitting
+- `react-router-dom` v7 — `BrowserRouter`, `Routes`, `Route`, `useLocation`, `useNavigate`.
+- `motion` v12 — `AnimatePresence`, `motion.div`.
+- `React.lazy` + `Suspense` — code splitting.
 
 ## Extension Points
 
-- **Add route**: Add `<Route>` in `AppRouter.tsx`. Wrap element in `React.lazy` for code splitting
-- **Custom transition**: Modify `routeMotion` object. Add per-route variants via `motion.div` props
-- **Auth guard**: Wrap `<Route>` with protected component that checks auth state
-- **404 page**: Add catch-all `<Route path="*">` at end of route list
+- **Add route**: Add `<Route>` in `AppRouter.tsx`. Wrap element in `React.lazy` for code splitting.
+- **Custom transition**: Modify `routeMotion` object. Add per-route variants via `motion.div` props.
+- **Auth guard**: Wrap `<Route>` with a protected component that checks auth state.
+- **404 page**: Add catch-all `<Route path="*">` at the end of the route list.
