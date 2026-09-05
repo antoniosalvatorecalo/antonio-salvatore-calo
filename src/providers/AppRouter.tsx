@@ -1,23 +1,28 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import App from '../App';
+import { PortfolioLayout } from '../layouts/PortfolioLayout';
 import { LanguageProvider } from './LanguageProvider';
+import { ProjectTransitionProvider } from './ProjectTransitionProvider';
+import { NavHoverProvider } from './NavHoverContext';
 
-const BugoniaPage = React.lazy(() => import('../pages/projects/bugonia/ProjectPage'));
-const NewsquestPage = React.lazy(() => import('../pages/projects/newsquest/ProjectPage'));
 const ContactPage = React.lazy(() => import('../pages/contact/ContactPage'));
 
 const FALLBACK = <div style={{padding: 40, color: 'var(--text-primary)'}}>Loading…</div>;
+
+const PortfolioRouteLayout = () => (
+  <ProjectTransitionProvider>
+    <PortfolioLayout />
+  </ProjectTransitionProvider>
+);
 
 const AnimatedRoutes: React.FC = () => {
   return (
     <LanguageProvider>
       <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/projects/bugonia" element={<Suspense fallback={FALLBACK}><BugoniaPage /></Suspense>} />
-        <Route path="/projects/newsquest" element={<Suspense fallback={FALLBACK}><NewsquestPage /></Suspense>} />
-        <Route path="/projects/bugonia/credits" element={<Suspense fallback={FALLBACK}><BugoniaPage /></Suspense>} />
-        <Route path="/projects/newsquest/credits" element={<Suspense fallback={FALLBACK}><NewsquestPage /></Suspense>} />
+        <Route element={<PortfolioRouteLayout />}>
+          <Route index element={null} />
+          <Route path="projects/:slug" element={null} />
+        </Route>
         <Route path="/contact" element={<Suspense fallback={FALLBACK}><ContactPage /></Suspense>} />
       </Routes>
     </LanguageProvider>
@@ -26,6 +31,8 @@ const AnimatedRoutes: React.FC = () => {
 
 export const router = (
   <BrowserRouter>
-    <AnimatedRoutes />
+    <NavHoverProvider>
+      <AnimatedRoutes />
+    </NavHoverProvider>
   </BrowserRouter>
 );

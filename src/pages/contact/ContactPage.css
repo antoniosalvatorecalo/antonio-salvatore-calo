@@ -3,3 +3,21 @@
   height: 100vh;
   width: 100%;
 }
+
+.contact-page-shell { min-height: 100vh; }
+.contact-page-content { min-height: 0; }
+
+@media (max-width: 767px) {
+  .contact-page-shell {
+    height: auto;
+    min-height: 100svh;
+    overflow: visible !important;
+  }
+
+  .contact-page-content {
+    flex: none;
+    min-height: calc(100svh - var(--mobile-header-height, 320px));
+    padding-top: calc(var(--mobile-header-height, 320px) + 20px);
+    padding-bottom: 32px;
+  }
+}

@@ -1,6 +1,6 @@
 /**
  * Shared contact information — single source of truth.
- * Used by ProjectBrutalistLayout (project pages).
+ * Shared by contact surfaces across the portfolio.
  */
 export const CONTACT = {
   location: 'Benevento, Italy',

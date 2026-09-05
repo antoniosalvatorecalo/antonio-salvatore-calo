@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { ProjectIndex } from '../components/home/ProjectIndex';
 import { SiteHeader } from '../components/ui/SiteHeader';
+import { PortfolioScene } from '../components/home/PortfolioScene';
+import { getProjectViewData } from '../components/projects/projectViewData';
 import { gsap } from '../lib/gsap-setup';
 import { FilterProvider } from '../providers/FilterContext';
-import { NavHoverProvider } from '../providers/NavHoverContext';
+import { useProjectTransition } from '../providers/ProjectTransitionProvider';
 
 interface PortfolioLayoutProps {
   deferInitialEffects?: boolean;
@@ -12,6 +13,8 @@ interface PortfolioLayoutProps {
 export const PortfolioLayout = ({
   deferInitialEffects = false,
 }: PortfolioLayoutProps) => {
+  const { phase, visibleSlug, returnToGallery } = useProjectTransition();
+  const visibleProject = visibleSlug ? getProjectViewData(visibleSlug) : null;
   useEffect(() => {
     if (deferInitialEffects) return;
     const raf = requestAnimationFrame(() => {
@@ -24,15 +27,18 @@ export const PortfolioLayout = ({
 
   return (
     <FilterProvider>
-      <NavHoverProvider>
-        <SiteHeader />
-        <main
-          className="portfolio-layout min-h-screen w-full bg-[var(--bg-primary)] font-sans transition-colors duration-300"
-          data-scroll-root
-        >
-          <ProjectIndex />
-        </main>
-      </NavHoverProvider>
+      <SiteHeader
+        transitionPhase={phase}
+        projectActive={Boolean(visibleProject) && phase !== 'opening'}
+        projectInfo={visibleProject ? {
+          name: visibleProject.title,
+          description: visibleProject.description,
+          links: visibleProject.links,
+          details: visibleProject.details,
+        } : undefined}
+        onBackToGallery={visibleProject && phase !== 'opening' ? returnToGallery : undefined}
+      />
+      <PortfolioScene />
     </FilterProvider>
   );
 };

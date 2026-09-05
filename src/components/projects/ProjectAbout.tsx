@@ -1,41 +1,82 @@
-import { useState } from 'react';
+import { useState, useId, type ReactNode } from 'react';
 import './ProjectAbout.css';
 
 interface ProjectAboutProps {
-  projectName: string;
+  /** Visible label on the toggle button (e.g. "about project", "contesto"). */
+  label: string;
+  /** Description text revealed when the accordion opens. */
   description: string;
-  links: { label: string; href: string }[];
+  /**
+   * Optional supporting content rendered below the description inside the
+   * accordion panel (e.g. links, credit lists).
+   */
+  children?: ReactNode;
+  /**
+   * Controlled open state. When provided, the accordion does not manage its
+   * own state and stays in sync with the parent. Used when several
+   * accordions are rendered in a row so they can share a single toggle.
+   */
+  isOpen?: boolean;
+  /** Called when the user clicks the toggle. Required when `isOpen` is controlled. */
+  onToggle?: () => void;
 }
 
-export function ProjectAbout({ projectName, description, links }: ProjectAboutProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+/**
+ * Single accordion cell rendered as part of the project header row.
+ *
+ * Renders a button labelled with `label` + a "+"/"−" icon. When clicked,
+ * reveals `description` (and any `children`) below. Can be controlled
+ * (via `isOpen`/`onToggle`) when used inside the multi-accordion row.
+ */
+export function ProjectAbout({
+  label,
+  description,
+  children,
+  isOpen: controlledOpen,
+  onToggle,
+}: ProjectAboutProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const contentId = useId();
+
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? Boolean(controlledOpen) : internalOpen;
+
+  const handleToggle = () => {
+    if (isControlled) {
+      onToggle?.();
+    } else {
+      setInternalOpen((prev) => !prev);
+    }
+  };
 
   return (
-    <div className="project-about">
+    <section
+      className={`project-about ${isOpen ? 'is-open' : ''}`}
+      aria-label={label}
+    >
       <button
+        type="button"
         className="project-about-toggle"
-        onClick={() => setIsExpanded(!isExpanded)}
-        aria-expanded={isExpanded}
+        onClick={handleToggle}
+        aria-expanded={isOpen}
+        aria-controls={contentId}
       >
-        <span className="project-about-title">{projectName}</span>
-        <span className="project-about-icon">{isExpanded ? '−' : '+'}</span>
+        <span className="project-about-title">{label}</span>
+        <span className="project-about-icon" aria-hidden="true">
+          {isOpen ? '−' : '+'}
+        </span>
       </button>
 
-      <div className={`project-about-content ${isExpanded ? 'is-expanded' : ''}`}>
+      <div
+        id={contentId}
+        className={`project-about-content ${isOpen ? 'is-expanded' : ''}`}
+        aria-hidden={!isOpen}
+        tabIndex={-1}
+      >
         <p className="project-about-description">{description}</p>
-        {links.length > 0 && (
-          <ul className="project-about-links">
-            {links.map((link, i) => (
-              <li key={i}>
-                <a href={link.href} target="_blank" rel="noopener noreferrer">
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+        {children}
       </div>
-    </div>
+    </section>
   );
 }
 

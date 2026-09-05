@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { SiteHeader } from '../ui/SiteHeader';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { isVimeoUrl, getVimeoEmbedUrl, getVimeoThumbnailUrl } from '@/lib/vimeo';
+import { getProjectImageDimensions } from '@/content/projectImageMetadata';
 import './SingleProjectView.css';
 
-interface ProjectData {
+export interface SliderProjectData {
   slug: string;
   title: string;
   description: string;
@@ -13,35 +13,52 @@ interface ProjectData {
 }
 
 interface SingleProjectViewProps {
-  project: ProjectData;
-  onClose: () => void;
+  project: SliderProjectData;
+  initialImage?: string;
+  interactive?: boolean;
 }
 
 function getImageName(path: string): string {
+  if (isVimeoUrl(path)) {
+    const match = path.match(/vimeo\.com\/(\d+)/);
+    return match ? `vimeo-${match[1]}` : 'vimeo-video';
+  }
   const filename = path.split('/').pop() || '';
   const name = filename.replace(/\.(webp|jpg|jpeg|png)$/i, '');
   return name;
 }
 
-export function SingleProjectView({ project, onClose }: SingleProjectViewProps) {
-  const navigate = useNavigate();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+export function SingleProjectView({ project, initialImage, interactive = true }: SingleProjectViewProps) {
+  const allImages = useMemo(
+    () => [project.coverImage, ...project.images.filter((image) => image !== project.coverImage)],
+    [project.coverImage, project.images],
+  );
+  const initialImageIndex = initialImage ? Math.max(0, allImages.indexOf(initialImage)) : 0;
+  const [currentImageIndex, setCurrentImageIndex] = useState(initialImageIndex);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [failedImage, setFailedImage] = useState<string | null>(null);
+  const [loadedVideo, setLoadedVideo] = useState<string | null>(null);
+  const [hasEnteredProject, setHasEnteredProject] = useState(interactive);
+  const currentImage = allImages[currentImageIndex];
+  const dimensions = getProjectImageDimensions(currentImage);
 
-  const allImages = [project.coverImage, ...project.images.filter(img => img !== project.coverImage)];
+  useEffect(() => {
+    if (interactive) setHasEnteredProject(true);
+    else setIsHovered(false);
+  }, [interactive]);
 
-  const handleBack = () => {
-    onClose();
-    navigate('/');
-  };
+  useEffect(() => {
+    setCurrentImageIndex(initialImageIndex);
+    setLightboxOpen(false);
+  }, [initialImageIndex, project.slug]);
 
   const handleNextImage = useCallback(() => {
     setCurrentImageIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0));
   }, [allImages.length]);
 
   useEffect(() => {
-    if (lightboxOpen) return;
+    if (lightboxOpen || !interactive) return;
 
     const interval = setInterval(() => {
       if (isHovered) {
@@ -50,41 +67,62 @@ export function SingleProjectView({ project, onClose }: SingleProjectViewProps) 
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [handleNextImage, lightboxOpen, isHovered]);
+  }, [handleNextImage, interactive, lightboxOpen, isHovered]);
 
   const handleLightboxClose = () => {
     setLightboxOpen(false);
   };
 
   const handleImageClick = () => {
-    setLightboxOpen(true);
+    if (interactive) setLightboxOpen(true);
   };
 
   return (
     <>
-      <div className="single-project-view is-active">
-        <SiteHeader 
-          projectInfo={{
-            name: project.title,
-            description: project.description,
-            links: project.links,
-          }}
-          onBackToGallery={handleBack}
-        />
-
+      <div className="single-project-view" data-project-transition-shell>
         <div className="single-project-content">
           <div className="single-project-carousel">
             <div 
               className="single-project-image-container"
+              data-project-transition-target={project.slug}
               onClick={handleImageClick}
-              onMouseEnter={() => setIsHovered(true)}
+              onMouseEnter={() => interactive && setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
-              <img
-                src={allImages[currentImageIndex]}
-                alt=""
-                className="single-project-image"
-              />
+              {isVimeoUrl(currentImage) ? (
+                <div className="single-project-video">
+                  <img
+                    src={getVimeoThumbnailUrl(currentImage)}
+                    alt={project.title}
+                    data-transition-media
+                    className="single-project-image"
+                    width={1280}
+                    height={720}
+                  />
+                  {(interactive || hasEnteredProject) && (
+                    <iframe
+                      src={getVimeoEmbedUrl(currentImage)}
+                      title={`${project.title} — video`}
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      onLoad={() => setLoadedVideo(currentImage)}
+                      style={{ opacity: loadedVideo === currentImage ? 1 : 0 }}
+                    />
+                  )}
+                </div>
+              ) : (
+                <img
+                  src={currentImage}
+                  alt={project.title}
+                  data-transition-media
+                  width={dimensions?.width}
+                  height={dimensions?.height}
+                  decoding="async"
+                  onError={() => setFailedImage(currentImage)}
+                  className="single-project-image"
+                />
+              )}
+              {failedImage === currentImage && <p role="status">Image unavailable.</p>}
             </div>
             <div className="single-project-name">
               [{getImageName(allImages[currentImageIndex])}]
@@ -93,7 +131,7 @@ export function SingleProjectView({ project, onClose }: SingleProjectViewProps) 
         </div>
       </div>
 
-      {lightboxOpen && (
+      {lightboxOpen && interactive && (
         <div className="lightbox" onClick={handleLightboxClose}>
           <button className="lightbox-close" aria-label="Close lightbox">[close x]</button>
           <button
@@ -110,12 +148,24 @@ export function SingleProjectView({ project, onClose }: SingleProjectViewProps) 
           >
             &gt;
           </button>
-          <img
-            src={allImages[currentImageIndex]}
-            alt=""
-            className="lightbox-image"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {isVimeoUrl(allImages[currentImageIndex]) ? (
+            <iframe
+              src={getVimeoEmbedUrl(allImages[currentImageIndex])}
+              title="Vimeo video"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              frameBorder="0"
+              style={{ width: '100%', height: '100%' }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={allImages[currentImageIndex]}
+              alt=""
+              className="lightbox-image"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
         </div>
       )}
     </>

@@ -1,15 +1,12 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { GalleryGrid } from './ProjectGrid';
 import { useFilter } from '@/providers/FilterContext';
 import { projectsRegistry } from '@/content/projects';
-import { useProjects } from '@/hooks/projects';
 import { ProjectPreview } from '@/components/projects/ProjectPreview';
 import { ProjectPreviewCarousel } from '@/components/projects/ProjectPreviewCarousel';
-import { SingleProjectView } from '@/components/projects/SingleProjectView';
 import { useNavHover } from '@/providers/NavHoverContext';
 import type { ProjectData } from '@/content/projects';
-import type { Project } from '@/hooks/projects';
+import { useProjectTransition } from '@/providers/ProjectTransitionProvider';
 import './ProjectIndex.css';
 
 const PROJECT_SLUG_MAP: Record<string, string> = {
@@ -36,40 +33,30 @@ function filterProjects(projects: ProjectData[], key: string): ProjectData[] {
   return projects;
 }
 
-export const ProjectIndex: React.FC = () => {
+interface ProjectIndexProps {
+  interactive?: boolean;
+  mediaActive?: boolean;
+}
+
+export const ProjectIndex: React.FC<ProjectIndexProps> = ({ interactive = true, mediaActive = true }) => {
   const { active: activeFilter } = useFilter();
-  const { projects, getProject } = useProjects();
-  const navigate = useNavigate();
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [isViewOpen, setIsViewOpen] = useState(false);
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const { navProjectImages } = useNavHover();
+  const { startProjectTransition } = useProjectTransition();
 
   const filteredProjects = filterProjects(projectsRegistry, activeFilter);
 
-  const openProjectView = useCallback((project: Project) => {
-    setSelectedProject(project);
-    setIsViewOpen(true);
-    setHoveredImage(null);
-  }, []);
-
-  const closeProjectView = useCallback(() => {
-    setIsViewOpen(false);
-    setSelectedProject(null);
-    setHoveredImage(null);
-  }, []);
-
-  const handleProjectClick = useCallback((projectId: string) => {
+  const handleProjectClick = useCallback((projectId: string, imageSrc: string, sourceElement: HTMLElement) => {
+    if (!interactive) return;
     const slug = PROJECT_SLUG_MAP[projectId] ?? projectId;
-    const project = getProject(slug);
-    if (project) {
-      openProjectView(project);
-    }
-  }, [getProject, openProjectView]);
+    setHoveredImage(null);
+    startProjectTransition({ slug, imageSrc, sourceElement });
+  }, [interactive, startProjectTransition]);
 
   const handleMouseEnter = useCallback((_projectId: string, imageSrc: string) => {
+    if (!interactive) return;
     setHoveredImage(imageSrc);
-  }, []);
+  }, [interactive]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredImage(null);
@@ -80,27 +67,15 @@ export const ProjectIndex: React.FC = () => {
       <section id="visual-index" className="project-index">
         <GalleryGrid
           projects={filteredProjects}
+          interactive={interactive}
+          mediaActive={mediaActive}
           onProjectClick={handleProjectClick}
           onProjectHover={{ onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave }}
         />
       </section>
 
-      {isViewOpen && selectedProject && (
-        <SingleProjectView
-          project={{
-            slug: selectedProject.slug,
-            title: selectedProject.title,
-            description: selectedProject.detail.shortDescription,
-            coverImage: selectedProject.coverImage,
-            images: selectedProject.images,
-            links: selectedProject.detail.projectLinks,
-          }}
-          onClose={closeProjectView}
-        />
-      )}
-
-      <ProjectPreview imageUrl={hoveredImage} />
-      {navProjectImages.length > 0 && (
+      <ProjectPreview imageUrl={interactive ? hoveredImage : null} />
+      {interactive && navProjectImages.length > 0 && (
         <ProjectPreviewCarousel images={navProjectImages} />
       )}
     </>

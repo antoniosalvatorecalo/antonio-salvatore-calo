@@ -1,0 +1,92 @@
+.portfolio-scene {
+  --scene-depth: 50vw;
+  --scene-angle: 0deg;
+  position: fixed;
+  inset: 0;
+  overflow: clip;
+  perspective: 4000px;
+  perspective-origin: 50% 50%;
+  background: var(--bg-primary);
+}
+
+/* Overflow, opacity and filters on this chain would flatten the shared 3D space. */
+.scene-roll,
+.scene-depth,
+.scene-rotor,
+.scene-plane,
+.scene-project-content {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+}
+
+.scene-roll { transform: rotateZ(var(--scene-angle)); }
+.scene-depth { transform: translateZ(calc(-1 * var(--scene-depth))); }
+.scene-rotor { transform: rotateY(var(--scene-angle)); }
+
+.scene-plane {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.scene-plane--index {
+  transform: translateZ(var(--scene-depth));
+  background: var(--bg-primary);
+}
+
+.scene-plane--project {
+  transform: rotateY(90deg) translateZ(var(--scene-depth));
+}
+
+.scene-project-content {
+  transform: rotateZ(90deg);
+  background: var(--bg-primary);
+}
+
+.portfolio-scene[data-transition-phase='opening'] .scene-roll,
+.portfolio-scene[data-transition-phase='closing'] .scene-roll,
+.portfolio-scene[data-transition-phase='opening'] .scene-rotor,
+.portfolio-scene[data-transition-phase='closing'] .scene-rotor {
+  will-change: transform;
+}
+
+.scene-plane[inert] { pointer-events: none; }
+
+/* The mounted gallery retains its scroll and filter state while parked. */
+.portfolio-scene[data-transition-phase='project'] .scene-plane--index {
+  display: none;
+}
+
+/* At either endpoint the composed matrix is identity. Flatten it explicitly so
+   hit testing, fixed lightboxes and text rendering use ordinary viewport geometry. */
+.portfolio-scene[data-transition-phase='idle'] :is(.scene-roll, .scene-depth, .scene-rotor, .scene-plane--index),
+.portfolio-scene[data-transition-phase='project'] :is(.scene-roll, .scene-depth, .scene-rotor, .scene-plane--project, .scene-project-content) {
+  transform: none;
+  transform-style: flat;
+}
+
+@media (max-width: 767px) {
+  .portfolio-scene[data-transition-phase='idle'] {
+    position: relative;
+    min-height: 100%;
+    height: auto;
+    overflow: visible;
+    perspective: none;
+  }
+
+  /* In the resting mobile home the index must participate in normal layout so
+     the page can grow beyond the header and scroll through every thumbnail.
+     These elements return to the absolute 3D chain as soon as a transition
+     starts. */
+  .portfolio-scene[data-transition-phase='idle'] :is(.scene-roll, .scene-depth, .scene-rotor, .scene-plane--index) {
+    position: relative;
+    inset: auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .portfolio-scene[data-transition-phase='idle'] .scene-plane--index {
+    width: 100%;
+  }
+}

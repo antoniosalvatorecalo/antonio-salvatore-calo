@@ -1,109 +1,223 @@
+/* ProjectAbout — accordion cell rendered inside the project header row. */
+
 .project-about {
-  position: absolute;
-  top: 100px;
-  left: 24px;
-  max-width: 320px;
-  z-index: 155;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  box-sizing: border-box;
 }
 
+.project-about:first-child {
+  padding-left: 0;
+}
+
+.project-about:last-child {
+  padding-right: 0;
+}
+
+/* No vertical separators between cells — the row reads as a single block */
+
 .project-about-toggle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-default);
-  padding: 10px 16px;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: var(--space-2) 0;
   cursor: pointer;
   font-family: inherit;
-  color: var(--text-primary);
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  color: var(--text-muted);
+  text-align: left;
+  transition: color 0.2s ease;
 }
 
 .project-about-toggle:hover {
-  background: var(--bg-secondary);
-  border-color: var(--border-strong);
+  color: var(--text-secondary);
+}
+
+.project-about-toggle:focus-visible {
+  outline: 2px solid var(--border-strong);
+  outline-offset: 2px;
 }
 
 .project-about-title {
-  font-weight: 600;
-  font-size: 13px;
-  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 0.7rem;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.2;
 }
 
 .project-about-icon {
-  font-size: 18px;
-  font-weight: 300;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 16px;
+  font-weight: 400;
   line-height: 1;
-  min-width: 16px;
-  text-align: center;
+  color: var(--text-muted);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease;
 }
 
+.project-about.is-open .project-about-icon {
+  transform: rotate(180deg);
+}
+
+/* Accordion panel — collapsed by default */
 .project-about-content {
   overflow: hidden;
   max-height: 0;
   opacity: 0;
-  transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), 
-              opacity 0.3s ease, 
-              padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(-4px);
+  transition:
+    max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s ease,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    margin 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  padding-top: 0;
   pointer-events: none;
 }
 
 .project-about-content.is-expanded {
-  max-height: 300px;
+  /* Large enough to never clip; max-height animates between 0 and this value */
+  max-height: 1600px;
   opacity: 1;
-  padding-top: 16px;
+  transform: translateY(0);
+  padding-top: var(--space-3);
   pointer-events: auto;
 }
 
 .project-about-description {
-  font-size: 13px;
-  line-height: 1.65;
+  font-size: var(--text-sm);
+  line-height: 1.6;
   color: var(--text-secondary);
-  margin: 0 0 14px 0;
+  margin: 0;
 }
 
+/* Inline links rendered through children */
 .project-about-links {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: var(--space-3) 0 0;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-.project-about-links li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.project-about-links--standalone {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  gap: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-3);
 }
 
 .project-about-links a {
-  font-size: 12px;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: var(--text-primary);
   text-decoration: none;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-default);
   padding-bottom: 2px;
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .project-about-links a:hover {
   border-color: var(--text-primary);
+}
+
+/* Credits list — used by the "credits" cell */
+.project-about-credits {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.project-about-credit-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-about-credit-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.project-about-credit-value {
+  font-size: var(--text-sm);
+  line-height: 1.5;
   color: var(--text-primary);
 }
 
-@media (max-width: 767px) {
-  .project-about {
-    top: 80px;
-    left: 16px;
-    max-width: calc(100vw - 80px);
-  }
+/* CTA links rendered inside a cell (e.g. credits cell) */
+.project-about-cta {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-3) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
 
-  .project-about-toggle {
-    padding: 8px 12px;
+.project-about-cta a {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 2px;
+  width: fit-content;
+  transition: border-color 0.2s ease;
+}
+
+.project-about-cta a:hover {
+  border-color: var(--text-primary);
+}
+
+/* Tablet keeps 5 columns but tightens spacing */
+@media (max-width: 1023px) {
+  .project-about {
+    padding: 0 var(--space-2);
   }
 
   .project-about-title {
-    font-size: 12px;
+    font-size: 10px;
+  }
+}
+
+/* Mobile — collapses into a vertical stack, no separators between cells */
+@media (max-width: 767px) {
+  .project-about {
+    padding: var(--space-3) 0;
+  }
+
+  .project-about-toggle {
+    padding: var(--space-1) 0;
+  }
+
+  .project-about-title {
+    font-size: 11px;
+  }
+
+  .project-about-description {
+    font-size: 13px;
   }
 }

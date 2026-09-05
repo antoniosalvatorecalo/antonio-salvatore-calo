@@ -156,6 +156,16 @@ export const translations: TranslationMap = {
 
   // ── Header (labels hard-coded in SiteHeader) ────────────────
   'header.menu-cta.contact':      { EN: 'Start a project',             IT: 'Inizia un progetto' },
+  'header.bio': { EN: 'is a Web & UI Designer and Frontend Developer based in Benevento, Italy. His practice sits between editorial design and software — building cinematic interfaces, typography systems, and interactive case studies across print, motion, and the browser. Recent projects include', IT: 'è Web & UI Designer e Frontend Developer con base a Benevento. La sua pratica unisce design editoriale e software: realizza interfacce cinematiche, sistemi tipografici e case study interattivi tra stampa, motion e browser. Tra i progetti recenti ci sono' },
+  'header.contact': { EN: 'Contact:', IT: 'Contatti:' },
+  'header.download-cv': { EN: 'Download CV', IT: 'Scarica CV' },
+  'header.download-portfolio': { EN: 'Download Portfolio', IT: 'Scarica Portfolio' },
+  'header.back': { EN: '< Back', IT: '< Indietro' },
+  'header.select-work': { EN: 'Select Work', IT: 'Lavori selezionati' },
+  'header.services': { EN: 'Services', IT: 'Servizi' },
+  'header.recognition': { EN: 'Recognition', IT: 'Riconoscimenti' },
+  'header.language': { EN: 'Language', IT: 'Lingua' },
+  'header.theme': { EN: 'Theme', IT: 'Tema' },
 
   // ── Visual Index (home grid + project detail) ──────────────
   'visualIndex.filterLabel':  { EN: 'Filter projects',          IT: 'Filtra progetti' },
@@ -172,6 +182,11 @@ export const translations: TranslationMap = {
   'visualIndex.back':         { EN: 'Back',                     IT: 'Indietro' },
   'visualIndex.prev':         { EN: 'Prev',                     IT: 'Prec' },
   'visualIndex.next':         { EN: 'Next',                     IT: 'Succ' },
+  'media.image-unavailable': { EN: 'Image unavailable.', IT: 'Immagine non disponibile.' },
+  'media.close': { EN: '[close x]', IT: '[chiudi x]' },
+  'media.previous': { EN: 'Previous image', IT: 'Immagine precedente' },
+  'media.next': { EN: 'Next image', IT: 'Immagine successiva' },
+  'media.video': { EN: 'video', IT: 'video' },
 
   // ── Awards ─────────────────────────────────────────────────
   'awards.faber-meeting-2026':    { EN: 'Faber Meeting 2026',           IT: 'Faber Meeting 2026' },

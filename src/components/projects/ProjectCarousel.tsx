@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
+import { isVimeoUrl } from '@/lib/vimeo';
 import './ProjectCarousel.css';
 
 interface ProjectCarouselProps {
@@ -63,7 +64,25 @@ export function ProjectCarousel({ images, onImageClick }: ProjectCarouselProps) 
           className="carousel-item"
           onClick={() => handleImageClick(i)}
         >
-          <img src={src} alt="" draggable={false} />
+          {isVimeoUrl(src) ? (
+            <div
+              className="carousel-video-placeholder"
+              style={{
+                background: '#1a1a1a',
+                color: '#fff',
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div style={{ fontSize: '48px', lineHeight: 1 }}>▶</div>
+            </div>
+          ) : (
+            <img src={src} alt="" draggable={false} />
+          )}
         </div>
       ))}
     </div>
