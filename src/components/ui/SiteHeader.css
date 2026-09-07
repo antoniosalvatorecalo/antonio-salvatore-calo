@@ -1025,6 +1025,13 @@
   }
 }
 
+/* Start Project button in info column on mobile */
+@media (max-width: 1023px) {
+  .site-header-col--language {
+    display: none;
+  }
+}
+
 /* ── Contact Panel ───────────────────────────────────────────── */
 .contact-panel-wrapper {
   position: absolute;
@@ -1072,7 +1079,7 @@
     width: 100%;
   }
   .site-header-col--info { grid-area: info; }
-  .site-header-col--nav { grid-area: nav; width: 100%; }
+  .site-header-col--nav { grid-area: nav; width: 100%; position: sticky; bottom: 0; background: var(--bg-primary); padding-top: var(--space-2); overflow-x: hidden; }
   .site-header-col--nav .site-header-nav-row,
   .site-header-col--nav .site-header-nav-group { width: 100%; }
   .site-header-col--project {
@@ -1121,20 +1128,24 @@
   .site-header-col--info,
   .site-header-col--info .site-header-info-name,
   .site-header-bio { width: 100%; max-width: none; }
-  .site-header-bio { font-size: 0.78rem; line-height: 1.3; }
+  .site-header-bio { font-size: 1rem; line-height: 1.5; }
   .site-header-contact { margin-top: var(--space-2); }
   .site-header-nav-row { flex-direction: column; gap: var(--space-3); }
-  .site-header-nav-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); width: 100%; }
+  .site-header-nav-group { display: flex; flex-direction: column; gap: var(--space-3); width: 100%; }
 
 @media (max-width: 767px) {
   .site-header-nav-item {
     min-width: 0;
     max-width: 100%;
+    overflow-x: hidden;
+  }
+  .site-header-nav-values {
+    overflow-x: hidden;
   }
 }
   .site-header-nav-actions { width: 100%; justify-content: flex-end; margin-top: var(--space-2); }
   .site-header-ctas { width: 100%; flex-wrap: nowrap; gap: clamp(0.45rem, 2.2vw, 0.8rem); margin-top: var(--space-2); white-space: nowrap; }
-  .site-header-cta-mini { min-width: 0; font-size: clamp(0.62rem, 2.4vw, 0.72rem); line-height: 1.2; letter-spacing: 0.02em; }
+  .site-header-cta-mini { min-width: 0; font-size: 1rem; line-height: 1.4; letter-spacing: 0.02em; }
   .site-header-cta-mobile { display: inline-flex; }
   .site-header-home-cta,
   .site-header-project-cta { display: none; }

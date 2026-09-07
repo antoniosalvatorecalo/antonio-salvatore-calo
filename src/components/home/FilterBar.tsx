@@ -55,7 +55,7 @@ export function FilterBar() {
         </button>
         {!isOpen && (
           <span className="filter-bar-current" aria-live="polite">
-            {activeLabel} <span className="filter-bar-count">{activeCount}</span>
+            {activeLabel} <span className="filter-bar-count">[{activeCount}]</span>
           </span>
         )}
       </div>
@@ -77,7 +77,7 @@ export function FilterBar() {
                 onClick={() => setActive('all')}
                 aria-pressed={active === 'all'}
               >
-                {locale === 'IT' ? 'Tutti' : 'All'} <span className="filter-bar-count">{projects.length}</span>
+                {locale === 'IT' ? 'Tutti' : 'All'} <span className="filter-bar-count">[{projects.length}]</span>
               </button>
               {servicesWithCounts.map(({ name, count }) => (
                 <button
@@ -87,7 +87,7 @@ export function FilterBar() {
                   onClick={() => setActive(name)}
                   aria-pressed={active === name}
                 >
-                  {getLabel(name)} <span className="filter-bar-count">{count}</span>
+                  {getLabel(name)} <span className="filter-bar-count">[{count}]</span>
                 </button>
               ))}
             </div>

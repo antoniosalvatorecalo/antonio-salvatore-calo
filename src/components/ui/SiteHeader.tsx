@@ -1,7 +1,6 @@
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { useLanguage } from '../../providers/LanguageProvider';
-import { RollingText } from './RollingText';
 import { useNavHover } from '../../providers/NavHoverContext';
 import { useOptionalProjectTransition } from '../../providers/ProjectTransitionProvider';
 import { useProjectCatalog, useSiteSettings } from '@/cms/ProjectCatalogProvider';
@@ -26,7 +25,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
   const headerRef = useRef<HTMLElement>(null);
   const startProjectButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
-  const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
   const { setNavHoveredProject, setNavProjectImages } = useNavHover();
   const transition = useOptionalProjectTransition();
@@ -37,7 +35,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
   const [contactOpen, setContactOpen] = useState(false);
 
   const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
-  const isContactPage = location.pathname === '/contact';
 
   // Escape key handler to close contact panel
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -61,11 +58,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
     observer.observe(header);
     return () => observer.disconnect();
   }, [isProjectPage, projectInfo?.name]);
-
-  const handleGoContact = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    navigate('/contact');
-  };
 
   const handleGoHome = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isProjectPage || !onBackToGallery) return;
@@ -118,9 +110,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
                   {download.label}
                 </a>
               ))}
-              <a href="/contact" onClick={handleGoContact} className={`site-header-cta-mini site-header-cta-mobile${isContactPage ? ' is-active' : ''}`} aria-current={isContactPage ? 'page' : undefined}>
-                <RollingText text={t('header.menu-cta.contact')} />
-              </a>
               {onBackToGallery && (
                 <button onClick={onBackToGallery} className="site-header-cta-mini" data-transition-control>
                   {t('header.back')}

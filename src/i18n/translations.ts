@@ -195,7 +195,7 @@ export const translations: TranslationMap = {
   'principles.vc-title': { EN: 'Visual Clarity', IT: 'Chiarezza Visiva' },
   'principles.vc-desc': {
     EN: 'Every pixel carries intention. I strip away the superfluous until only what matters remains — crafting interfaces where hierarchy is instant, typography breathes, and the user never has to ask "what do I do next?" because the design already answered.',
-    IT: 'Ogni pixel ha un\'intenzione. Elimino il superfluo fino a lasciare solo ciò che conta — creando interfacce dove la gerarchia è istantanea, la tipografia respira, e l\'utente non deve mai chiedersi "cosa faccio dopo?" perché il design ha già risposto.',
+    IT: 'Ogni pixel ha un\'intenzione. Elimino il superfluo fino a lasciare solo ciò che conta — creando interfacce dove la gerarchia è istantanea, la tipografia respira, e l\'utente non deve mai chiedersi "cosa faccio?" perché il design ha già risposto.',
   },
   'principles.st-title': { EN: 'Strategic Thinking', IT: 'Pensiero Strategico' },
   'principles.st-desc': {
