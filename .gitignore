@@ -72,6 +72,9 @@ npm-debug.log*
 # Codex config
 .codex/
 
+# Kilo planning artifacts
+.kilo/
+
 # MCP tooling config (local/dev)
 .mcp.json
 

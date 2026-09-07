@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
-export type FilterKey = 'all' | 'identity' | 'motion' | 'research' | 'web';
+export type FilterKey = 'all' | string;
 
 interface FilterContextValue {
   active: FilterKey;

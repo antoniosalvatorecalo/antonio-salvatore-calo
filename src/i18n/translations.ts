@@ -57,7 +57,6 @@ export const translations: TranslationMap = {
   'cta.send-message':        { EN: 'Send this message',   IT: 'Invia messaggio' },
   'cta.send-another':        { EN: 'Send another message',IT: 'Invia un altro messaggio' },
   'cta.start-over':          { EN: 'Start over',          IT: 'Ricomincia' },
-  'cta.open-email-draft':    { EN: 'Open email draft',    IT: 'Apri bozza email' },
   'cta.process':             { EN: 'Process',             IT: 'Processo' },
   'cta.live':                { EN: 'Live',                IT: 'Live' },
   'cta.prototype':           { EN: 'Prototype',           IT: 'Prototipo' },
@@ -77,7 +76,6 @@ export const translations: TranslationMap = {
   'hero.aggregator':   { EN: 'Aggregator',      IT: 'Aggregatore' },
   'hero.bugonia-full': { EN: 'Bugonia Ticket First Website Concept', IT: 'Bugonia Ticket First Concept Sito Web' },
   'hero.newsquest-full': { EN: 'Newsquest Mobile News Aggregator', IT: 'Newsquest Aggregatore Notizie Mobile' },
-  'hero.full-name': { EN: 'Antonio Salvatore Calò', IT: 'Antonio Salvatore Calò' },
 
   // ── Project Descriptions (Bugonia) ──────────────────────────
   'bugonia.desc-col1': {
@@ -156,16 +154,12 @@ export const translations: TranslationMap = {
 
   // ── Header (labels hard-coded in SiteHeader) ────────────────
   'header.menu-cta.contact':      { EN: 'Start a project',             IT: 'Inizia un progetto' },
-  'header.bio': { EN: 'is a Web & UI Designer and Frontend Developer based in Benevento, Italy. His practice sits between editorial design and software — building cinematic interfaces, typography systems, and interactive case studies across print, motion, and the browser. Recent projects include', IT: 'è Web & UI Designer e Frontend Developer con base a Benevento. La sua pratica unisce design editoriale e software: realizza interfacce cinematiche, sistemi tipografici e case study interattivi tra stampa, motion e browser. Tra i progetti recenti ci sono' },
   'header.contact': { EN: 'Contact:', IT: 'Contatti:' },
-  'header.download-cv': { EN: 'Download CV', IT: 'Scarica CV' },
-  'header.download-portfolio': { EN: 'Download Portfolio', IT: 'Scarica Portfolio' },
   'header.back': { EN: '< Back', IT: '< Indietro' },
   'header.select-work': { EN: 'Select Work', IT: 'Lavori selezionati' },
   'header.services': { EN: 'Services', IT: 'Servizi' },
   'header.recognition': { EN: 'Recognition', IT: 'Riconoscimenti' },
   'header.language': { EN: 'Language', IT: 'Lingua' },
-  'header.theme': { EN: 'Theme', IT: 'Tema' },
 
   // ── Visual Index (home grid + project detail) ──────────────
   'visualIndex.filterLabel':  { EN: 'Filter projects',          IT: 'Filtra progetti' },
@@ -189,7 +183,6 @@ export const translations: TranslationMap = {
   'media.video': { EN: 'video', IT: 'video' },
 
   // ── Awards ─────────────────────────────────────────────────
-  'awards.faber-meeting-2026':    { EN: 'Faber Meeting 2026',           IT: 'Faber Meeting 2026' },
   'awards.faber-meeting-desc':    { EN: 'Selected — Independent Design Track.', IT: 'Selezionato — Independent Design Track.' },
 
   // ── Artwork ────────────────────────────────────────────────
@@ -268,7 +261,6 @@ export const translations: TranslationMap = {
   'contact.email':    { EN: 'antonio.salvatore.calo@gmail.com',  IT: 'antonio.salvatore.calo@gmail.com' },
   'contact.couldnt-send':  { EN: "Couldn't send directly.",        IT: 'Impossibile inviare direttamente.' },
   'contact.something-wrong': { EN: 'Something went wrong.',        IT: 'Qualcosa è andato storto.' },
-  'contact.fallback-draft': { EN: 'A draft email has been opened as fallback — just hit send.', IT: 'Una bozza email è stata aperta come fallback — basta inviare.' },
 
   // ── Work Page ────────────────────────────────────────────────
   'work.label-bugonia':   { EN: 'BUGONIA',   IT: 'BUGONIA' },

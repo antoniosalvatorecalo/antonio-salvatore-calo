@@ -74,10 +74,6 @@ export default defineConfig(() => {
               return 'vendor-gsap';
             }
 
-            if (id.includes('/node_modules/lenis/')) {
-              return 'vendor-lenis';
-            }
-
             return undefined;
           },
         },

@@ -1,18 +1,14 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { useLanguage } from '../../providers/LanguageProvider';
-import { useTheme } from '../../hooks/theme/useTheme';
 import { RollingText } from './RollingText';
 import { useNavHover } from '../../providers/NavHoverContext';
 import { useOptionalProjectTransition } from '../../providers/ProjectTransitionProvider';
-import { projectsRegistry } from '../../content/projects';
+import { useProjectCatalog, useSiteSettings } from '@/cms/ProjectCatalogProvider';
 import { ProjectDetailsGrid, type ProjectDetailColumn } from '../projects/ProjectDetailsGrid';
+import { ContactFormExperience } from './ContactFormExperience';
+import { AnimatedContactPanel } from './AnimatedContactPanel';
 import './SiteHeader.css';
-
-const PROJECT_IMAGES: Record<string, string[]> = {
-  bugonia: projectsRegistry.find(p => p.id === 'bugonia')?.images || [],
-  newsquest: projectsRegistry.find(p => p.id === 'newsquest')?.images || [],
-};
 
 interface SiteHeaderProps {
   transitionPhase?: 'idle' | 'opening' | 'project' | 'closing';
@@ -28,15 +24,33 @@ interface SiteHeaderProps {
 
 export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectInfo, onBackToGallery, transitionPhase }) => {
   const headerRef = useRef<HTMLElement>(null);
+  const startProjectButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
-  const { theme, toggle: toggleTheme } = useTheme();
   const { setNavHoveredProject, setNavProjectImages } = useNavHover();
   const transition = useOptionalProjectTransition();
+  const { getProject, projects } = useProjectCatalog();
+  const siteSettings = useSiteSettings();
+  const publicEmail = siteSettings.publicContacts.find((contact) => contact.kind === 'email');
+
+  const [contactOpen, setContactOpen] = useState(false);
 
   const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
   const isContactPage = location.pathname === '/contact';
+
+  // Escape key handler to close contact panel
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && contactOpen) {
+      setContactOpen(false);
+      startProjectButtonRef.current?.focus();
+    }
+  }, [contactOpen]);
+
+  useLayoutEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   useLayoutEffect(() => {
     const header = headerRef.current;
@@ -60,8 +74,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
   };
 
   const handleProjectHover = (projectId: string) => {
+    const project = getProject(projectId);
     setNavHoveredProject(projectId);
-    setNavProjectImages(PROJECT_IMAGES[projectId] || []);
+    setNavProjectImages(project?.media.map((media) => media.src) ?? []);
   };
 
   const handleProjectLeave = () => {
@@ -72,11 +87,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
   const handleProjectClick = (event: React.MouseEvent<HTMLButtonElement>, projectId: string) => {
     event.preventDefault();
     if (!transition || transition.phase !== 'idle') return;
-    const imageSrc = PROJECT_IMAGES[projectId]?.[0];
-    if (!imageSrc) return;
+    const media = getProject(projectId)?.media[0];
+    if (!media) return;
     setNavHoveredProject(null);
     setNavProjectImages([]);
-    transition.startProjectTransition({ slug: projectId, imageSrc, sourceElement: event.currentTarget });
+    transition.startProjectTransition({
+      slug: projectId,
+      mediaKey: media.key,
+      imageSrc: media.src,
+      sourceElement: event.currentTarget,
+    });
   };
 
   return (
@@ -86,32 +106,28 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
         <div className="site-header-col site-header-col--info">
           <div className="site-header-info-name">
             <p className="site-header-bio">
-              <Link to="/" onClick={handleGoHome} className="site-header-name">Antonio Salvatore Calò</Link> {t('header.bio')} <strong>Bugonia</strong>, a Ticket First website concept, and <strong>Newsquest</strong>, a mobile news aggregator.
+              <Link to="/" onClick={handleGoHome} className="site-header-name">{siteSettings.displayName}</Link> {siteSettings.bio}
             </p>
             <div className="site-header-contact">
               <span className="site-header-contact-label">{t('header.contact')}</span>
-              <a href="mailto:antonio.salvatore.calo@gmail.com" className="site-header-contact-email">
-                antonio.salvatore.calo@gmail.com
-              </a>
+              {publicEmail?.href && <a href={publicEmail.href} className="site-header-contact-email">{publicEmail.value}</a>}
             </div>
             <div className="site-header-ctas">
-              <a href="/media/CV e Portfolio/CV_antonio_salvatore_calo_.pdf" download className="site-header-cta-mini">
-                <RollingText text={t('header.download-cv')} />
-              </a>
-              <a href="/media/CV e Portfolio/Portfolio_Antonio_Salvatore_Calo_.pdf" download className="site-header-cta-mini">
-                <RollingText text={t('header.download-portfolio')} />
-              </a>
+              {siteSettings.downloads.map((download) => (
+                <a key={download.kind} href={download.href} download className="site-header-cta-mini">
+                  {download.label}
+                </a>
+              ))}
               <a href="/contact" onClick={handleGoContact} className={`site-header-cta-mini site-header-cta-mobile${isContactPage ? ' is-active' : ''}`} aria-current={isContactPage ? 'page' : undefined}>
                 <RollingText text={t('header.menu-cta.contact')} />
               </a>
               {onBackToGallery && (
                 <button onClick={onBackToGallery} className="site-header-cta-mini" data-transition-control>
-                  <RollingText text={t('header.back')} />
+                  {t('header.back')}
                 </button>
               )}
               <div className="site-header-mobile-switches">
                 <button type="button" onClick={(e) => { e.preventDefault(); setLocale(locale === 'EN' ? 'IT' : 'EN'); }} aria-label={`Language: ${locale}`} aria-pressed={locale === 'IT'} className="site-header-switch-btn">[ {locale} ]</button>
-                <button type="button" onClick={(e) => { e.preventDefault(); toggleTheme(); }} aria-label={`Theme: ${theme}`} aria-pressed={theme === 'dark'} className="site-header-switch-btn">[ {theme === 'light' ? 'LI' : 'DR'} ]</button>
               </div>
             </div>
           </div>
@@ -125,63 +141,96 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
           </div>
         )}
 
-        {/* RIGHT: Nav actions */}
+        {/* CENTER: Nav actions */}
         <div key={isProjectPage ? 'project' : 'home'} className="site-header-col site-header-col--nav" data-transition-control>
           {isProjectPage ? (
             <>
-              <a href="/contact" onClick={handleGoContact} className={`site-header-cta site-header-project-cta${isContactPage ? ' is-active' : ''}`} aria-current={isContactPage ? 'page' : undefined}>{t('header.menu-cta.contact')}</a>
-              <div className="site-header-switches">
+              <div className="site-header-project-nav-row">
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); setLocale(locale === 'EN' ? 'IT' : 'EN'); }}
-                  aria-label={`Language: ${locale}. Click to switch.`}
-                  aria-pressed={locale === 'IT'}
-                  className="site-header-switch-btn"
-                >[ {locale} ]</button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); toggleTheme(); }}
-                  aria-label={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}. Click to switch.`}
-                  aria-pressed={theme === 'dark'}
-                  className="site-header-switch-btn"
-                >[ {theme === 'light' ? 'LI' : 'DR'} ]</button>
+                  className={`site-header-start-project${contactOpen ? ' is-active' : ''}`}
+                  onClick={() => setContactOpen((open) => !open)}
+                  aria-expanded={contactOpen}
+                >
+                  <span>{t('header.menu-cta.contact')}</span>
+                  <span className="site-header-start-project-indicator">{contactOpen ? '−' : '+'}</span>
+                </button>
+
+                <div className="site-header-switches">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setLocale(locale === 'EN' ? 'IT' : 'EN'); }}
+                    aria-label={`Language: ${locale}. Click to switch.`}
+                    aria-pressed={locale === 'IT'}
+                    className="site-header-switch-btn"
+                  >[ {locale} ]</button>
+                </div>
               </div>
             </>
           ) : (
-            <div className="site-header-nav-row">
-              <div className="site-header-nav-group">
-                <div className="site-header-nav-item">
-                  <span className="site-header-nav-label">{t('header.select-work')}</span>
-                  <div className="site-header-nav-values">
-                    <button type="button" aria-label={`${locale === 'IT' ? 'Apri il progetto' : 'Open'} Bugonia`} onClick={(event) => handleProjectClick(event, 'bugonia')} onMouseEnter={() => handleProjectHover('bugonia')} onMouseLeave={handleProjectLeave}>Bugonia</button>
-                    <button type="button" aria-label={`${locale === 'IT' ? 'Apri il progetto' : 'Open'} Newsquest`} onClick={(event) => handleProjectClick(event, 'newsquest')} onMouseEnter={() => handleProjectHover('newsquest')} onMouseLeave={handleProjectLeave}>Newsquest</button>
+            <>
+              {/* CENTER: Select Work, Services, Recognition + Start Project */}
+              <div className="site-header-nav-row">
+                <div className="site-header-nav-group">
+                  <div className="site-header-nav-item">
+                    <span className="site-header-nav-label">{t('header.select-work')}</span>
+                    <div className="site-header-nav-values">
+                      {projects.map((project) => (
+                        <button key={project.slug} type="button" aria-label={`${locale === 'IT' ? 'Apri il progetto' : 'Open'} ${project.title}`} onClick={(event) => handleProjectClick(event, project.slug)} onMouseEnter={() => handleProjectHover(project.slug)} onMouseLeave={handleProjectLeave}>{project.title}</button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="site-header-nav-item">
-                  <span className="site-header-nav-label">{t('header.services')}</span>
-                  <div className="site-header-nav-values">
-                    <span>UI/UX</span>
-                    <span>Web Design</span>
-                    <span>Motion</span>
+                  <div className="site-header-nav-item">
+                    <span className="site-header-nav-label">{t('header.recognition')}</span>
+                    <div className="site-header-nav-values">
+                      {siteSettings.recognition.map((item) => <span key={item}>{item}</span>)}
+                    </div>
                   </div>
-                </div>
-                <div className="site-header-nav-item">
-                  <span className="site-header-nav-label">{t('header.recognition')}</span>
-                  <div className="site-header-nav-values">
-                    <span>Faber Meeting 2026</span>
-                  </div>
+                  {siteSettings.socials.length > 0 && (
+                    <div className="site-header-nav-item">
+                      <span className="site-header-nav-label">Social</span>
+                      <div className="site-header-nav-values">
+                        {siteSettings.socials.map((social) => (
+                          <a key={social.href} href={social.href} target="_blank" rel="noopener noreferrer" className="site-header-social-link">{social.label}</a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {!isProjectPage && (
+                    <div className="site-header-nav-item site-header-nav-item--cta">
+                      <button
+                        ref={startProjectButtonRef}
+                        type="button"
+                        className={`site-header-start-project${contactOpen ? ' is-active' : ''}`}
+                        onClick={() => setContactOpen((open) => !open)}
+                        aria-expanded={contactOpen}
+                        aria-controls="header-contact-popover"
+                      >
+                        <span>{t('header.menu-cta.contact')}</span>
+                        <span className="site-header-start-project-indicator" aria-hidden="true" />
+                      </button>
+
+                      <AnimatedContactPanel open={contactOpen}>
+                        <div id="header-contact-popover" className="site-header-contact-form">
+                          <ContactFormExperience compact />
+                        </div>
+                      </AnimatedContactPanel>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="site-header-nav-actions">
-                <a href="/contact" onClick={handleGoContact} className={`site-header-cta site-header-home-cta${isContactPage ? ' is-active' : ''}`} aria-current={isContactPage ? 'page' : undefined}>{t('header.menu-cta.contact')}</a>
-                <div className="site-header-switches">
-                  <button type="button" onClick={(e) => { e.preventDefault(); setLocale(locale === 'EN' ? 'IT' : 'EN'); }} aria-label={`Language: ${locale}`} aria-pressed={locale === 'IT'} className="site-header-switch-btn">[ {locale} ]</button>
-                  <button type="button" onClick={(e) => { e.preventDefault(); toggleTheme(); }} aria-label={`Theme: ${theme}`} aria-pressed={theme === 'dark'} className="site-header-switch-btn">[ {theme === 'light' ? 'LI' : 'DR'} ]</button>
-                </div>
-              </div>
-            </div>
+            </>
           )}
         </div>
+
+        {/* LANGUAGE: Dedicated column */}
+        {!isProjectPage && (
+          <div className="site-header-col site-header-col--language" data-transition-control>
+            <div className="site-header-switches">
+              <button type="button" onClick={(e) => { e.preventDefault(); setLocale(locale === 'EN' ? 'IT' : 'EN'); }} aria-label={`Language: ${locale}`} aria-pressed={locale === 'IT'} className="site-header-switch-btn">[ {locale} ]</button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

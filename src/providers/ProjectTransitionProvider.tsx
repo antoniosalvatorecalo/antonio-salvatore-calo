@@ -5,7 +5,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { gsap } from '@/lib/gsap-setup';
 import { waitForProjectMedia } from '@/lib/project-media-ready';
-import { getProjectViewData } from '@/components/projects/projectViewData';
+import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 import { useReducedMotionPreference } from './MotionPreferenceProvider';
 import {
   createCloseTimeline, createOpenTimeline, setHomePlaneState, setProjectPlaneState,
@@ -15,8 +15,9 @@ import { useTransitionInputLock } from '@/hooks/useTransitionInputLock';
 
 export type ProjectTransitionPhase = 'idle' | 'opening' | 'project' | 'closing';
 
-interface ProjectTransitionRequest {
+export interface ProjectTransitionRequest {
   slug: string;
+  mediaKey: string;
   imageSrc: string;
   sourceElement: HTMLElement;
 }
@@ -32,13 +33,14 @@ interface TransitionOrigin {
 interface TransitionState {
   phase: ProjectTransitionPhase;
   slug: string | null;
-  image: string | undefined;
+  mediaKey: string | undefined;
+  imageSrc: string | undefined;
 }
 
 interface ProjectTransitionContextValue {
   phase: ProjectTransitionPhase;
   selectedSlug: string | null;
-  selectedImage: string | undefined;
+  selectedMediaKey: string | undefined;
   visibleSlug: string | null;
   shouldRenderProject: boolean;
   galleryInteractive: boolean;
@@ -49,22 +51,31 @@ interface ProjectTransitionContextValue {
 }
 
 const ProjectTransitionContext = createContext<ProjectTransitionContextValue | null>(null);
-const HOME: TransitionState = { phase: 'idle', slug: null, image: undefined };
-const getRouteSlug = (pathname: string) => {
-  const slug = pathname.match(/^\/projects\/([^/]+)$/)?.[1];
-  return slug && getProjectViewData(slug) ? slug : null;
+const HOME: TransitionState = {phase: 'idle', slug: null, mediaKey: undefined, imageSrc: undefined};
+const getRouteSelection = (state: unknown) => {
+  if (!state || typeof state !== 'object') return {mediaKey: undefined, imageSrc: undefined};
+  return {
+    mediaKey: 'selectedMediaKey' in state && typeof state.selectedMediaKey === 'string'
+      ? state.selectedMediaKey
+      : undefined,
+    imageSrc: 'selectedImageSrc' in state && typeof state.selectedImageSrc === 'string'
+      ? state.selectedImageSrc
+      : undefined,
+  };
 };
-const getRouteImage = (state: unknown) =>
-  state && typeof state === 'object' && 'selectedImage' in state && typeof state.selectedImage === 'string'
-    ? state.selectedImage : undefined;
 
 export const ProjectTransitionProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const reducedMotion = useReducedMotionPreference();
+  const {getProject} = useProjectCatalog();
+  const getRouteSlug = useCallback((pathname: string) => {
+    const slug = pathname.match(/^\/projects\/([^/]+)$/)?.[1];
+    return slug && getProject(slug) ? slug : null;
+  }, [getProject]);
   const [state, setState] = useState<TransitionState>(() => {
     const slug = getRouteSlug(location.pathname);
-    return slug ? { phase: 'project', slug, image: getRouteImage(location.state) } : HOME;
+    return slug ? {phase: 'project', slug, ...getRouteSelection(location.state)} : HOME;
   });
   const stateRef = useRef(state);
   const locationRef = useRef(location);
@@ -105,7 +116,12 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     const path = `/projects/${current.slug}`;
     internalNavigationRef.current = path;
     commit({ ...current, phase: 'project' });
-    navigate(path, { state: { selectedImage: current.image } });
+    navigate(path, {
+      state: {
+        selectedMediaKey: current.mediaKey,
+        selectedImageSrc: current.imageSrc,
+      },
+    });
   }, [commit, navigate]);
 
   const finishClose = useCallback(() => {
@@ -126,7 +142,9 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
   }, [commit, navigate, restoreGallery]);
 
   const startProjectTransition = useCallback((request: ProjectTransitionRequest) => {
-    if (stateRef.current.phase !== 'idle' || !getProjectViewData(request.slug)) return;
+    const project = getProject(request.slug);
+    if (stateRef.current.phase !== 'idle' || !project) return;
+    if (!project.media.some((media) => media.key === request.mediaKey)) return;
     const grid = request.sourceElement.closest<HTMLElement>('[data-project-transition-grid]');
     const currentLocation = locationRef.current;
     originRef.current = {
@@ -137,8 +155,13 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
       sourceElement: request.sourceElement,
     };
     projectHistoryKeyRef.current = null;
-    commit({ phase: 'opening', slug: request.slug, image: request.imageSrc });
-  }, [commit]);
+    commit({
+      phase: 'opening',
+      slug: request.slug,
+      mediaKey: request.mediaKey,
+      imageSrc: request.imageSrc,
+    });
+  }, [commit, getProject]);
 
   const returnToGallery = useCallback(() => {
     if (stateRef.current.phase !== 'project') return;
@@ -163,7 +186,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     const current = stateRef.current;
     if (slug) {
       projectHistoryKeyRef.current = location.key;
-      commit({ phase: 'project', slug, image: getRouteImage(location.state) });
+      commit({phase: 'project', slug, ...getRouteSelection(location.state)});
     } else if (current.phase === 'project' || current.phase === 'closing') {
       closeSourceRef.current = 'pop';
       if (current.phase !== 'closing') commit({ ...current, phase: 'closing' });
@@ -171,7 +194,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
       commit(HOME);
       restoreGallery();
     }
-  }, [commit, location, restoreGallery]);
+  }, [commit, getRouteSlug, location, restoreGallery]);
 
   useLayoutEffect(() => {
     if (!planes) return;
@@ -259,7 +282,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
   const value = useMemo<ProjectTransitionContextValue>(() => ({
     phase: state.phase,
     selectedSlug: state.slug,
-    selectedImage: state.image,
+    selectedMediaKey: state.mediaKey,
     visibleSlug: state.slug,
     shouldRenderProject: Boolean(state.slug),
     galleryInteractive: state.phase === 'idle',

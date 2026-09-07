@@ -1,36 +1,18 @@
 import { useState, useCallback } from 'react';
 import { GalleryGrid } from './ProjectGrid';
-import { useFilter } from '@/providers/FilterContext';
-import { projectsRegistry } from '@/content/projects';
+import { FilterBar } from './FilterBar';
 import { ProjectPreview } from '@/components/projects/ProjectPreview';
 import { ProjectPreviewCarousel } from '@/components/projects/ProjectPreviewCarousel';
 import { useNavHover } from '@/providers/NavHoverContext';
-import type { ProjectData } from '@/content/projects';
+import type { ProjectDomain } from '@/cms/domain';
+import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 import { useProjectTransition } from '@/providers/ProjectTransitionProvider';
+import { useFilter } from '@/providers/FilterContext';
 import './ProjectIndex.css';
 
-const PROJECT_SLUG_MAP: Record<string, string> = {
-  bugonia: 'bugonia',
-  'bugonia-2': 'bugonia',
-  'bugonia-3': 'bugonia',
-  'bugonia-4': 'bugonia',
-  'bugonia-5': 'bugonia',
-  'bugonia-6': 'bugonia',
-  newsquest: 'newsquest',
-  'newsquest-2': 'newsquest',
-  'newsquest-3': 'newsquest',
-  'newsquest-4': 'newsquest',
-  'newsquest-5': 'newsquest',
-  'newsquest-6': 'newsquest',
-};
-
-function filterProjects(projects: ProjectData[], key: string): ProjectData[] {
-  if (key === 'all') return projects;
-  if (key === 'identity') return [];
-  if (key === 'motion') return projects.filter(p => p.category === 'Web Design' || p.tags?.some(t => t.toLowerCase() === 'motion'));
-  if (key === 'research') return projects.filter(p => p.tags?.some(t => t.toLowerCase() === 'research'));
-  if (key === 'web') return projects.filter(p => p.category === 'Web Design');
-  return projects;
+function filterProjectsByService(projects: ProjectDomain[], service: string | null): ProjectDomain[] {
+  if (!service || service === 'all') return projects;
+  return projects.filter(p => p.category === service);
 }
 
 interface ProjectIndexProps {
@@ -43,14 +25,14 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({ interactive = true, 
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const { navProjectImages } = useNavHover();
   const { startProjectTransition } = useProjectTransition();
+  const { projects } = useProjectCatalog();
 
-  const filteredProjects = filterProjects(projectsRegistry, activeFilter);
+  const filteredProjects = filterProjectsByService(projects, activeFilter === 'all' ? null : activeFilter);
 
-  const handleProjectClick = useCallback((projectId: string, imageSrc: string, sourceElement: HTMLElement) => {
+  const handleProjectClick = useCallback((projectId: string, mediaKey: string, imageSrc: string, sourceElement: HTMLElement) => {
     if (!interactive) return;
-    const slug = PROJECT_SLUG_MAP[projectId] ?? projectId;
     setHoveredImage(null);
-    startProjectTransition({ slug, imageSrc, sourceElement });
+    startProjectTransition({ slug: projectId, mediaKey, imageSrc, sourceElement });
   }, [interactive, startProjectTransition]);
 
   const handleMouseEnter = useCallback((_projectId: string, imageSrc: string) => {
@@ -67,6 +49,8 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({ interactive = true, 
       <section id="visual-index" className="project-index">
         <GalleryGrid
           projects={filteredProjects}
+          filters={<FilterBar />}
+          filterKey={activeFilter}
           interactive={interactive}
           mediaActive={mediaActive}
           onProjectClick={handleProjectClick}

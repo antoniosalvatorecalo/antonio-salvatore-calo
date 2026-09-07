@@ -51,13 +51,15 @@ export const RollingText = ({ text, className, trigger = true, delay = 0 }: Roll
       char.style.opacity = '0';
     });
 
-    requestAnimationFrame(() => {
+    const animationFrame = requestAnimationFrame(() => {
       charEls.forEach((char, i) => {
         char.style.transition = `transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay + i * 0.03}s, opacity 0.4s ease ${delay + i * 0.03}s`;
         char.style.transform = 'translateY(0)';
         char.style.opacity = '1';
       });
     });
+
+    return () => cancelAnimationFrame(animationFrame);
   }, [text, trigger]);
 
   return (

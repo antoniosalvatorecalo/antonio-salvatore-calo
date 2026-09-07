@@ -48,7 +48,7 @@
   gap: var(--space-3);
 }
 
-/* Legacy selector — kept for backwards compatibility */
+/* Legacy selectors — kept for backwards compatibility */
 .step-number {
   font-size: var(--ui-label-size);
   font-weight: var(--ui-label-weight);
@@ -57,14 +57,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Legacy selector — kept for backwards compatibility */
 .step-separator {
   width: 1px;
   height: 12px;
   background-color: var(--border-default);
 }
 
-/* Legacy selector — kept for backwards compatibility */
 .step-label {
   font-size: var(--ui-label-size);
   font-weight: var(--ui-label-weight);
@@ -88,20 +86,37 @@
   line-height: var(--ui-body-line-height);
   font-weight: 400;
   color: var(--ui-body-color);
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
-.sentence-prompt {
-  display: inline-block;
-  vertical-align: baseline;
-  position: relative;
+/* Compact form wrapper */
+.contact-form-experience--compact {
+  height: auto;
+  min-height: 0;
+  justify-content: flex-start;
+  overflow: visible;
 }
 
+/* Compact form: sentence line styling */
+.contact-form-experience--compact .sentence-line {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+  overflow-wrap: break-word;
+  word-break: normal;
+  line-height: 1.7;
+}
+
+/* Input wrapper with proper spacing */
 .sentence-input-wrap {
   display: inline-grid;
   vertical-align: baseline;
   min-width: 6ch;
   position: relative;
-  padding-right: 1.5rem;
+  padding-right: 3.5rem;
+  line-height: 1.7;
 }
 
 .sentence-input-mirror {
@@ -132,18 +147,28 @@
   font-weight: 400;
 }
 
-.input-submit-btn {
+/* [Enter] hint */
+.input-enter-hint {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
-.input-submit-btn:focus-visible {
-  outline: 2px solid var(--text-primary);
-  outline-offset: 2px;
+/* Sentence prompt */
+.sentence-prompt {
+  display: inline;
+  vertical-align: baseline;
+  position: relative;
 }
 
+/* Dropdown container */
 .sentence-dropdown {
   position: absolute;
   left: 0;
@@ -159,6 +184,7 @@
   padding: var(--space-2) 0;
 }
 
+/* Dropdown options */
 .dropdown-option {
   display: block;
   text-align: left;
@@ -169,6 +195,18 @@
   opacity: 0.6;
   transition: opacity 0.15s ease;
   letter-spacing: inherit;
+  cursor: pointer;
+}
+
+/* Compact dropdown: options on single line */
+.dropdown-option.compact {
+  opacity: 0.7;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+  display: inline-block;
+  min-width: auto;
 }
 
 @media (hover: hover) {
@@ -182,13 +220,33 @@
   outline-offset: 4px;
 }
 
-.cta-link {
+/* Send button - matches header CTA styling */
+.contact-form-experience .cta-link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   font-weight: 600;
-  margin-top: var(--space-2);
+  margin-top: var(--space-3);
   vertical-align: middle;
+  position: relative;
+  color: var(--cta-color);
+}
+
+.contact-form-experience .cta-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-form-experience .cta-link:hover::after {
+  transform: scaleX(1);
 }
 
 .cta-link-text {
@@ -209,7 +267,7 @@
   }
 }
 
-/* ── Arrow icon — hidden by default, appears on link hover ── */
+/* Arrow icon — hidden by default, appears on link hover */
 .group .nav-pill-arrow-icon {
   opacity: 0;
   transform: translateY(110%) rotate(22deg);

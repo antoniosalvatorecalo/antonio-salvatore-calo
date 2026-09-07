@@ -79,6 +79,39 @@
   padding: var(--space-3) var(--space-3);
 }
 
+/* Home page: 3-column layout */
+@media (min-width: 1024px) {
+  .site-header-inner:not(.is-project) {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "info nav language";
+    align-items: start;
+    column-gap: var(--space-4);
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .site-header-inner:not(.is-project) .site-header-col--info {
+    grid-area: info;
+    justify-self: start;
+  }
+
+  .site-header-inner:not(.is-project) .site-header-col--nav {
+    grid-area: nav;
+    display: flex;
+    justify-content: center;
+  }
+
+  .site-header-inner:not(.is-project) .site-header-col--nav .site-header-nav-row {
+    justify-content: center;
+  }
+
+  .site-header-inner:not(.is-project) .site-header-col--language {
+    grid-area: language;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
 .site-header-cols--paired {
   display: flex;
   gap: var(--space-6);
@@ -88,9 +121,9 @@
 .site-header-nav-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: var(--space-4);
+  gap: var(--space-2);
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: center;
   overflow-x: visible;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -103,8 +136,16 @@
 
 .site-header-nav-group {
   display: flex;
-  gap: var(--space-8);
+  gap: var(--space-4);
   align-items: flex-start;
+  flex-shrink: 0;
+  overflow-x: visible;
+}
+
+@media (max-width: 1200px) {
+  .site-header-nav-group {
+    gap: var(--space-3);
+  }
 }
 
 .site-header-nav-actions {
@@ -113,6 +154,19 @@
   gap: var(--space-3);
   flex-shrink: 0;
   overflow-x: visible;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.site-header-nav-actions .site-header-cta {
+  flex-shrink: 1;
+  max-width: max-content;
+  overflow: visible;
+}
+
+.site-header-nav-actions .site-header-switches {
+  flex-shrink: 0;
+  min-width: max-content;
 }
 
 .site-header-nav-item {
@@ -120,15 +174,79 @@
   flex-direction: column;
   gap: 2px;
   min-width: max-content;
+  max-width: max-content;
+  overflow: visible;
+}
+
+.site-header-nav-item--cta {
+  position: relative;
 }
 
 .site-header-nav-label {
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
+  font-size: var(--ui-label-size);
+  font-weight: var(--ui-label-weight);
+  letter-spacing: var(--ui-label-tracking);
   text-transform: uppercase;
-  color: var(--text-muted);
-  line-height: 1.2;
+  color: var(--ui-label-color);
+  line-height: var(--ui-label-line-height);
+}
+
+.site-header-filter-btn {
+  background: transparent;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+
+.site-header-filter-btn.is-open {
+  color: var(--text-primary);
+}
+
+.site-header-filter-values {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: max-content;
+}
+
+.site-header-filter-item {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: var(--ui-body-size);
+  font-weight: inherit;
+  line-height: var(--ui-body-line-height);
+  cursor: pointer;
+  text-align: left;
+  color: var(--ui-body-color);
+  padding: 0;
+  position: relative;
+  padding-left: 0.8rem;
+}
+
+.site-header-filter-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.site-header-filter-item:hover::before,
+.site-header-filter-item.is-active::before {
+  opacity: 1;
+}
+
+.site-header-filter-item.is-active {
+  font-weight: 600;
 }
 
 .site-header-nav-values {
@@ -139,9 +257,11 @@
 
 .site-header-nav-values span,
 .site-header-nav-values button {
-  font-size: 0.8125rem;
-  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: inherit;
   line-height: 1.4;
+  color: var(--ui-body-color);
   white-space: nowrap;
   display: block;
   position: relative;
@@ -150,7 +270,6 @@
   margin: 0;
   border: 0;
   background: transparent;
-  font: inherit;
   text-align: left;
   cursor: pointer;
 }
@@ -175,10 +294,48 @@
   transform: scaleX(1);
 }
 
+.site-header-social-link {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--ui-body-color);
+  white-space: nowrap;
+  display: block;
+  position: relative;
+  text-decoration: none;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  text-align: left;
+}
+
+.site-header-social-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.site-header-social-link:hover::after,
+.site-header-social-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.site-header-social-link:focus-visible {
+  outline: 2px solid var(--border-strong);
+  outline-offset: 2px;
+}
+
 .site-header-cta {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--cta-color);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -234,45 +391,10 @@
   }
 }
 
-@media (min-width: 1024px) {
-  .site-header-inner {
-    grid-template-columns: 5fr 4fr;
-    grid-template-areas: "info nav";
-    gap: var(--space-4);
-    padding: var(--space-4) var(--space-6);
-  }
-
-  .site-header-col--info { grid-area: info; }
-  .site-header-col--nav { grid-area: nav; }
-  .site-header-cols--paired {
-    display: flex;
-    gap: var(--space-6);
-    align-items: flex-start;
-  }
-  .site-header-col--awards {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-  .site-header-col--select-work {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-  .site-header-col--contact {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    align-items: center;
-    margin-top: 0;
-  }
-}
-
 /* On project pages: bio | project title + accordions | nav actions — all in one row */
 @media (min-width: 1024px) {
   .site-header-inner.is-project {
-    grid-template-columns: 5fr 4fr 3fr;
+    grid-template-columns: 1fr 2fr 1fr;
     grid-template-areas: "info project nav";
     grid-auto-rows: auto;
     column-gap: var(--space-6);
@@ -306,6 +428,11 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  overflow: visible;
+}
+
+.site-header-col--nav > * {
+  overflow: visible;
 }
 
 .site-header-col--project {
@@ -531,12 +658,17 @@
   font-size: 0.875rem; /* 14px */
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: var(--text-primary);
+  color: var(--cta-color);
   background: transparent;
   border: none;
   text-decoration: none;
   line-height: 1.3;
   position: relative;
+  opacity: 1;
+}
+
+.site-header-cta-mini span {
+  color: var(--cta-color);
 }
 .site-header-cta-mini::after {
   content: '';
@@ -618,15 +750,6 @@
   opacity: 0.6;
 }
 
-/* ── Column 4 — CTA + Lang + Theme (all on one row) ─────────── */
-.site-header-contact-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
 /* ── Project Column (project pages) ──────────────────────────── */
 .site-header-col--project {
   display: flex;
@@ -695,7 +818,7 @@
   gap: var(--space-3);
   font-size: 0.875rem; /* 14px */
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--cta-color);
   text-decoration: none;
   position: relative;
   line-height: 1.3;
@@ -777,11 +900,156 @@
   text-transform: uppercase;
   line-height: 1.2;
   width: fit-content;
+  opacity: 1;
+}
+
+/* Download and project-return controls must remain readable. */
+.site-header-cta-mini,
+.site-header-cta-mini span,
+.site-header-back-btn {
+  color: var(--cta-color, var(--text-primary));
+  visibility: visible;
 }
 
 .site-header-back-btn:focus-visible {
   outline: 2px solid var(--border-strong);
   outline-offset: 2px;
+}
+
+/* ── Start Project Button ─────────────────────────────────────── */
+.site-header-start-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: max-content;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cta-color);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  line-height: 1.3;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.site-header-start-project::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.site-header-start-project:hover::after,
+.site-header-start-project:focus-visible::after,
+.site-header-start-project.is-active::after {
+  transform: scaleX(1);
+}
+
+.site-header-start-project:focus-visible {
+  outline: 2px solid var(--border-strong);
+  outline-offset: 4px;
+}
+
+.site-header-start-project-indicator {
+  position: relative;
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  flex: 0 0 0.65rem;
+}
+
+.site-header-start-project-indicator::before,
+.site-header-start-project-indicator::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+}
+
+.site-header-start-project-indicator::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+  transition: opacity 220ms ease, transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.site-header-start-project.is-active .site-header-start-project-indicator::after {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.site-header-start-project:hover .site-header-start-project-indicator,
+.site-header-start-project.is-active .site-header-start-project-indicator {
+  opacity: 1;
+}
+
+/* ── Project Nav Row (for project pages) ────────────────────── */
+.site-header-project-nav-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.site-header-contact-form {
+  padding-top: 0;
+  padding-bottom: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Compact contact form wrapper */
+.contact-panel-wrapper .site-header-contact-form {
+  height: auto;
+  min-height: 0;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+/* Mobile: prevent overflow issues */
+@media (max-width: 767px) {
+  .site-header-contact-form {
+    max-height: calc(100dvh - var(--header-height) - 60px);
+    overflow-y: auto;
+  }
+}
+
+/* ── Contact Panel ───────────────────────────────────────────── */
+.contact-panel-wrapper {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 0;
+  width: clamp(14rem, 18vw, 18rem);
+  min-width: 0;
+  z-index: 3;
+  background: var(--bg-primary);
+  overflow: visible;
+  transform-origin: top left;
+}
+
+/* Mobile/Tablet: ensure panel stays within viewport */
+@media (max-width: 1023px) {
+  .contact-panel-wrapper {
+    width: clamp(12rem, 85vw, 18rem);
+    max-width: calc(100vw - var(--space-6));
+  }
+
+  /* Make panel scrollable if it exceeds viewport height */
+  .contact-panel-wrapper .site-header-contact-form {
+    max-height: calc(100dvh - var(--header-height) - 40px);
+    overflow-y: auto;
+  }
 }
 
 /* ── Tablet / mobile collapse ───────────────────────────────── */
@@ -856,7 +1124,14 @@
   .site-header-bio { font-size: 0.78rem; line-height: 1.3; }
   .site-header-contact { margin-top: var(--space-2); }
   .site-header-nav-row { flex-direction: column; gap: var(--space-3); }
-  .site-header-nav-group { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+  .site-header-nav-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); width: 100%; }
+
+@media (max-width: 767px) {
+  .site-header-nav-item {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
   .site-header-nav-actions { width: 100%; justify-content: flex-end; margin-top: var(--space-2); }
   .site-header-ctas { width: 100%; flex-wrap: nowrap; gap: clamp(0.45rem, 2.2vw, 0.8rem); margin-top: var(--space-2); white-space: nowrap; }
   .site-header-cta-mini { min-width: 0; font-size: clamp(0.62rem, 2.4vw, 0.72rem); line-height: 1.2; letter-spacing: 0.02em; }

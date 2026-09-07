@@ -1,1 +1,0 @@
-export const BUGONIA_SITE_URL = "https://bugonia-experience.com";

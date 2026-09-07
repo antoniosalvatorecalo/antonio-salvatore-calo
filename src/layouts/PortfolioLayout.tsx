@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { SiteHeader } from '../components/ui/SiteHeader';
 import { PortfolioScene } from '../components/home/PortfolioScene';
-import { getProjectViewData } from '../components/projects/projectViewData';
 import { gsap } from '../lib/gsap-setup';
 import { FilterProvider } from '../providers/FilterContext';
 import { useProjectTransition } from '../providers/ProjectTransitionProvider';
+import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 
 interface PortfolioLayoutProps {
   deferInitialEffects?: boolean;
@@ -14,7 +14,8 @@ export const PortfolioLayout = ({
   deferInitialEffects = false,
 }: PortfolioLayoutProps) => {
   const { phase, visibleSlug, returnToGallery } = useProjectTransition();
-  const visibleProject = visibleSlug ? getProjectViewData(visibleSlug) : null;
+  const { getProject } = useProjectCatalog();
+  const visibleProject = visibleSlug ? getProject(visibleSlug) : null;
   useEffect(() => {
     if (deferInitialEffects) return;
     const raf = requestAnimationFrame(() => {

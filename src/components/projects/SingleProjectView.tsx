@@ -1,47 +1,42 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { isVimeoUrl, getVimeoEmbedUrl, getVimeoThumbnailUrl } from '@/lib/vimeo';
-import { getProjectImageDimensions } from '@/content/projectImageMetadata';
+import type { ProjectDomain, ProjectMedia } from '@/cms/domain';
 import './SingleProjectView.css';
 
-export interface SliderProjectData {
-  slug: string;
-  title: string;
-  description: string;
-  coverImage: string;
-  images: string[];
-  links: { label: string; href: string }[];
-}
+export type SliderProjectData = Pick<ProjectDomain, 'slug' | 'title' | 'description' | 'media' | 'links'>;
 
 interface SingleProjectViewProps {
   project: SliderProjectData;
-  initialImage?: string;
+  initialMediaKey?: string;
   interactive?: boolean;
 }
 
-function getImageName(path: string): string {
-  if (isVimeoUrl(path)) {
-    const match = path.match(/vimeo\.com\/(\d+)/);
+function getImageName(media: ProjectMedia): string {
+  if (media.label) return media.label;
+  if (isVimeoUrl(media.src)) {
+    const match = media.src.match(/vimeo\.com\/(\d+)/);
     return match ? `vimeo-${match[1]}` : 'vimeo-video';
   }
-  const filename = path.split('/').pop() || '';
+  const filename = media.src.split('/').pop() || '';
   const name = filename.replace(/\.(webp|jpg|jpeg|png)$/i, '');
   return name;
 }
 
-export function SingleProjectView({ project, initialImage, interactive = true }: SingleProjectViewProps) {
-  const allImages = useMemo(
-    () => [project.coverImage, ...project.images.filter((image) => image !== project.coverImage)],
-    [project.coverImage, project.images],
-  );
-  const initialImageIndex = initialImage ? Math.max(0, allImages.indexOf(initialImage)) : 0;
-  const [currentImageIndex, setCurrentImageIndex] = useState(initialImageIndex);
+export function SingleProjectView({ project, initialMediaKey, interactive = true }: SingleProjectViewProps) {
+  const allMedia = useMemo(() => project.media, [project.media]);
+  const initialMediaIndex = initialMediaKey
+    ? Math.max(0, allMedia.findIndex((media) => media.key === initialMediaKey))
+    : 0;
+  const [currentImageIndex, setCurrentImageIndex] = useState(initialMediaIndex);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [failedImage, setFailedImage] = useState<string | null>(null);
   const [loadedVideo, setLoadedVideo] = useState<string | null>(null);
   const [hasEnteredProject, setHasEnteredProject] = useState(interactive);
-  const currentImage = allImages[currentImageIndex];
-  const dimensions = getProjectImageDimensions(currentImage);
+  const currentMedia = allMedia[currentImageIndex];
+  const dimensions = currentMedia?.width && currentMedia.height
+    ? {width: currentMedia.width, height: currentMedia.height}
+    : undefined;
 
   useEffect(() => {
     if (interactive) setHasEnteredProject(true);
@@ -49,13 +44,13 @@ export function SingleProjectView({ project, initialImage, interactive = true }:
   }, [interactive]);
 
   useEffect(() => {
-    setCurrentImageIndex(initialImageIndex);
+    setCurrentImageIndex(initialMediaIndex);
     setLightboxOpen(false);
-  }, [initialImageIndex, project.slug]);
+  }, [initialMediaIndex, project.slug]);
 
   const handleNextImage = useCallback(() => {
-    setCurrentImageIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0));
-  }, [allImages.length]);
+    setCurrentImageIndex((prev) => (prev < allMedia.length - 1 ? prev + 1 : 0));
+  }, [allMedia.length]);
 
   useEffect(() => {
     if (lightboxOpen || !interactive) return;
@@ -68,6 +63,15 @@ export function SingleProjectView({ project, initialImage, interactive = true }:
 
     return () => clearInterval(interval);
   }, [handleNextImage, interactive, lightboxOpen, isHovered]);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLightboxOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen]);
 
   const handleLightboxClose = () => {
     setLightboxOpen(false);
@@ -85,15 +89,24 @@ export function SingleProjectView({ project, initialImage, interactive = true }:
             <div 
               className="single-project-image-container"
               data-project-transition-target={project.slug}
+              role={interactive ? 'button' : undefined}
+              tabIndex={interactive ? 0 : -1}
+              aria-label={interactive ? `Open ${currentMedia.alt}` : undefined}
               onClick={handleImageClick}
+              onKeyDown={(event) => {
+                if (interactive && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault();
+                  setLightboxOpen(true);
+                }
+              }}
               onMouseEnter={() => interactive && setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
-              {isVimeoUrl(currentImage) ? (
+              {currentMedia.type === 'vimeo' ? (
                 <div className="single-project-video">
                   <img
-                    src={getVimeoThumbnailUrl(currentImage)}
-                    alt={project.title}
+                    src={currentMedia.thumbnailSrc ?? getVimeoThumbnailUrl(currentMedia.src)}
+                    alt={currentMedia.alt}
                     data-transition-media
                     className="single-project-image"
                     width={1280}
@@ -101,56 +114,56 @@ export function SingleProjectView({ project, initialImage, interactive = true }:
                   />
                   {(interactive || hasEnteredProject) && (
                     <iframe
-                      src={getVimeoEmbedUrl(currentImage)}
                       title={`${project.title} — video`}
                       allow="autoplay; fullscreen; picture-in-picture"
                       allowFullScreen
-                      onLoad={() => setLoadedVideo(currentImage)}
-                      style={{ opacity: loadedVideo === currentImage ? 1 : 0 }}
+                      src={getVimeoEmbedUrl(currentMedia.src)}
+                      onLoad={() => setLoadedVideo(currentMedia.key)}
+                      style={{ opacity: loadedVideo === currentMedia.key ? 1 : 0 }}
                     />
                   )}
                 </div>
               ) : (
                 <img
-                  src={currentImage}
-                  alt={project.title}
+                  src={currentMedia.src}
+                  alt={currentMedia.alt}
                   data-transition-media
                   width={dimensions?.width}
                   height={dimensions?.height}
                   decoding="async"
-                  onError={() => setFailedImage(currentImage)}
+                  onError={() => setFailedImage(currentMedia.key)}
                   className="single-project-image"
                 />
               )}
-              {failedImage === currentImage && <p role="status">Image unavailable.</p>}
+              {failedImage === currentMedia.key && <p role="status">Image unavailable.</p>}
             </div>
             <div className="single-project-name">
-              [{getImageName(allImages[currentImageIndex])}]
+              [{getImageName(currentMedia)}]
             </div>
           </div>
         </div>
       </div>
 
       {lightboxOpen && interactive && (
-        <div className="lightbox" onClick={handleLightboxClose}>
-          <button className="lightbox-close" aria-label="Close lightbox">[close x]</button>
+        <div className="lightbox" role="dialog" aria-modal="true" aria-label={`${project.title} media viewer`} onClick={handleLightboxClose}>
+          <button autoFocus className="lightbox-close" aria-label="Close lightbox">[close x]</button>
           <button
             className="lightbox-prev"
             aria-label="Previous image"
-            onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : allImages.length - 1)); }}
+            onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : allMedia.length - 1)); }}
           >
             &lt;
           </button>
           <button
             className="lightbox-next"
             aria-label="Next image"
-            onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0)); }}
+            onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev < allMedia.length - 1 ? prev + 1 : 0)); }}
           >
             &gt;
           </button>
-          {isVimeoUrl(allImages[currentImageIndex]) ? (
+          {currentMedia.type === 'vimeo' ? (
             <iframe
-              src={getVimeoEmbedUrl(allImages[currentImageIndex])}
+              src={getVimeoEmbedUrl(currentMedia.src)}
               title="Vimeo video"
               allow="autoplay; fullscreen; picture-in-picture"
               allowFullScreen
@@ -160,8 +173,8 @@ export function SingleProjectView({ project, initialImage, interactive = true }:
             />
           ) : (
             <img
-              src={allImages[currentImageIndex]}
-              alt=""
+              src={currentMedia.src}
+              alt={currentMedia.alt}
               className="lightbox-image"
               onClick={(e) => e.stopPropagation()}
             />

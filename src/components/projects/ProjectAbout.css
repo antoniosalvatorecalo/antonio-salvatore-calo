@@ -73,17 +73,14 @@
 
 /* Accordion panel — collapsed by default */
 .project-about-content {
-  overflow: hidden;
+  overflow: visible;
   max-height: 0;
   opacity: 0;
   transform: translateY(-4px);
   transition:
     max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.3s ease,
-    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    padding 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    margin 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  padding-top: 0;
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
 
@@ -92,7 +89,6 @@
   max-height: 1600px;
   opacity: 1;
   transform: translateY(0);
-  padding-top: var(--space-3);
   pointer-events: auto;
 }
 
@@ -140,17 +136,23 @@
 /* Credits list — used by the "credits" cell */
 .project-about-credits {
   list-style: none;
-  padding: 0;
-  margin: var(--space-2) 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  padding: var(--space-3) 0 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.project-about-credits .project-about-credit-item {
+  min-width: 0;
 }
 
 .project-about-credit-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
 }
 
 .project-about-credit-label {
@@ -159,7 +161,7 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: var(--space-1);
+  white-space: nowrap;
 }
 
 .project-about-credit-value {
@@ -173,18 +175,20 @@
   list-style: none;
   padding: 0;
   margin: var(--space-3) 0 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-2);
+  align-items: start;
 }
 
 .project-about-cta a {
   font-size: var(--text-xs);
-  color: var(--text-primary);
+  color: var(--cta-color);
   text-decoration: none;
   border-bottom: 1px solid var(--border-default);
   padding-bottom: 2px;
   width: fit-content;
+  white-space: nowrap;
   transition: border-color 0.2s ease;
 }
 

@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef } from 'react';
 import { ProjectIndex } from './ProjectIndex';
 import { SingleProjectView } from '@/components/projects/SingleProjectView';
-import { getProjectViewData, asSliderProjectData } from '@/components/projects/projectViewData';
 import { useProjectTransition } from '@/providers/ProjectTransitionProvider';
+import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 import './PortfolioScene.css';
 
 export function PortfolioScene() {
@@ -13,14 +13,15 @@ export function PortfolioScene() {
   const projectPlaneRef = useRef<HTMLDivElement>(null);
   const {
     phase,
-    selectedImage,
+    selectedMediaKey,
     shouldRenderProject,
     visibleSlug,
     galleryInteractive,
     galleryMediaActive,
     registerScenePlanes,
   } = useProjectTransition();
-  const project = visibleSlug ? getProjectViewData(visibleSlug) : null;
+  const { getProject } = useProjectCatalog();
+  const project = visibleSlug ? getProject(visibleSlug) : null;
 
   useLayoutEffect(() => {
     const indexPlane = indexPlaneRef.current;
@@ -56,8 +57,8 @@ export function PortfolioScene() {
                 <div className="scene-project-content">
                   <SingleProjectView
                     key={project.slug}
-                    project={asSliderProjectData(project)}
-                    initialImage={selectedImage}
+                    project={project}
+                    initialMediaKey={selectedMediaKey}
                     interactive={phase === 'project'}
                   />
                 </div>

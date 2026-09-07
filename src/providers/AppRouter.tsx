@@ -4,6 +4,8 @@ import { PortfolioLayout } from '../layouts/PortfolioLayout';
 import { LanguageProvider } from './LanguageProvider';
 import { ProjectTransitionProvider } from './ProjectTransitionProvider';
 import { NavHoverProvider } from './NavHoverContext';
+import { ProjectCatalogGate, ProjectCatalogProvider } from '@/cms/ProjectCatalogProvider';
+import { SeoManager } from '@/cms/SeoManager';
 
 const ContactPage = React.lazy(() => import('../pages/contact/ContactPage'));
 
@@ -18,13 +20,18 @@ const PortfolioRouteLayout = () => (
 const AnimatedRoutes: React.FC = () => {
   return (
     <LanguageProvider>
-      <Routes>
-        <Route element={<PortfolioRouteLayout />}>
-          <Route index element={null} />
-          <Route path="projects/:slug" element={null} />
-        </Route>
-        <Route path="/contact" element={<Suspense fallback={FALLBACK}><ContactPage /></Suspense>} />
-      </Routes>
+      <ProjectCatalogProvider>
+        <ProjectCatalogGate>
+          <SeoManager />
+          <Routes>
+            <Route element={<PortfolioRouteLayout />}>
+              <Route index element={null} />
+              <Route path="projects/:slug" element={null} />
+            </Route>
+            <Route path="/contact" element={<Suspense fallback={FALLBACK}><ContactPage /></Suspense>} />
+          </Routes>
+        </ProjectCatalogGate>
+      </ProjectCatalogProvider>
     </LanguageProvider>
   );
 };

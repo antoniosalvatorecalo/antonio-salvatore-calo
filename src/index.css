@@ -81,6 +81,9 @@
   --text-inverse:       #F5F5F5;  /* 15.3:1 on bg-inverse */
   --text-inverse-muted: #A0A0A0;  /* 5.21:1 on bg-inverse */
 
+  /* CTA links — always visible */
+  --cta-color:         #0A0A0A;
+
   /* Color — borders */
   --border-subtle:  #E2E2E2;
   --border-default: #C8C8C8;
@@ -119,7 +122,7 @@
    * Stacking order reference (lowest → highest):
    *   Base layers    : default (0)
    *   Dropdown       :  20  — ContactBuilder dropdown
-   *   Project shell  :  60  — ProjectBrutalistLayout (page overlay)
+   *   Project shell  :  60  — persistent project plane
    *   Main nav       : 100  — SiteHeader (desktop + mobile)
    *   Skip link      : 999  — topmost layer (WCAG 2.4.1)
    *
@@ -133,40 +136,29 @@
   --z-skip-link:       999;
 
   /* Type scale — Minor Third (base 16px × 1.200) — fluid */
-  --text-display-xl: clamp(3rem, 6vw + 0.5rem, 5rem);    /* 48→’80px */
-  --text-display:    clamp(2.063rem, 4vw + 0.5rem, 3.625rem);   /* 33→’58px */
-  --text-h1:         clamp(1.75rem, 3.5vw + 0.25rem, 3rem);     /* 28→’48px */
-  --text-h2:         clamp(1.5rem, 2.8vw + 0.25rem, 2.5rem);    /* 24→’40px */
-  --text-h3:         clamp(1.25rem, 2.2vw + 0.2rem, 2.063rem);  /* 20→’33px */
-  --text-h4:         clamp(1.125rem, 1.8vw + 0.125rem, 1.75rem); /* 18→’28px */
-  --text-h5:         clamp(1rem, 1.5vw + 0.1rem, 1.438rem);     /* 16→’23px */
-  --text-h6:         clamp(0.875rem, 1.2vw + 0.1rem, 1.188rem); /* 14→’19px */
+  --text-display-xl: clamp(3rem, 6vw + 0.5rem, 5rem);    /* 48→'80px */
+  --text-display:    clamp(2.063rem, 4vw + 0.5rem, 3.625rem);   /* 33→'58px */
+  --text-h1:         clamp(1.75rem, 3.5vw + 0.25rem, 3rem);     /* 28→'48px */
+  --text-h2:         clamp(1.5rem, 2.8vw + 0.25rem, 2.5rem);    /* 24→'40px */
+  --text-h3:         clamp(1.25rem, 2.2vw + 0.2rem, 2.063rem);  /* 20→'33px */
+  --text-h4:         clamp(1.125rem, 1.8vw + 0.125rem, 1.75rem); /* 18→'28px */
+  --text-h5:         clamp(1rem, 1.5vw + 0.1rem, 1.438rem);     /* 16→'23px */
+  --text-h6:         clamp(0.875rem, 1.2vw + 0.1rem, 1.188rem); /* 14→'19px */
   --text-base:       1rem;      /* 16px — fixed */
   --text-sm:         0.813rem;  /* 13px — fixed */
   --text-xs:         0.688rem;  /* 11px — fixed */
-}
 
-/* â”€â”€ Dark Mode Token Overrides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-html[data-theme="dark"] {
-  /* surfaces — inverted */
-  --bg-primary:         #141414;
-  --bg-secondary:       #1F1F1F;
-  --bg-tertiary:        #2A2A2A;
-  --bg-inverse:         #F5F5F5;
-  --bg-inverse-subtle:  #F0F0F0;
+  /* ── UI Component Tokens — shared typography ─────────────────────────────── */
+  /* Used across SiteHeader and ContactBuilder for visual consistency */
+  --ui-label-size:      0.7rem;    /* 11.2px — label hierarchy */
+  --ui-label-weight:    500;
+  --ui-label-tracking:  0.12em;
+  --ui-label-line-height: 1.2;
+  --ui-label-color:     var(--text-muted);
 
-  /* text — inverted, all WCAG AA on dark surfaces */
-  --text-primary:       #F5F5F5;  /* 15.3:1 on bg-primary */
-  --text-secondary:     #A0A0A0;  /* 5.21:1 on bg-primary */
-  --text-muted:         #888888;  /* 5.35:1 on bg-primary */
-  --text-inverse:       #0A0A0A;  /* 19.6:1 on bg-inverse */
-  --text-inverse-muted: #3D3D3D;  /* 9.73:1 on bg-inverse */
-
-  /* borders — inverted */
-  --border-subtle:  rgba(245, 245, 245, 0.08);
-  --border-default: rgba(245, 245, 245, 0.15);
-  --border-strong:  #F5F5F5;
-  --border-inverse: rgba(10, 10, 10, 0.15);
+  --ui-body-size:       0.8125rem; /* 13px — body/value text */
+  --ui-body-line-height: 1.4;
+  --ui-body-color:      var(--text-primary);
 }
 
 /* â”€â”€ Glass Nav Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -176,14 +168,8 @@ html[data-theme="dark"] {
 }
 /* Plain overlay for specific project cards (no glass) */
 .plain-overlay {
-  background: rgba(0, 0, 0, 0.6); /* dark semiâ€‘transparent backdrop for contrast (light mode) */
-  color: var(--text-inverse);       /* whiteâ€‘ish text for readability */
-}
-
-/* Darkâ€‘mode override for plain overlay â€“ use light backdrop and dark text */
-html[data-theme="dark"] .plain-overlay {
-  background: rgba(255, 255, 255, 0.6); /* light semiâ€‘transparent for dark theme */
-  color: var(--text-inverse);       /* dark text for readability */
+  background: rgba(0, 0, 0, 0.6); /* semi-transparent backdrop for contrast */
+  color: var(--text-inverse);       /* white text for readability */
 }
 
 /* Ensure overlay link inherits overlay colour */
@@ -205,18 +191,7 @@ html[data-theme="dark"] .plain-overlay {
   --glass-nav-focus:     rgba(10, 10, 10, 0.55);
 }
 
-html[data-theme="dark"] {
-  --glass-nav-bg:        transparent;
-  --glass-nav-border:    transparent;
-  --glass-nav-highlight: transparent;
-  --glass-nav-shadow:    none;
-  --glass-nav-text:      #F5F5F5;
-  --glass-nav-btn-hover: transparent;
-  --glass-nav-btn-active: transparent;
-  --glass-nav-divider:   transparent;
-  --glass-nav-text-inactive: #AAAAAA;
-  --glass-nav-focus:     rgba(245, 245, 245, 0.65);
-}
+/* CTA links — handled by CSS variable --cta-color */
 
 .glass-nav {
   background: var(--glass-nav-bg);
@@ -257,8 +232,7 @@ html[data-theme="dark"] {
 }
 
 /* â”€â”€ FIX 1: Prevent scrollbar width shift â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-/* NOTE: scrollbar-gutter removed to eliminate white space on right side.
-   Lenis handles smooth scrolling without native scrollbar interference. */
+/* scrollbar-gutter is omitted to avoid a persistent strip beside the scene. */
 html {
   overflow: hidden;
 }
@@ -397,12 +371,6 @@ body {
   }
 }
 
-/* GUARD 3: Hard fallback — se Lenis non parte, lo scroll nativo funziona comunque */
-.lenis-fallback {
-  scroll-behavior: smooth !important;
-  overflow-y: auto !important;
-}
-
 /* ── Contact field ─────────────────────────────────────────────────────────────── */
 .contact-field {
   container-type: inline-size;
@@ -493,100 +461,24 @@ body {
   overflow: hidden;
 }
 
-.curved-loop-svg {
-  width: 100%;
-  min-width: 100%;
-  overflow: visible;
-  display: block;
-  fill: currentColor;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
-  line-height: 1.15;
-  font-size: clamp(42px, 12vh, 120px);
-  font-weight: 600;
-  letter-spacing: -0.025em;
-}
 
 /* â”€â”€ FIX: Portfolio column scroll height â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* Ensure right column scroll container calculates height correctly */
-.portfolio-scroll-wrapper {
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-}
-
-.portfolio-scroll-wrapper>div {
-  height: 100%;
-  overflow: hidden;
-}
 
 /* â”€â”€ FIX: Scroll content height calculation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* Ensure scroll-content children don't constrain parent height */
-.scroll-content {
-  min-height: min-content;
-}
 
 /* â”€â”€ FIX 11: Prevent project card flash on initial render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-/* Hide project cards by default until GSAP/Lenis is fully initialized */
 /* NOTE: No !important - GSAP needs to override this during animation */
-.project-card-wrapper {
-  opacity: 0;
-  transform: translateY(40px);
-  will-change: opacity, transform;
-}
 
 /* Class added by GSAP after animation completes */
-.project-card-wrapper.revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 /* â”€â”€ Scroll Stagger Animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* Desktop defaults */
-[data-stagger] {
-  opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
-}
-
-[data-stagger].animate {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 /* Medium layer for labels */
-[data-stagger-medium] {
-  opacity: 0;
-  transform: translateY(12px);
-  transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
-}
-
-[data-stagger-medium].animate {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 /* Shallow layer for list items/values */
-[data-stagger-shallow] {
-  opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
-}
-
-[data-stagger-shallow].animate {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 /* Mobile styles (<768px) - single-column layout, reduced animations */
 @media (max-width: 767px) {
@@ -595,93 +487,15 @@ body {
     --text-display-xl: clamp(1.75rem, 7vw + 0.5rem, 2.5rem); /* 28px→’40px on mobile */
   }
 
-  [data-stagger] {
-    transform: translateY(12px);
-    transition:
-      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  [data-stagger-medium] {
-    transform: translateY(12px);
-    transition:
-      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  [data-stagger-shallow] {
-    transform: translateY(8px);
-    transition:
-      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .project-hero-title {
-    font-size: clamp(1.1rem, 3.5vw + 0.2rem, 1.4rem) !important;
-    overflow-wrap: anywhere;
-    white-space: nowrap;
-  }
-}
-
-/* Tablet + Desktop styles (>=768px) - shared base for larger viewports */
-@media (min-width: 768px) {
-  /* Placeholder: adjust typographic CSS variables for desktop if needed */
-}
-
-/* Desktop styles (>=1024px) — column is 30% viewport, cap font to fit */
-@media (min-width: 1024px) {
-  .project-hero-title {
-    /* Adjusted hero title size for narrower left column (20% width) */
-    font-size: clamp(1.65rem, 2.1vw + 0.1rem, 2.15rem) !important;
-    white-space: normal;
-  }
 }
 
 /* Tablet-specific styles (768px-1024px) */
 @media (min-width: 768px) and (max-width: 1023px) {
-  .project-hero-title {
-    font-size: clamp(1.1rem, 2.5vw + 0.2rem, 1.4rem) !important;
-    overflow-wrap: anywhere;
-    white-space: nowrap;
-  }
-
-  /* Tablet typography scale - coherent across components */
-  :root {
-    --text-tablet-xs: 0.75rem;    /* 12px - fine print */
-    --text-tablet-sm: 0.875rem;   /* 14px - labels, meta */
-    --text-tablet-base: 1rem;     /* 16px - body text */
-    --text-tablet-lg: 1.125rem;   /* 18px - lead text */
-    --text-tablet-xl: 1.25rem;    /* 20px - small headings */
-    --text-tablet-2xl: 1.5rem;    /* 24px - section titles */
-    --text-tablet-3xl: 1.875rem;  /* 30px - page titles */
-    --text-tablet-4xl: 2.25rem;   /* 36px - hero titles */
-  }
-
-  /* Project section image container - full width with padding */
-  .project-image-container {
-    width: 100%;
-    padding-left: var(--tablet-padding, 1rem);
-    padding-right: var(--tablet-padding, 1rem);
-  }
-
-  .project-image-container img {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-  }
 }
 
 /* Accessibility: Reduced motion */
 @media (prefers-reduced-motion: reduce) {
 
-  [data-stagger],
-[data-stagger-medium],
-[data-stagger-shallow] {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-  }
 }
 
 html[data-motion="reduced"] *,
@@ -782,6 +596,3 @@ transition-duration: 0.01ms !important;
 scroll-behavior: auto !important;
 }
 }
-
-
-

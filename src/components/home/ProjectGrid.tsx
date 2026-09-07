@@ -1,5 +1,7 @@
-import type { ProjectData } from '@/content/projects';
+import type { ProjectDomain } from '@/cms/domain';
 import { isVimeoUrl, getVimeoThumbnailUrl } from '@/lib/vimeo';
+import { AnimatePresence, motion } from 'motion/react';
+import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
 
 export interface GalleryGridHoverHandlers {
   onMouseEnter?: (projectId: string, imageSrc: string) => void;
@@ -7,49 +9,37 @@ export interface GalleryGridHoverHandlers {
 }
 
 export interface GalleryGridProps {
-  projects: ProjectData[];
+  projects: ProjectDomain[];
+  filters?: React.ReactNode;
+  filterKey?: string;
   interactive?: boolean;
   mediaActive?: boolean;
-  onProjectClick?: (projectId: string, imageSrc: string, sourceElement: HTMLElement) => void;
+  onProjectClick?: (projectId: string, mediaKey: string, imageSrc: string, sourceElement: HTMLElement) => void;
   onProjectHover?: GalleryGridHoverHandlers;
 }
 
-const PROJECT_ROUTE: Record<string, string> = {
-  bugonia: 'bugonia',
-  'bugonia-2': 'bugonia',
-  'bugonia-3': 'bugonia',
-  'bugonia-4': 'bugonia',
-  'bugonia-5': 'bugonia',
-  'bugonia-6': 'bugonia',
-  newsquest: 'newsquest',
-  'newsquest-2': 'newsquest',
-  'newsquest-3': 'newsquest',
-  'newsquest-4': 'newsquest',
-  'newsquest-5': 'newsquest',
-  'newsquest-6': 'newsquest',
-};
-
-export function GalleryGrid({ projects, interactive = true, mediaActive = true, onProjectClick, onProjectHover }: GalleryGridProps) {
+export function GalleryGrid({ projects, filters, filterKey = 'all', interactive = true, mediaActive = true, onProjectClick, onProjectHover }: GalleryGridProps) {
+  const reducedMotion = useReducedMotionPreference();
   // Deduplicate images - keep only unique image sources
   const seenSrcs = new Set<string>();
   const items = projects.flatMap((project) =>
-    project.images
-      .filter((src) => {
-        if (seenSrcs.has(src)) return false;
-        seenSrcs.add(src);
+    project.media
+      .filter((media) => {
+        if (seenSrcs.has(media.src)) return false;
+        seenSrcs.add(media.src);
         return true;
       })
-      .map((src) => ({
-        src,
-        projectId: PROJECT_ROUTE[project.id] ?? project.id,
+      .map((media) => ({
+        ...media,
+        projectId: project.slug,
       })),
   );
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>, projectId: string, imageSrc: string) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>, projectId: string, mediaKey: string, imageSrc: string) => {
     if (interactive && onProjectClick) {
       e.preventDefault();
       e.stopPropagation();
-      onProjectClick(projectId, imageSrc, e.currentTarget);
+      onProjectClick(projectId, mediaKey, imageSrc, e.currentTarget);
     }
   };
 
@@ -63,26 +53,38 @@ export function GalleryGrid({ projects, interactive = true, mediaActive = true, 
 
   return (
     <div className="gallery-grid-wrap" data-project-transition-grid data-media-active={mediaActive} aria-hidden={!interactive}>
-      <div className="gallery-grid">
+      {filters}
+      <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={filterKey}
+        className="gallery-grid"
+        initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
+        transition={{ duration: reducedMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
+      >
         {items.slice(0, 64).map((item, i) => (
-          <button
-            key={`${item.projectId}-${i}`}
+          <motion.button
+            key={`${item.projectId}-${item.key}`}
             className="gallery-grid-item"
             aria-label={`Open ${item.projectId}, image ${i + 1}`}
             disabled={!interactive}
-            onClick={(e) => handleClick(e, item.projectId, item.src)}
+            onClick={(e) => handleClick(e, item.projectId, item.key, item.src)}
             onMouseEnter={() => handleMouseEnter(item.projectId, item.src)}
             onMouseLeave={handleMouseLeave}
             data-project-id={item.projectId}
-            data-project-transition-key={`${item.projectId}-${i}`}
+            data-project-transition-key={`${item.projectId}-${item.key}`}
+            initial={reducedMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.52, delay: reducedMotion ? 0 : Math.min(i, 12) * 0.045, ease: [0.22, 1, 0.36, 1] }}
           >
-            {isVimeoUrl(item.src) ? (
+            {item.type === 'vimeo' || isVimeoUrl(item.src) ? (
               <div
                 style={{
                   width: '100%',
                   height: '100%',
                   aspectRatio: '61 / 40',
-                  backgroundImage: `url(${getVimeoThumbnailUrl(item.src)})`,
+                  backgroundImage: `url(${item.thumbnailSrc ?? getVimeoThumbnailUrl(item.src)})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   position: 'relative',
@@ -112,14 +114,18 @@ export function GalleryGrid({ projects, interactive = true, mediaActive = true, 
             ) : (
               <img
                 src={item.src}
-                alt=""
-                loading={mediaActive && i < 16 ? 'eager' : 'lazy'}
+                alt={item.alt}
+                width={item.width}
+                height={item.height}
+                loading={mediaActive && i < 4 ? 'eager' : 'lazy'}
                 decoding="async"
+                fetchPriority={mediaActive && i === 0 ? 'high' : 'auto'}
               />
             )}
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
