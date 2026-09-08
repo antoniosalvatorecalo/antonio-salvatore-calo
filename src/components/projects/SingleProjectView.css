@@ -272,9 +272,11 @@
 
   .single-project-carousel {
     max-width: none;
-    flex: 1 1 auto;
-    height: 100%;
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
     min-height: 0;
+    align-self: flex-end;
   }
 
   .single-project-media-frame {
@@ -475,6 +477,7 @@
     width: min(78vw, 22rem);
     height: auto;
     min-width: min(78vw, 22rem);
+    max-height: calc(100dvh - var(--site-header-height, 320px) - 2.5rem);
     aspect-ratio: 61 / 40 !important;
     max-width: calc(100vw - (2 * var(--project-gallery-padding)));
   }
@@ -483,6 +486,7 @@
      into the shared mobile frame. */
   .project-media-card[data-media-label*='bugonia-menu'] .project-media-card-frame {
     height: auto;
+    max-height: calc(100dvh - var(--site-header-height, 320px) - 2.5rem);
     aspect-ratio: auto !important;
   }
 
