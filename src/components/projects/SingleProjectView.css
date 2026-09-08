@@ -458,6 +458,17 @@
 
   .project-media-card {
     flex-basis: auto;
+    scroll-snap-stop: always;
+  }
+
+  .project-media-gallery-viewport {
+    scroll-behavior: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .project-media-card:hover .project-media-card-image,
+  .project-media-card:focus-visible .project-media-card-image {
+    transform: none;
   }
 
   .project-media-card-frame {
@@ -603,7 +614,8 @@
   display: block;
   width: min(90vw, 96rem);
   max-width: 100%;
-  height: auto;
+  height: min(80dvh, 50.625vw);
+  min-height: 180px;
   aspect-ratio: 16 / 9;
   border: 0;
   background: transparent;
