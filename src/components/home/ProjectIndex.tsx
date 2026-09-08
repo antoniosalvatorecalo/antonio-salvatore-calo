@@ -4,7 +4,7 @@ import { FilterBar } from './FilterBar';
 import { ProjectPreview } from '@/components/projects/ProjectPreview';
 import { ProjectPreviewCarousel } from '@/components/projects/ProjectPreviewCarousel';
 import { useNavHover } from '@/providers/NavHoverContext';
-import type { ProjectDomain } from '@/cms/domain';
+import type { ProjectDomain, ProjectMedia } from '@/cms/domain';
 import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 import { useProjectTransition } from '@/providers/ProjectTransitionProvider';
 import { useFilter } from '@/providers/FilterContext';
@@ -22,8 +22,8 @@ interface ProjectIndexProps {
 
 export const ProjectIndex: React.FC<ProjectIndexProps> = ({ interactive = true, mediaActive = true }) => {
   const { active: activeFilter } = useFilter();
-  const [hoveredImage, setHoveredImage] = useState<string | null>(null);
-  const { navProjectImages } = useNavHover();
+  const [hoveredMedia, setHoveredMedia] = useState<ProjectMedia | null>(null);
+  const { navProjectMedia } = useNavHover();
   const { startProjectTransition } = useProjectTransition();
   const { projects } = useProjectCatalog();
 
@@ -31,17 +31,17 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({ interactive = true, 
 
   const handleProjectClick = useCallback((projectId: string, mediaKey: string, imageSrc: string, sourceElement: HTMLElement) => {
     if (!interactive) return;
-    setHoveredImage(null);
+    setHoveredMedia(null);
     startProjectTransition({ slug: projectId, mediaKey, imageSrc, sourceElement });
   }, [interactive, startProjectTransition]);
 
-  const handleMouseEnter = useCallback((_projectId: string, imageSrc: string) => {
+  const handleMouseEnter = useCallback((_projectId: string, media: ProjectMedia) => {
     if (!interactive) return;
-    setHoveredImage(imageSrc);
+    setHoveredMedia(media);
   }, [interactive]);
 
   const handleMouseLeave = useCallback(() => {
-    setHoveredImage(null);
+    setHoveredMedia(null);
   }, []);
 
   return (
@@ -58,9 +58,9 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({ interactive = true, 
         />
       </section>
 
-      <ProjectPreview imageUrl={interactive ? hoveredImage : null} />
-      {interactive && navProjectImages.length > 0 && (
-        <ProjectPreviewCarousel images={navProjectImages} />
+      <ProjectPreview media={interactive ? hoveredMedia : null} />
+      {interactive && navProjectMedia.length > 0 && (
+        <ProjectPreviewCarousel media={navProjectMedia} />
       )}
     </>
   );

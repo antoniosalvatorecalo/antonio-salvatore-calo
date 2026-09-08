@@ -377,7 +377,7 @@ body {
 }
 
 @media (max-width: 767px) {
-  html, body { overflow-x: hidden !important; overflow-y: auto !important; }
+  html, body { overflow: hidden !important; }
 }
 
 /* â”€â”€ Contact link underline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */

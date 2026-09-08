@@ -1,72 +1,42 @@
-import { useState, useEffect, useCallback } from 'react';
-import { isVimeoUrl } from '@/lib/vimeo';
+import { useEffect, useMemo, useState } from 'react';
+import type { ProjectMedia } from '@/cms/domain';
+import { getPreviewMediaName, PreviewMediaAsset } from './PreviewMediaAsset';
+import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
 import './ProjectPreview.css';
 
 interface ProjectPreviewCarouselProps {
-  images: string[];
+  media: ProjectMedia[];
 }
 
-function getImageName(path: string): string {
-  if (isVimeoUrl(path)) {
-    const match = path.match(/vimeo\.com\/(\d+)/);
-    return match ? `vimeo-${match[1]}` : 'vimeo-video';
-  }
-  const filename = path.split('/').pop() || '';
-  const name = filename.replace(/\.(webp|jpg|jpeg|png)$/i, '');
-  return name;
-}
-
-export function ProjectPreviewCarousel({ images }: ProjectPreviewCarouselProps) {
+export function ProjectPreviewCarousel({ media }: ProjectPreviewCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-
-  const advanceImage = useCallback(() => {
-    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
-  }, [images.length]);
+  const reducedMotion = useReducedMotionPreference();
+  const mediaSignature = useMemo(() => media.map((item) => item.key).join('|'), [media]);
 
   useEffect(() => {
-    if (images.length === 0) return;
-
-    setIsVisible(true);
     setCurrentIndex(0);
+  }, [mediaSignature]);
 
-    const interval = setInterval(advanceImage, 1500);
-    return () => clearInterval(interval);
-  }, [images, advanceImage]);
+  useEffect(() => {
+    if (reducedMotion || media.length < 2) return;
 
-  if (images.length === 0) return null;
+    const interval = window.setInterval(() => {
+      setCurrentIndex((index) => (index + 1) % media.length);
+    }, 850);
+
+    return () => window.clearInterval(interval);
+  }, [media.length, mediaSignature, reducedMotion]);
+
+  const currentMedia = media[currentIndex % media.length];
+
+  if (!currentMedia) return null;
 
   return (
-    <div className={`project-preview ${isVisible ? 'is-visible' : ''}`}>
+    <div className="project-preview is-visible">
       <div className="project-preview-inner">
-        {isVimeoUrl(images[currentIndex]) ? (
-          <div
-            className="project-preview-video-placeholder"
-            style={{
-              background: '#1a1a1a',
-              color: '#fff',
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <div style={{ fontSize: '48px', lineHeight: 1 }}>▶</div>
-            <div style={{ marginTop: '8px', fontSize: '12px', opacity: 0.8 }}>
-              {getImageName(images[currentIndex])}
-            </div>
-          </div>
-        ) : (
-          <img
-            src={images[currentIndex]}
-            alt=""
-            className="project-preview-image"
-          />
-        )}
+        <PreviewMediaAsset key={currentMedia.key} media={currentMedia} staticPreview />
         <div className="project-preview-name">
-          [{getImageName(images[currentIndex])}]
+          [{getPreviewMediaName(currentMedia)}]
         </div>
       </div>
     </div>

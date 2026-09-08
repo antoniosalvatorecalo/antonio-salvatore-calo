@@ -16,8 +16,8 @@
 
   .contact-page-content {
     flex: none;
-    min-height: calc(100svh - var(--mobile-header-height, 320px));
-    padding-top: calc(var(--mobile-header-height, 320px) + 20px);
+    min-height: calc(100svh - var(--site-header-height, 320px));
+    padding-top: calc(var(--site-header-height, 320px) + 20px);
     padding-bottom: 32px;
   }
 }

@@ -7,16 +7,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: 0 var(--space-2);
+  padding: 0;
   box-sizing: border-box;
-}
-
-.project-about:first-child {
-  padding-left: 0;
-}
-
-.project-about:last-child {
-  padding-right: 0;
 }
 
 /* No vertical separators between cells — the row reads as a single block */
@@ -73,7 +65,7 @@
 
 /* Accordion panel — collapsed by default */
 .project-about-content {
-  overflow: visible;
+  overflow: hidden;
   max-height: 0;
   opacity: 0;
   transform: translateY(-4px);
@@ -85,16 +77,17 @@
 }
 
 .project-about-content.is-expanded {
-  /* Large enough to never clip; max-height animates between 0 and this value */
-  max-height: 1600px;
+  max-height: calc(100dvh - var(--site-header-height, 320px) - var(--space-4));
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
 }
 
 .project-about-description {
-  font-size: var(--text-sm);
-  line-height: 1.6;
+  display: block;
+  overflow: visible;
+  font-size: 0.75rem;
+  line-height: 1.45;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -139,8 +132,8 @@
   padding: var(--space-3) 0 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-8);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
   align-items: start;
 }
 
@@ -150,9 +143,9 @@
 
 .project-about-credit-item {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: baseline;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
 }
 
 .project-about-credit-label {
@@ -165,8 +158,10 @@
 }
 
 .project-about-credit-value {
-  font-size: var(--text-sm);
-  line-height: 1.5;
+  display: block;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
   color: var(--text-primary);
 }
 
@@ -176,7 +171,7 @@
   padding: 0;
   margin: var(--space-3) 0 0;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
   align-items: start;
 }
@@ -187,8 +182,10 @@
   text-decoration: none;
   border-bottom: 1px solid var(--border-default);
   padding-bottom: 2px;
-  width: fit-content;
-  white-space: nowrap;
+  width: max-content;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
   transition: border-color 0.2s ease;
 }
 
@@ -210,7 +207,7 @@
 /* Mobile — collapses into a vertical stack, no separators between cells */
 @media (max-width: 767px) {
   .project-about {
-    padding: var(--space-3) 0;
+    padding: 0;
   }
 
   .project-about-toggle {
@@ -221,7 +218,10 @@
     font-size: 11px;
   }
 
-  .project-about-description {
-    font-size: 13px;
+  .project-about-description { font-size: 0.75rem; }
+
+  .project-about-credits {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: var(--space-1);
   }
 }

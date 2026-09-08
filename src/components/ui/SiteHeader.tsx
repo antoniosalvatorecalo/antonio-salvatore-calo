@@ -14,27 +14,35 @@ interface SiteHeaderProps {
   projectActive?: boolean;
   projectInfo?: {
     name: string;
-    description: string;
-    links: { label: string; href: string }[];
-    details?: ProjectDetailColumn[];
+    details: ProjectDetailColumn[];
   };
   onBackToGallery?: () => void;
 }
 
-export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectInfo, onBackToGallery, transitionPhase }) => {
+interface SiteHeaderProps {
+   transitionPhase?: 'idle' | 'opening' | 'project' | 'closing';
+   projectActive?: boolean;
+   projectInfo?: {
+     name: string;
+     details: ProjectDetailColumn[];
+   };
+   onBackToGallery?: () => void;
+ }
+
+ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectInfo, onBackToGallery, transitionPhase }) => {
   const headerRef = useRef<HTMLElement>(null);
   const startProjectButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
   const { locale, setLocale, t } = useLanguage();
-  const { setNavHoveredProject, setNavProjectImages } = useNavHover();
+  const { setNavHoveredProject, setNavProjectMedia } = useNavHover();
   const transition = useOptionalProjectTransition();
   const { getProject, projects } = useProjectCatalog();
   const siteSettings = useSiteSettings();
   const publicEmail = siteSettings.publicContacts.find((contact) => contact.kind === 'email');
 
-  const [contactOpen, setContactOpen] = useState(false);
+const [contactOpen, setContactOpen] = useState(false);
 
-  const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
+const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
 
   // Escape key handler to close contact panel
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -52,7 +60,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
   useLayoutEffect(() => {
     const header = headerRef.current;
     if (!header) return;
-    const update = () => document.documentElement.style.setProperty('--mobile-header-height', `${header.offsetHeight}px`);
+    const update = () => document.documentElement.style.setProperty('--site-header-height', `${header.offsetHeight}px`);
     update();
     const observer = new ResizeObserver(update);
     observer.observe(header);
@@ -68,12 +76,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
   const handleProjectHover = (projectId: string) => {
     const project = getProject(projectId);
     setNavHoveredProject(projectId);
-    setNavProjectImages(project?.media.map((media) => media.src) ?? []);
+    setNavProjectMedia(project?.media ?? []);
   };
 
   const handleProjectLeave = () => {
     setNavHoveredProject(null);
-    setNavProjectImages([]);
+    setNavProjectMedia([]);
   };
 
   const handleProjectClick = (event: React.MouseEvent<HTMLButtonElement>, projectId: string) => {
@@ -82,7 +90,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
     const media = getProject(projectId)?.media[0];
     if (!media) return;
     setNavHoveredProject(null);
-    setNavProjectImages([]);
+    setNavProjectMedia([]);
     transition.startProjectTransition({
       slug: projectId,
       mediaKey: media.key,
@@ -92,7 +100,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
   };
 
   return (
-    <header ref={headerRef} className="site-header" data-transition-phase={transitionPhase}>
+    <header ref={headerRef} className={`site-header${isProjectPage ? ' is-project' : ''}`} data-transition-phase={transitionPhase}>
       <div className={`site-header-inner${isProjectPage ? ' is-project' : ''}`}>
         {/* LEFT: Bio */}
         <div className="site-header-col site-header-col--info">
@@ -122,82 +130,67 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
           </div>
         </div>
 
-        {/* CENTER: Project title + accordions (only on project pages) */}
-        {isProjectPage && projectInfo && projectInfo.details && projectInfo.details.length > 0 && (
+        {isProjectPage && projectInfo && (
           <div className="site-header-col site-header-col--project" data-transition-control>
-            <div className="site-header-project-title">{projectInfo.name}</div>
+            <div className="site-header-project-heading">
+              <h1 className="site-header-project-title">{projectInfo.name}</h1>
+              <div className="site-header-project-language">
+                <div className="site-header-switches">
+                  <button type="button" onClick={(e) => { e.preventDefault(); setLocale(locale === 'EN' ? 'IT' : 'EN'); }} aria-label={`Language: ${locale}`} aria-pressed={locale === 'IT'} className="site-header-switch-btn">[ {locale} ]</button>
+                </div>
+              </div>
+            </div>
             <ProjectDetailsGrid columns={projectInfo.details} />
           </div>
         )}
 
-        {/* CENTER: Nav actions */}
-        <div key={isProjectPage ? 'project' : 'home'} className="site-header-col site-header-col--nav" data-transition-control>
-          {isProjectPage ? (
-            <>
-              <div className="site-header-project-nav-row">
-                <button
-                  type="button"
-                  className={`site-header-start-project${contactOpen ? ' is-active' : ''}`}
-                  onClick={() => setContactOpen((open) => !open)}
-                  aria-expanded={contactOpen}
-                >
-                  <span>{t('header.menu-cta.contact')}</span>
-                  <span className="site-header-start-project-indicator">{contactOpen ? '−' : '+'}</span>
-                </button>
-
-                <div className="site-header-switches">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); setLocale(locale === 'EN' ? 'IT' : 'EN'); }}
-                    aria-label={`Language: ${locale}. Click to switch.`}
-                    aria-pressed={locale === 'IT'}
-                    className="site-header-switch-btn"
-                  >[ {locale} ]</button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* CENTER: Select Work, Services, Recognition + Start Project */}
+        {/* Home-only navigation */}
+        {!isProjectPage && <div className="site-header-col site-header-col--nav" data-transition-control>
               <div className="site-header-nav-row">
-                <div className="site-header-nav-group">
-                  <div className="site-header-nav-item">
-                    <span className="site-header-nav-label">{t('header.select-work')}</span>
-                    <div className="site-header-nav-values">
-                      {projects.map((project) => (
-                        <button key={project.slug} type="button" aria-label={`${locale === 'IT' ? 'Apri il progetto' : 'Open'} ${project.title}`} onClick={(event) => handleProjectClick(event, project.slug)} onMouseEnter={() => handleProjectHover(project.slug)} onMouseLeave={handleProjectLeave}>{project.title}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="site-header-nav-item">
-                    <span className="site-header-nav-label">{t('header.recognition')}</span>
-                    <div className="site-header-nav-values">
-                      {siteSettings.recognition.map((item) => <span key={item}>{item}</span>)}
-                    </div>
-                  </div>
-                  {siteSettings.socials.length > 0 && (
-                    <div className="site-header-nav-item">
-                      <span className="site-header-nav-label">Social</span>
-                      <div className="site-header-nav-values">
-                        {siteSettings.socials.map((social) => (
-                          <a key={social.href} href={social.href} target="_blank" rel="noopener noreferrer" className="site-header-social-link">{social.label}</a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+<div className="site-header-nav-group">
+<div className="site-header-nav-item">
+                     <span className="site-header-nav-label">
+                       {t('header.select-work')}
+                     </span>
+                     <div className="site-header-nav-values">
+{projects.map((project) => (
+                           <button key={project.slug} type="button" aria-label={`${locale === 'IT' ? 'Apri il progetto' : 'Open'} ${project.title}`} onClick={(event) => handleProjectClick(event, project.slug)} onMouseEnter={() => handleProjectHover(project.slug)} onFocus={() => handleProjectHover(project.slug)} onMouseLeave={handleProjectLeave}>{project.title}</button>
+                         ))}
+                     </div>
+                   </div>
+<div className="site-header-nav-item">
+                     <span className="site-header-nav-label">
+                       {t('header.recognition')}
+                     </span>
+                     <div className="site-header-nav-values">
+                       {siteSettings.recognition.map((item) => <span key={item}>{item}</span>)}
+                     </div>
+                   </div>
+{siteSettings.socials.length > 0 && (
+                     <div className="site-header-nav-item">
+                       <span className="site-header-nav-label">
+                         Social
+                       </span>
+                       <div className="site-header-nav-values">
+{siteSettings.socials.map((social) => (
+                            <a key={social.href} href={social.href} target="_blank" rel="noopener noreferrer" className="site-header-social-link">{social.label}</a>
+                          ))}
+                       </div>
+                     </div>
+                   )}
                   {!isProjectPage && (
                     <div className="site-header-nav-item site-header-nav-item--cta">
-                      <button
-                        ref={startProjectButtonRef}
-                        type="button"
-                        className={`site-header-start-project${contactOpen ? ' is-active' : ''}`}
-                        onClick={() => setContactOpen((open) => !open)}
-                        aria-expanded={contactOpen}
-                        aria-controls="header-contact-popover"
-                      >
-                        <span>{t('header.menu-cta.contact')}</span>
-                        <span className="site-header-start-project-indicator" aria-hidden="true" />
-                      </button>
+<button
+     ref={startProjectButtonRef}
+     type="button"
+     className={`site-header-start-project${contactOpen ? ' is-active' : ''}`}
+     onClick={() => setContactOpen((open) => !open)}
+     aria-expanded={contactOpen}
+     aria-controls="header-contact-popover"
+   >
+     <span>{t('header.menu-cta.contact')}</span>
+     <span className="site-header-start-project-indicator" aria-hidden="true" />
+   </button>
 
                       <AnimatedContactPanel open={contactOpen}>
                         <div id="header-contact-popover" className="site-header-contact-form">
@@ -208,9 +201,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ projectActive, projectIn
                   )}
                 </div>
               </div>
-            </>
-          )}
-        </div>
+        </div>}
 
         {/* LANGUAGE: Dedicated column */}
         {!isProjectPage && (

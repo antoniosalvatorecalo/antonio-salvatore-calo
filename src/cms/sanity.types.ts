@@ -15,6 +15,13 @@
 export declare const internalGroqTypeReferenceTo: unique symbol;
 
 // Source: schema.json
+export type SanityImageAssetReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+};
+
 export type SiteSettings = {
   _id: string;
   _type: "siteSettings";
@@ -23,11 +30,6 @@ export type SiteSettings = {
   _rev: string;
   displayName?: LocalizedString;
   bio?: LocalizedText;
-  services?: Array<
-    {
-      _key: string;
-    } & LocalizedString
-  >;
   recognition?: Array<
     {
       _key: string;
@@ -35,7 +37,6 @@ export type SiteSettings = {
   >;
   publicContacts?: Array<{
     kind?: "email" | "phone" | "location";
-    label?: LocalizedString;
     value?: string;
     href?: string;
     _type: "publicContact";
@@ -53,15 +54,18 @@ export type SiteSettings = {
     _type: "downloadLink";
     _key: string;
   }>;
+  branding?: {
+    favicon?: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    };
+    themeColor?: string;
+  };
   canonicalBaseUrl?: string;
   seo?: Seo;
-};
-
-export type SanityImageAssetReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
 };
 
 export type Seo = {
@@ -77,6 +81,22 @@ export type Seo = {
     _type: "image";
   };
   twitterCard?: "summary_large_image" | "summary";
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x?: number;
+  y?: number;
+  height?: number;
+  width?: number;
 };
 
 export type LocalizedString = {
@@ -100,9 +120,8 @@ export type Project = {
   title?: LocalizedString;
   slug?: Slug;
   order?: number;
-  client?: string;
-  year?: number;
-  service?: string;
+  service?:
+    "Web Design" | "UI/UX Design" | "Development" | "UI Design" | "UX Design";
   description?: LocalizedText;
   details?: ProjectDetails;
   credits?: Array<
@@ -137,22 +156,6 @@ export type Slug = {
   _type: "slug";
   current?: string;
   source?: string;
-};
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top?: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x?: number;
-  y?: number;
-  height?: number;
-  width?: number;
 };
 
 export type VimeoMedia = {
@@ -292,16 +295,16 @@ export type Geopoint = {
 };
 
 export type AllSanitySchemaTypes =
-  | SiteSettings
   | SanityImageAssetReference
+  | SiteSettings
   | Seo
+  | SanityImageCrop
+  | SanityImageHotspot
   | LocalizedString
   | LocalizedText
   | Project
   | ProjectDetails
   | Slug
-  | SanityImageCrop
-  | SanityImageHotspot
   | VimeoMedia
   | ImageMedia
   | ExternalLink
@@ -317,15 +320,19 @@ export type AllSanitySchemaTypes =
 
 // Source: ../antonio-salvatore-calo/src/cms/queries.ts
 // Variable: PROJECTS_QUERY
-// Query: *[_type == "project"] | order(order asc){    _id,    title,    slug,    order,    client,    year,    service,    description,    details,    credits[]{_key, label, values},    links[]{_key, label, href},    seo{      title,      description,      canonicalPath,      "openGraphImage": openGraphImage.asset->url,      twitterCard    },    gallery[]{      _key,      _type,      alt,      label,      url,      image{        crop,        hotspot,        asset->{_id, url, metadata{dimensions}}      },      poster{        crop,        hotspot,        asset->{_id, url, metadata{dimensions}}      }    }  }
+// Query: *[_type == "project"] | order(order asc){    _id,    title,    slug,    order,    service,    description,    details,    credits[]{_key, label, values},    links[]{_key, label, href},    seo{      title,      description,      canonicalPath,      "openGraphImage": openGraphImage.asset->url,      twitterCard    },    gallery[]{      _key,      _type,      alt,      label,      url,      image{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      },      poster{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      }    }  }
 export type PROJECTS_QUERY_RESULT = Array<{
   _id: string;
   title: LocalizedString | null;
   slug: Slug | null;
   order: number | null;
-  client: string | null;
-  year: number | null;
-  service: string | null;
+  service:
+    | "Development"
+    | "UI Design"
+    | "UI/UX Design"
+    | "UX Design"
+    | "Web Design"
+    | null;
   description: LocalizedText | null;
   details: ProjectDetails | null;
   credits: Array<{
@@ -360,6 +367,7 @@ export type PROJECTS_QUERY_RESULT = Array<{
             url: string | null;
             metadata: {
               dimensions: SanityImageDimensions | null;
+              lqip: string | null;
             } | null;
           } | null;
         } | null;
@@ -380,6 +388,7 @@ export type PROJECTS_QUERY_RESULT = Array<{
             url: string | null;
             metadata: {
               dimensions: SanityImageDimensions | null;
+              lqip: string | null;
             } | null;
           } | null;
         } | null;
@@ -389,15 +398,10 @@ export type PROJECTS_QUERY_RESULT = Array<{
 
 // Source: ../antonio-salvatore-calo/src/cms/queries.ts
 // Variable: SITE_SETTINGS_QUERY
-// Query: *[_type == "siteSettings" && _id == "siteSettings"][0]{    displayName,    bio,    services,    recognition,    publicContacts[]{_key, kind, label, value, href},    socials[]{_key, label, href},    downloads[]{_key, kind, label, href},    canonicalBaseUrl,    seo{      title,      description,      canonicalPath,      "openGraphImage": openGraphImage.asset->url,      twitterCard    }  }
+// Query: *[_type == "siteSettings" && _id == "siteSettings"][0]{    displayName,    bio,    recognition,    publicContacts[]{_key, kind, value, href},    socials[]{_key, label, href},    downloads[]{_key, kind, label, href},    canonicalBaseUrl,    branding{themeColor, favicon{asset->{url}}},    seo{      title,      description,      canonicalPath,      "openGraphImage": openGraphImage.asset->url,      twitterCard    }  }
 export type SITE_SETTINGS_QUERY_RESULT = {
   displayName: LocalizedString | null;
   bio: LocalizedText | null;
-  services: Array<
-    {
-      _key: string;
-    } & LocalizedString
-  > | null;
   recognition: Array<
     {
       _key: string;
@@ -406,7 +410,6 @@ export type SITE_SETTINGS_QUERY_RESULT = {
   publicContacts: Array<{
     _key: string;
     kind: "email" | "location" | "phone" | null;
-    label: LocalizedString | null;
     value: string | null;
     href: string | null;
   }> | null;
@@ -422,6 +425,14 @@ export type SITE_SETTINGS_QUERY_RESULT = {
     href: string | null;
   }> | null;
   canonicalBaseUrl: string | null;
+  branding: {
+    themeColor: string | null;
+    favicon: {
+      asset: {
+        url: string | null;
+      } | null;
+    } | null;
+  } | null;
   seo: {
     title: LocalizedString | null;
     description: LocalizedText | null;
@@ -434,8 +445,8 @@ export type SITE_SETTINGS_QUERY_RESULT = {
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n  *[_type == "project"] | order(order asc){\n    _id,\n    title,\n    slug,\n    order,\n    client,\n    year,\n    service,\n    description,\n    details,\n    credits[]{_key, label, values},\n    links[]{_key, label, href},\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    },\n    gallery[]{\n      _key,\n      _type,\n      alt,\n      label,\n      url,\n      image{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions}}\n      },\n      poster{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions}}\n      }\n    }\n  }\n': PROJECTS_QUERY_RESULT;
-    '\n  *[_type == "siteSettings" && _id == "siteSettings"][0]{\n    displayName,\n    bio,\n    services,\n    recognition,\n    publicContacts[]{_key, kind, label, value, href},\n    socials[]{_key, label, href},\n    downloads[]{_key, kind, label, href},\n    canonicalBaseUrl,\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    }\n  }\n': SITE_SETTINGS_QUERY_RESULT;
+    '\n  *[_type == "project"] | order(order asc){\n    _id,\n    title,\n    slug,\n    order,\n    service,\n    description,\n    details,\n    credits[]{_key, label, values},\n    links[]{_key, label, href},\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    },\n    gallery[]{\n      _key,\n      _type,\n      alt,\n      label,\n      url,\n      image{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      },\n      poster{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      }\n    }\n  }\n': PROJECTS_QUERY_RESULT;
+    '\n  *[_type == "siteSettings" && _id == "siteSettings"][0]{\n    displayName,\n    bio,\n    recognition,\n    publicContacts[]{_key, kind, value, href},\n    socials[]{_key, label, href},\n    downloads[]{_key, kind, label, href},\n    canonicalBaseUrl,\n    branding{themeColor, favicon{asset->{url}}},\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    }\n  }\n': SITE_SETTINGS_QUERY_RESULT;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too

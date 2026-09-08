@@ -9,6 +9,7 @@ export interface ProjectMedia {
   label: string;
   width?: number;
   height?: number;
+  lqip?: string;
 }
 
 export interface ProjectCreditGroup {
@@ -32,14 +33,10 @@ export interface ProjectDomain {
   id: string;
   slug: string;
   title: string;
-  client: string;
   category: string;
-  year: string;
   description: string;
   media: ProjectMedia[];
-  links: ProjectLink[];
   details?: ProjectDetail[];
-  tags?: string[];
   seo?: SeoContent;
 }
 
@@ -54,11 +51,11 @@ export interface SeoContent {
 export interface SiteSettings {
   displayName: string;
   bio: string;
-  services: string[];
   recognition: string[];
-  publicContacts: {kind: 'email' | 'phone' | 'location'; label: string; value: string; href?: string}[];
+  publicContacts: {kind: 'email' | 'phone' | 'location'; value: string; href?: string}[];
   socials: ProjectLink[];
   downloads: {kind: 'cv' | 'portfolio'; label: string; href: string}[];
   canonicalBaseUrl?: string;
+  branding?: {favicon?: string; themeColor?: string};
   seo: SeoContent;
 }

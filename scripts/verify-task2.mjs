@@ -52,9 +52,14 @@ const thirdProject = {
     },
   }],
 }
-const sanityFixture = [...liveProjects, thirdProject]
+const malformedProject = {...liveNewsquest, _id: 'project-malformed', slug: {current: 'malformed'}, gallery: []}
+const siteSettingsFixture = {
+  ...liveSiteSettings,
+  branding: {favicon: {asset: {url: 'https://cdn.sanity.io/images/dw4juo8a/production/favicon.png'}}, themeColor: '#111111'},
+}
+const sanityFixture = [...liveProjects, thirdProject, malformedProject]
 const sanityResultFor = (url) => new URL(url).searchParams.get('query')?.includes('siteSettings')
-  ? liveSiteSettings
+  ? siteSettingsFixture
   : sanityFixture
 
 const browserCache = resolve(process.env.LOCALAPPDATA || resolve(homedir(), 'AppData', 'Local'), 'ms-playwright')
@@ -95,6 +100,22 @@ try {
   assert(await page.locator('[data-project-id="newsquest"]').count() === 6, 'Expected 6 Sanity Newsquest media in the grid.')
   await page.getByText('antonio.salvatore.calo@gmail.com').waitFor()
   assert((await page.title()).includes('Antonio Salvatore Calò'), 'Global CMS SEO title was not applied.')
+  assert((await page.locator('link[rel="icon"]').getAttribute('href'))?.includes('cdn.sanity.io'), 'CMS favicon was not applied.')
+  assert(await page.locator('meta[name="theme-color"]').getAttribute('content') === '#111111', 'CMS theme color was not applied.')
+  assert(await page.locator('[data-project-id="malformed"]').count() === 0, 'Malformed CMS project was rendered.')
+
+  const gallery = page.locator('.gallery-grid-wrap')
+  const filterBar = page.locator('.filter-bar')
+  const stableFilterTop = await filterBar.boundingBox().then((box) => box?.y)
+  await page.locator('.filter-bar-toggle').click()
+  const filters = page.locator('.filter-bar-item')
+  for (let index = 0; index < await filters.count(); index += 1) {
+    await gallery.evaluate((element) => { element.scrollTop = 80 })
+    await filters.nth(index).click()
+    await page.locator('.gallery-grid').waitFor()
+    assert(await gallery.evaluate((element) => element.scrollTop) === 0, 'Filter change did not reset the gallery scroll container.')
+    assert((await filterBar.boundingBox())?.y === stableFilterTop, 'FilterBar moved after changing result count.')
+  }
 
   for (let index = 0; index < expectedLabels.length; index += 1) {
     await page.locator('[data-project-id="bugonia"]').nth(index).click()
@@ -156,6 +177,15 @@ try {
   await page.reload()
   await page.locator('.single-project-image-container').waitFor()
   assert(await page.locator('.single-project-view').isVisible(), 'Bugonia is not visible at the mobile viewport.')
+  const accordion = page.locator('.project-about-toggle').first()
+  if (await accordion.count()) {
+    await accordion.click()
+    assert(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight), 'Mobile accordion created page overflow.')
+  }
+
+  await page.setViewportSize({width: 768, height: 1024})
+  await page.goto(baseURL)
+  await page.locator('.gallery-grid').waitFor()
 
   const motionContext = await browser.newContext({reducedMotion: 'no-preference'})
   const motionPage = await motionContext.newPage()

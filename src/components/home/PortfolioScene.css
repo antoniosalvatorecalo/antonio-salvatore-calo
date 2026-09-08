@@ -65,28 +65,3 @@
   transform: none;
   transform-style: flat;
 }
-
-@media (max-width: 767px) {
-  .portfolio-scene[data-transition-phase='idle'] {
-    position: relative;
-    min-height: 100%;
-    height: auto;
-    overflow: visible;
-    perspective: none;
-  }
-
-  /* In the resting mobile home the index must participate in normal layout so
-     the page can grow beyond the header and scroll through every thumbnail.
-     These elements return to the absolute 3D chain as soon as a transition
-     starts. */
-  .portfolio-scene[data-transition-phase='idle'] :is(.scene-roll, .scene-depth, .scene-rotor, .scene-plane--index) {
-    position: relative;
-    inset: auto;
-    height: auto;
-    min-height: 0;
-  }
-
-  .portfolio-scene[data-transition-phase='idle'] .scene-plane--index {
-    width: 100%;
-  }
-}

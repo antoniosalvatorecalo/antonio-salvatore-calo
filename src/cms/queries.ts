@@ -6,8 +6,6 @@ export const PROJECTS_QUERY = defineQuery(`
     title,
     slug,
     order,
-    client,
-    year,
     service,
     description,
     details,
@@ -29,12 +27,12 @@ export const PROJECTS_QUERY = defineQuery(`
       image{
         crop,
         hotspot,
-        asset->{_id, url, metadata{dimensions}}
+        asset->{_id, url, metadata{dimensions, lqip}}
       },
       poster{
         crop,
         hotspot,
-        asset->{_id, url, metadata{dimensions}}
+        asset->{_id, url, metadata{dimensions, lqip}}
       }
     }
   }
@@ -44,12 +42,12 @@ export const SITE_SETTINGS_QUERY = defineQuery(`
   *[_type == "siteSettings" && _id == "siteSettings"][0]{
     displayName,
     bio,
-    services,
     recognition,
-    publicContacts[]{_key, kind, label, value, href},
+    publicContacts[]{_key, kind, value, href},
     socials[]{_key, label, href},
     downloads[]{_key, kind, label, href},
     canonicalBaseUrl,
+    branding{themeColor, favicon{asset->{url}}},
     seo{
       title,
       description,

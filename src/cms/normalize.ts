@@ -91,6 +91,7 @@ export function normalizeProject(
         label: localized(item.label ?? item.alt, locale, `gallery.${key}.label`),
         width: item.image?.asset?.metadata?.dimensions?.width,
         height: item.image?.asset?.metadata?.dimensions?.height,
+        lqip: item.image?.asset?.metadata?.lqip ?? undefined,
       };
     }
 
@@ -105,41 +106,29 @@ export function normalizeProject(
       label: localized(item.label ?? item.alt, locale, `gallery.${key}.label`),
       width: item.poster?.asset?.metadata?.dimensions?.width,
       height: item.poster?.asset?.metadata?.dimensions?.height,
+      lqip: item.poster?.asset?.metadata?.lqip ?? undefined,
     };
   });
-
-  const links = project.links?.map((link, index) => ({
-    label: localized(link.label, locale, `links[${index}].label`),
-    href: link.href ?? '',
-  })).filter((link) => link.href) ?? [];
 
   return {
     id: slug,
     slug,
     title: localized(project.title, locale, 'title'),
-    client: project.client ?? '',
     category: project.service ?? '',
-    year: project.year ? String(project.year) : '',
     description: localized(project.description, locale, 'description'),
     media,
-    links,
     details: normalizeCmsDetails(project, locale),
     seo: normalizeSeo(project.seo, locale),
   };
 }
 
 export function normalizeSiteSettings(settings: CmsSiteSettingsResult, locale: CmsLocale): SiteSettings {
-  // Default services in alphabetical order
-  const defaultServices = ['Art Direction', 'Brand Identity', 'Motion Design', 'Prototyping', 'UI Design', 'UX Design', 'Web Design'];
-  const services = settings.services?.map((item, index) => localized(item, locale, `services[${index}]`)) ?? defaultServices;
-
   const publicContacts = settings.publicContacts?.map((item, index) => {
     if (!['email', 'phone', 'location'].includes(item.kind ?? '') || !item.value) {
       throw new Error(`CMS siteSettings.publicContacts[${index}] is invalid.`);
     }
     return {
       kind: item.kind as 'email' | 'phone' | 'location',
-      label: localized(item.label, locale, `publicContacts[${index}].label`),
       value: item.value,
       href: item.href ?? undefined,
     };
@@ -151,7 +140,6 @@ export function normalizeSiteSettings(settings: CmsSiteSettingsResult, locale: C
   return {
     displayName: localized(settings.displayName, locale, 'displayName'),
     bio: localized(settings.bio, locale, 'bio'),
-    services,
     recognition: settings.recognition?.map((item, index) => localized(item, locale, `recognition[${index}]`)) ?? [],
     publicContacts,
     socials: settings.socials?.flatMap((item, index) => item.href ? [{label: localized(item.label, locale, `socials[${index}].label`), href: item.href}] : []) ?? [
@@ -165,6 +153,10 @@ export function normalizeSiteSettings(settings: CmsSiteSettingsResult, locale: C
       return [{kind: item.kind, label: localized(item.label, locale, `downloads[${index}].label`), href: item.href}];
     }) ?? [],
     canonicalBaseUrl: settings.canonicalBaseUrl ?? undefined,
+    branding: settings.branding ? {
+      favicon: settings.branding.favicon?.asset?.url ?? undefined,
+      themeColor: settings.branding.themeColor ?? undefined,
+    } : undefined,
     seo,
   };
 }

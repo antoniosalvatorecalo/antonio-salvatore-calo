@@ -65,8 +65,23 @@ export function ProjectCatalogProvider({children}: {children: ReactNode}) {
     if (!rawContent) return {projects: [], siteSettings: null, error: requestError};
     try {
       if (!rawContent.siteSettings) throw new Error('CMS siteSettings singleton is missing.');
+      const normalizedProjects: ProjectDomain[] = [];
+      const seenSlugs = new Set<string>();
+      const seenOrders = new Set<number>();
+      for (const rawProject of rawContent.projects) {
+        try {
+          const project = normalizeProject(rawProject, locale);
+          if (seenSlugs.has(project.slug)) throw new Error(`Duplicate CMS slug: ${project.slug}`);
+          if (rawProject.order != null && seenOrders.has(rawProject.order)) console.warn(`[Sanity] Duplicate display order: ${rawProject.order}`);
+          seenSlugs.add(project.slug);
+          if (rawProject.order != null) seenOrders.add(rawProject.order);
+          normalizedProjects.push(project);
+        } catch (error) {
+          console.warn('[Sanity] Skipping malformed project.', error);
+        }
+      }
       return {
-        projects: rawContent.projects.map((project) => normalizeProject(project, locale)),
+        projects: normalizedProjects,
         siteSettings: normalizeSiteSettings(rawContent.siteSettings, locale),
         error: requestError,
       };

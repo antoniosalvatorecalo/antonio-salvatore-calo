@@ -53,6 +53,18 @@ export function SeoManager() {
     setMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title);
     setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description);
     setMeta('meta[name="twitter:image"]', 'name', 'twitter:image', absoluteImage);
+    const favicon = settings.branding?.favicon;
+    const faviconLink = document.head.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (favicon && faviconLink) faviconLink.href = favicon;
+    let themeColor = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (settings.branding?.themeColor) {
+      if (!themeColor) {
+        themeColor = document.createElement('meta');
+        themeColor.name = 'theme-color';
+        document.head.appendChild(themeColor);
+      }
+      themeColor.content = settings.branding.themeColor;
+    }
   }, [pathname, project, settings]);
 
   return null;

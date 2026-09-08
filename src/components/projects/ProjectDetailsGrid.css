@@ -1,9 +1,9 @@
-/* ProjectDetailsGrid — horizontal row of 4 accordions at the top of a project page. */
+/* Project details sit in the project-only header column. */
 
 .project-details-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
+  gap: 1.5rem;
   width: 100%;
   border-top: none;
   border-bottom: none;
@@ -12,11 +12,22 @@
   box-sizing: border-box;
 }
 
-/* Mobile — two accordions per row */
-@media (max-width: 767px) {
+@media (min-width: 1024px) {
+  .project-details-grid {
+    margin-top: 30px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
   .project-details-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--space-4);
-    row-gap: var(--space-3);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .project-details-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
   }
 }

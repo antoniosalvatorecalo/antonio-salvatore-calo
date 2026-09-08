@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api|assets|favicon|robots|sitemap).*)", "destination": "/index.html" }
   ],
@@ -14,7 +15,7 @@
         { "key": "Permissions-Policy",       "value": "camera=(), microphone=(), geolocation=()" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io https://vumbnail.com; font-src 'self'; connect-src 'self' https://dw4juo8a.api.sanity.io https://dw4juo8a.apicdn.sanity.io; frame-src https://player.vimeo.com; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io; font-src 'self'; connect-src 'self' https://dw4juo8a.api.sanity.io https://dw4juo8a.apicdn.sanity.io; frame-src https://player.vimeo.com; frame-ancestors 'none'"
         }
       ]
     }

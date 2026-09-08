@@ -1,20 +1,21 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
+import type { ProjectMedia } from '@/cms/domain';
 
 interface NavHoverContextValue {
   navHoveredProject: string | null;
   setNavHoveredProject: (project: string | null) => void;
-  navProjectImages: string[];
-  setNavProjectImages: (images: string[]) => void;
+  navProjectMedia: ProjectMedia[];
+  setNavProjectMedia: (media: ProjectMedia[]) => void;
 }
 
 const NavHoverContext = createContext<NavHoverContextValue | null>(null);
 
 export function NavHoverProvider({ children }: { children: ReactNode }) {
   const [navHoveredProject, setNavHoveredProject] = useState<string | null>(null);
-  const [navProjectImages, setNavProjectImages] = useState<string[]>([]);
+  const [navProjectMedia, setNavProjectMedia] = useState<ProjectMedia[]>([]);
 
   return (
-    <NavHoverContext.Provider value={{ navHoveredProject, setNavHoveredProject, navProjectImages, setNavProjectImages }}>
+    <NavHoverContext.Provider value={{ navHoveredProject, setNavHoveredProject, navProjectMedia, setNavProjectMedia }}>
       {children}
     </NavHoverContext.Provider>
   );

@@ -33,9 +33,7 @@ export const PortfolioLayout = ({
         projectActive={Boolean(visibleProject) && phase !== 'opening'}
         projectInfo={visibleProject ? {
           name: visibleProject.title,
-          description: visibleProject.description,
-          links: visibleProject.links,
-          details: visibleProject.details,
+          details: visibleProject.details ?? [],
         } : undefined}
         onBackToGallery={visibleProject && phase !== 'opening' ? returnToGallery : undefined}
       />
