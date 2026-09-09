@@ -1,8 +1,8 @@
 .project-preview {
   position: fixed;
   left: 50%;
-  top: 40%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 200;
   pointer-events: none;
   opacity: 0;
@@ -55,6 +55,34 @@
 
 .project-preview-image--static {
   object-position: center center;
+}
+
+/* Bugonia's tall editorial assets need an intentional inner scale in previews.
+   Keep this scoped to the three named media so Newsquest and other projects
+   retain the shared preview geometry. */
+.project-preview-image--bugonia-menu {
+  object-position: left center;
+  transform-origin: left center;
+  transform: scale(0.78);
+}
+
+.project-preview-image--bugonia-home,
+.project-preview-image--bugonia-merchandising {
+  object-position: left center;
+  transform-origin: left center;
+  transform: scale(0.62);
+}
+
+.project-preview-media--bugonia-menu,
+.project-preview-media--bugonia-home,
+.project-preview-media--bugonia-merchandising {
+  align-items: flex-start;
+}
+
+.project-preview-media--bugonia-home,
+.project-preview-media--bugonia-merchandising {
+  aspect-ratio: auto;
+  height: min(42vh, 420px);
 }
 
 .project-preview-video {

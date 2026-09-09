@@ -73,7 +73,7 @@ export function ProjectAbout({
         aria-hidden={!isOpen}
         tabIndex={-1}
       >
-        <p className="project-about-description">{description}</p>
+        {description && <p className="project-about-description">{description}</p>}
         {children}
       </div>
     </section>

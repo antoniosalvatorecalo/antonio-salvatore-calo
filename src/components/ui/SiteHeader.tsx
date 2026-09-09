@@ -1,5 +1,5 @@
 import { useLocation, Link } from 'react-router-dom';
-import { useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react';
 import { useLanguage } from '../../providers/LanguageProvider';
 import { useNavHover } from '../../providers/NavHoverContext';
 import { useOptionalProjectTransition } from '../../providers/ProjectTransitionProvider';
@@ -42,7 +42,10 @@ interface SiteHeaderProps {
 
 const [contactOpen, setContactOpen] = useState(false);
 
-const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
+  const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
+  useEffect(() => {
+    setContactOpen(false);
+  }, [isProjectPage]);
 
   // Escape key handler to close contact panel
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -108,11 +111,10 @@ const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/'
             <p className="site-header-bio">
               <Link to="/" onClick={handleGoHome} className="site-header-name">{siteSettings.displayName}</Link> {siteSettings.bio}
             </p>
-            <div className="site-header-contact">
-              <span className="site-header-contact-label">{t('header.contact')}</span>
-              {publicEmail?.href && <a href={publicEmail.href} className="site-header-contact-email">{publicEmail.value}</a>}
-            </div>
             <div className="site-header-ctas">
+              {publicEmail?.href && (
+                <a href={publicEmail.href} className="site-header-cta-mini">Email Me</a>
+              )}
               {siteSettings.downloads.map((download) => (
                 <a key={download.kind} href={download.href} download className="site-header-cta-mini">
                   {download.label}
@@ -148,7 +150,7 @@ const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/'
         {!isProjectPage && <div className="site-header-col site-header-col--nav" data-transition-control>
               <div className="site-header-nav-row">
 <div className="site-header-nav-group">
-<div className="site-header-nav-item">
+<div className="site-header-nav-item site-header-nav-item--select-work">
                      <span className="site-header-nav-label">
                        {t('header.select-work')}
                      </span>

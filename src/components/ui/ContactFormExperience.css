@@ -230,6 +230,7 @@
   vertical-align: middle;
   position: relative;
   color: var(--cta-color);
+  text-transform: uppercase;
 }
 
 .contact-form-experience .cta-link::after {

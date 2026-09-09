@@ -1,17 +1,17 @@
 import { useState, type ReactNode } from 'react';
 import { ProjectAbout } from './ProjectAbout';
+import { useLanguage } from '../../providers/LanguageProvider';
 import './ProjectDetailsGrid.css';
 
 export interface ProjectDetailColumn {
-  /** Small uppercase label (e.g. "contesto", "sfida", "soluzione", "credits"). */
+  /** Small uppercase label (e.g. "contesto", "sfida", "soluzione", "credits", "links"). */
   label: string;
   /** Long-form body copy for the cell. */
   text?: string;
   /** Optional list of {label, values} entries — used by the "credits" cell. */
   credits?: { label: string; values: string[] }[];
   /**
-   * Optional list of links rendered at the bottom of the cell as a CTA
-   * (e.g. "View on Behance", "Open Live Website" inside the credits cell).
+   * Optional list of links rendered in the dedicated links cell.
    */
   cta?: { label: string; href: string }[];
 }
@@ -21,7 +21,7 @@ export interface ProjectDetailsGridProps {
 }
 
 /**
- * Row of four independent accordions rendered at the top of a project page.
+ * Row of independent accordions rendered at the top of a project page.
  * Each cell can be opened / closed on its own; only one cell is expanded at
  * a time (the user can also close the open cell by clicking it again).
  *
@@ -30,9 +30,11 @@ export interface ProjectDetailsGridProps {
  *   2. sfida         — challenge narrative
  *   3. soluzione     — solution narrative
  *   4. credits       — structured credits list
+ *   5. links         — process and live project links
  */
 export function ProjectDetailsGrid({ columns }: ProjectDetailsGridProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { t } = useLanguage();
 
   if (columns.length === 0) return null;
 
@@ -41,7 +43,7 @@ export function ProjectDetailsGrid({ columns }: ProjectDetailsGridProps) {
       {columns.map((column, index) => {
         const description = column.text ?? '';
         const hasCredits = column.credits && column.credits.length > 0;
-        const hasCta = column.cta && column.cta.length > 0;
+        const hasCtas = column.cta && column.cta.length > 0;
         const isOpen = openIndex === index;
 
         const children: ReactNode = (
@@ -66,16 +68,12 @@ export function ProjectDetailsGrid({ columns }: ProjectDetailsGridProps) {
                 ))}
               </dl>
             )}
-            {hasCta && (
+            {hasCtas && (
               <ul className="project-about-cta">
-                {column.cta!.map((link, linkIndex) => (
-                  <li key={linkIndex}>
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {link.label}
+                {column.cta!.map((link) => (
+                  <li key={link.href}>
+                    <a href={link.href} target="_blank" rel="noopener noreferrer">
+                      {link.href.includes('behance.net') ? t('cta.process') : t('cta.live')}
                     </a>
                   </li>
                 ))}

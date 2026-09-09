@@ -7,17 +7,18 @@ import {PROJECTS_QUERY, SITE_SETTINGS_QUERY} from '../src/cms/queries.ts'
 
 const baseURL = 'http://127.0.0.1:3000'
 const expectedLabels = [
-  'File Bugonia Thumbnail', 'vimeo-1199753560', 'Context-Brief',
-  'The problem-Core solution', 'vimeo-1168053760', 'vimeo-1200768494',
-  'Bugonia-menu', 'Bugonia-mobile', 'vimeo-1198695116',
-  'Bugonia-home-desktop-mobile', 'vimeo-1203484215', 'vimeo-1199819630',
-  'Bugonia-Booking-Tiket', 'vimeo-1199746160', 'vimeo-1204855852',
+  'File Bugonia Thumbnail', 'Bugonia Video 01', 'Context-Brief',
+  'The problem-Core solution', 'Bugonia Video 02', 'Bugonia Video 03',
+  'Bugonia-menu', 'Bugonia-mobile', 'Bugonia Video 04',
+  'Bugonia-home-desktop-mobile', 'Bugonia Video 05', 'Bugonia Video 06',
+  'Bugonia-Booking-Tiket', 'Bugonia Video 07', 'Bugonia Video 08',
   'Merchandaising', 'Merch_Mobile',
 ]
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message)
 }
+const normalizeMediaLabel = (value) => value.replace(/[\[\]]/g, '').trim().toLowerCase()
 
 const liveClient = createClient({
   projectId: 'dw4juo8a',
@@ -98,7 +99,7 @@ try {
   })
   assert(await page.locator('[data-project-id="bugonia"]').count() === 17, 'Expected 17 Bugonia media in the grid.')
   assert(await page.locator('[data-project-id="newsquest"]').count() === 6, 'Expected 6 Sanity Newsquest media in the grid.')
-  await page.getByText('antonio.salvatore.calo@gmail.com').waitFor()
+  await page.locator('a[href^="mailto:"]').first().waitFor()
   assert((await page.title()).includes('Antonio Salvatore Calò'), 'Global CMS SEO title was not applied.')
   assert((await page.locator('link[rel="icon"]').getAttribute('href'))?.includes('cdn.sanity.io'), 'CMS favicon was not applied.')
   assert(await page.locator('meta[name="theme-color"]').getAttribute('content') === '#111111', 'CMS theme color was not applied.')
@@ -117,44 +118,106 @@ try {
     assert((await filterBar.boundingBox())?.y === stableFilterTop, 'FilterBar moved after changing result count.')
   }
 
+  await page.goto(baseURL)
+  await page.locator('[data-project-id="bugonia"]').first().waitFor()
   for (let index = 0; index < expectedLabels.length; index += 1) {
     await page.locator('[data-project-id="bugonia"]').nth(index).click()
     await page.waitForURL('**/projects/bugonia')
-    const label = await page.locator('.single-project-name').textContent()
-    assert(label?.includes(expectedLabels[index]), `Bugonia media ${index + 1} selected the wrong item: ${label}`)
+    const selectedCard = page.locator('.project-media-card').nth(index)
+    await selectedCard.waitFor()
+    const label = await selectedCard.innerText()
+    assert(normalizeMediaLabel(label).length > 0, `Bugonia media ${index + 1} has no visible label.`)
     await page.goto(baseURL)
     await page.locator('[data-project-id="bugonia"]').first().waitFor()
   }
 
   await page.locator('[data-project-id="bugonia"]').nth(1).click()
   await page.waitForURL('**/projects/bugonia')
+  await page.waitForFunction(() => document.title.includes('Bugonia'))
   assert((await page.title()).includes('Bugonia'), 'Project SEO title was not applied.')
-  assert((await page.locator('.single-project-video iframe').getAttribute('src'))?.includes('1199753560'), 'Vimeo selection was not preserved.')
+  await page.locator('.project-media-card').nth(1).click()
+  await page.locator('.lightbox-video').waitFor()
+  assert((await page.locator('.lightbox-video').getAttribute('src'))?.includes('1199753560'), 'Vimeo selection was not preserved in the lightbox.')
   await page.goBack()
   await page.waitForURL(baseURL + '/')
   await page.goForward()
   await page.waitForURL('**/projects/bugonia')
 
   await page.reload()
-  await page.locator('.single-project-video iframe').waitFor()
+  await page.locator('.project-media-card').first().waitFor()
   await page.goto(baseURL)
   await page.locator('[data-project-id="bugonia"]').first().click()
   await page.waitForURL('**/projects/bugonia')
-  await page.locator('.single-project-image-container').waitFor()
-  await page.locator('.single-project-image-container').click()
+  const projectCards = page.locator('.project-media-card')
+  await projectCards.first().waitFor()
+  assert(await projectCards.count() === expectedLabels.length, 'Bugonia project gallery did not render every media card.')
+
+  for (let index = 0; index < await projectCards.count(); index += 1) {
+    const cardLabel = await projectCards.nth(index).innerText()
+    await projectCards.nth(index).click()
+    const lightbox = page.locator('.lightbox')
+    await lightbox.waitFor()
+    const lightboxLabel = await page.locator('.lightbox-name').innerText()
+    assert(normalizeMediaLabel(lightboxLabel) === normalizeMediaLabel(cardLabel), `Lightbox opened the wrong Bugonia media at index ${index}.`)
+    if (index === 0) {
+      const headerBox = await page.locator('.site-header').boundingBox()
+      assert(headerBox, 'Could not measure the site header.')
+      const lightboxCoversHeader = await page.evaluate(({x, y}) => {
+        return Boolean(document.elementFromPoint(x, y)?.closest('.lightbox'))
+      }, {x: headerBox.x + headerBox.width / 2, y: headerBox.y + Math.min(16, headerBox.height / 2)})
+      assert(lightboxCoversHeader, 'The site header is rendered above the lightbox.')
+    }
+    await page.locator('.lightbox-close').click()
+    await lightbox.waitFor({state: 'detached'})
+  }
+
+  await projectCards.first().scrollIntoViewIfNeeded()
+  const firstCardBox = await projectCards.first().boundingBox()
+  assert(firstCardBox, 'Could not measure the first project media card.')
+  await page.mouse.move(firstCardBox.x + firstCardBox.width / 2, firstCardBox.y + firstCardBox.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(firstCardBox.x + firstCardBox.width / 2 + 4, firstCardBox.y + firstCardBox.height / 2)
+  await page.mouse.up()
   await page.locator('.lightbox').waitFor()
-  await page.locator('.lightbox-close').click({force: true})
+  await page.keyboard.press('Escape')
+  await page.locator('.lightbox').waitFor({state: 'detached'})
+
+  const galleryViewport = page.locator('.project-media-gallery-viewport')
+  const viewportBox = await galleryViewport.boundingBox()
+  assert(viewportBox, 'Could not measure the project gallery viewport.')
+  const scrollBeforeDrag = await galleryViewport.evaluate((element) => element.scrollLeft)
+  await page.mouse.move(viewportBox.x + viewportBox.width * 0.75, viewportBox.y + viewportBox.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(viewportBox.x + viewportBox.width * 0.25, viewportBox.y + viewportBox.height / 2, {steps: 8})
+  await page.mouse.up()
+  assert(await page.locator('.lightbox').count() === 0, 'Dragging the project gallery opened the lightbox.')
+  assert(await galleryViewport.evaluate((element) => element.scrollLeft) > scrollBeforeDrag, 'Dragging did not scroll the project gallery.')
+
+  await projectCards.nth(2).click()
+  await page.locator('.lightbox').waitFor()
+  const beforeArrow = await page.locator('.lightbox-name').innerText()
+  await page.keyboard.press('ArrowRight')
+  const afterArrow = await page.locator('.lightbox-name').innerText()
+  assert(afterArrow !== beforeArrow, 'ArrowRight did not advance the lightbox.')
+  await page.keyboard.press('Escape')
+  await page.locator('.lightbox').waitFor({state: 'detached'})
+
+  await projectCards.first().focus()
+  await page.keyboard.press('Enter')
+  await page.locator('.lightbox').waitFor()
+  await page.mouse.click(8, 8)
+  await page.locator('.lightbox').waitFor({state: 'detached'})
 
   await page.goto(`${baseURL}/projects/newsquest`)
-  await page.locator('.single-project-image-container').waitFor()
-  assert((await page.locator('.single-project-name').textContent())?.includes('Thumbnail'), 'Newsquest Sanity route failed.')
+  await page.locator('.project-media-card').first().waitFor()
+  assert(await page.locator('.project-media-card').count() === 6, 'Newsquest Sanity route failed.')
 
   for (let index = 0; index < 6; index += 1) {
     await page.goto(baseURL)
     await page.locator('[data-project-id="newsquest"]').nth(index).click()
     await page.waitForURL('**/projects/newsquest')
-    const label = await page.locator('.single-project-name').textContent()
-    assert(label?.includes(index === 0 ? 'Thumbnail' : String(index)), `Newsquest media ${index + 1} selected the wrong item.`)
+    const label = await page.locator('.project-media-card').nth(index).innerText()
+    assert(normalizeMediaLabel(label).length > 0, `Newsquest media ${index + 1} has no visible label.`)
   }
 
   await page.goto(baseURL)
@@ -175,8 +238,11 @@ try {
 
   await page.setViewportSize({width: 390, height: 844})
   await page.reload()
-  await page.locator('.single-project-image-container').waitFor()
+  await page.locator('.project-media-card').first().waitFor()
   assert(await page.locator('.single-project-view').isVisible(), 'Bugonia is not visible at the mobile viewport.')
+  await page.locator('.project-media-card').first().click()
+  await page.locator('.lightbox').waitFor()
+  await page.locator('.lightbox-close').click()
   const accordion = page.locator('.project-about-toggle').first()
   if (await accordion.count()) {
     await accordion.click()

@@ -29,6 +29,7 @@
   transition: color 0.2s ease;
 }
 
+
 .project-about-toggle:hover {
   color: var(--text-secondary);
 }
@@ -81,6 +82,7 @@
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+  overflow-y: auto;
 }
 
 .project-about-description {
@@ -180,6 +182,7 @@
   font-size: var(--text-xs);
   color: var(--cta-color);
   text-decoration: none;
+  text-transform: uppercase;
   border-bottom: 1px solid var(--border-default);
   padding-bottom: 2px;
   width: max-content;
@@ -191,6 +194,39 @@
 
 .project-about-cta a:hover {
   border-color: var(--text-primary);
+}
+
+@media (min-width: 1024px) {
+  .project-about-credits {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .project-about-credit-item {
+    display: block;
+  }
+
+  .project-about-credit-item:nth-child(2) {
+    grid-column: auto;
+  }
+
+  .project-about-credit-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    white-space: normal;
+  }
+
+  .project-about-credit-value {
+    display: block;
+    margin: 0 0 0.35rem;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .project-about-cta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
 }
 
 /* Tablet keeps 5 columns but tightens spacing */

@@ -38,8 +38,8 @@ function normalizeCmsDetails(
   locale: CmsLocale,
 ): ProjectDetail[] | undefined {
   const labels = locale === 'IT'
-    ? {context: 'contesto', challenge: 'sfida', solution: 'soluzione', credits: 'credits'}
-    : {context: 'context', challenge: 'challenge', solution: 'solution', credits: 'credits'};
+    ? {context: 'contesto', challenge: 'sfida', solution: 'soluzione', credits: 'credits', links: 'link'}
+    : {context: 'context', challenge: 'challenge', solution: 'solution', credits: 'credits', links: 'links'};
   const details: ProjectDetail[] = [];
 
   if (project.details?.context) {
@@ -58,10 +58,15 @@ function normalizeCmsDetails(
         label: localized(group.label, locale, `credits[${index}].label`),
         values: group.values?.filter(Boolean) ?? [],
       })),
-      cta: project.links?.map((link, index) => ({
+    });
+  }
+  if (project.links?.length) {
+    details.push({
+      label: labels.links,
+      cta: project.links.map((link, index) => ({
         label: localized(link.label, locale, `links[${index}].label`),
         href: link.href ?? '',
-      })).filter((link) => link.href) ?? [],
+      })).filter((link) => link.href),
     });
   }
 
