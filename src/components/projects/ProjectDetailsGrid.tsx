@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { ProjectAbout } from './ProjectAbout';
 import './ProjectDetailsGrid.css';
 import { AnimatedLink } from '../ui/AnimatedLink';
@@ -28,10 +28,6 @@ interface ProjectMetaAccordionProps {
 function ProjectMetaAccordion({ label, children }: ProjectMetaAccordionProps) {
   const [isOpen, setIsOpen] = useState(false);
   const contentId = useId();
-
-  useEffect(() => {
-    if (window.matchMedia('(max-width: 767px)').matches) setIsOpen(true);
-  }, []);
 
   return (
     <section className={`project-details-meta-block${isOpen ? ' is-open' : ''}`}>
