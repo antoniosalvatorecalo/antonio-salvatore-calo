@@ -12,23 +12,40 @@ export function getPreviewMediaName(media: ProjectMedia): string {
   return filename.replace(/\.(webp|jpg|jpeg|png|gif)$/i, '');
 }
 
-export function PreviewMediaAsset({ media, staticPreview = false }: { media: ProjectMedia; staticPreview?: boolean }) {
+export function PreviewMediaAsset({
+  media,
+  staticPreview = false,
+}: {
+  media: ProjectMedia;
+  staticPreview?: boolean;
+}) {
   const isVideo = media.type === 'vimeo' || isVimeoUrl(media.src);
   const posterSrc = media.thumbnailSrc || (isVideo ? getVimeoThumbnailUrl(media.src) : '');
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const previewName = getPreviewMediaName(media);
   const normalizedName = previewName.trim().toLowerCase();
-  const specialPreview = normalizedName === 'bugonia-menu'
-    ? { image: ' project-preview-image--bugonia-menu', media: ' project-preview-media--bugonia-menu' }
-    : normalizedName === 'bugonia-home-desktop-mobile'
-      ? { image: ' project-preview-image--bugonia-home', media: ' project-preview-media--bugonia-home' }
-      : normalizedName === 'merchandaising'
-        ? { image: ' project-preview-image--bugonia-merchandising', media: ' project-preview-media--bugonia-merchandising' }
-        : { image: '', media: '' };
+  const specialPreview =
+    normalizedName === 'bugonia-menu'
+      ? {
+          image: ' project-preview-image--bugonia-menu',
+          media: ' project-preview-media--bugonia-menu',
+        }
+      : normalizedName === 'bugonia-home-desktop-mobile'
+        ? {
+            image: ' project-preview-image--bugonia-home',
+            media: ' project-preview-media--bugonia-home',
+          }
+        : normalizedName === 'merchandaising'
+          ? {
+              image: ' project-preview-image--bugonia-merchandising',
+              media: ' project-preview-media--bugonia-merchandising',
+            }
+          : { image: '', media: '' };
   const imageClassName = `project-preview-image${staticPreview ? ' project-preview-image--static' : ''}${specialPreview.image}`;
-  const mediaAspectRatio = media.width && media.height && !specialPreview.media
-    ? `${media.width} / ${media.height}`
-    : undefined;
+  const mediaAspectRatio =
+    media.width && media.height && !specialPreview.media
+      ? `${media.width} / ${media.height}`
+      : undefined;
 
   useEffect(() => setIsVideoLoaded(false), [media.key, media.src]);
 
@@ -38,7 +55,12 @@ export function PreviewMediaAsset({ media, staticPreview = false }: { media: Pro
       style={mediaAspectRatio ? { aspectRatio: mediaAspectRatio } : undefined}
     >
       {isVideo && posterSrc && !staticPreview && (
-        <img src={posterSrc} alt="" aria-hidden="true" className="project-preview-image project-preview-poster" />
+        <img
+          src={posterSrc}
+          alt=""
+          aria-hidden="true"
+          className="project-preview-image project-preview-poster"
+        />
       )}
       {isVideo && !staticPreview ? (
         <div className="project-preview-video-frame">

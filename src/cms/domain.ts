@@ -52,10 +52,10 @@ export interface SiteSettings {
   displayName: string;
   bio: string;
   recognition: string[];
-  publicContacts: {kind: 'email' | 'phone' | 'location'; value: string; href?: string}[];
+  publicContacts: { kind: 'email' | 'phone' | 'location'; value: string; href?: string }[];
   socials: ProjectLink[];
-  downloads: {kind: 'cv' | 'portfolio'; label: string; href: string}[];
+  downloads: { kind: 'cv' | 'portfolio'; label: string; href: string }[];
   canonicalBaseUrl?: string;
-  branding?: {favicon?: string; themeColor?: string};
+  branding?: { favicon?: string; themeColor?: string };
   seo: SeoContent;
 }

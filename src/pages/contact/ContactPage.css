@@ -4,8 +4,12 @@
   width: 100%;
 }
 
-.contact-page-shell { min-height: 100vh; }
-.contact-page-content { min-height: 0; }
+.contact-page-shell {
+  min-height: 100vh;
+}
+.contact-page-content {
+  min-height: 0;
+}
 
 @media (max-width: 767px) {
   .contact-page-shell {

@@ -1,0 +1,7 @@
+dist
+.ssr
+node_modules
+package-lock.json
+src/cms/sanity.types.ts
+public
+.vercel

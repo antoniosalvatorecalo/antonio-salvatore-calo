@@ -10,18 +10,14 @@ interface PortfolioLayoutProps {
   deferInitialEffects?: boolean;
 }
 
-export const PortfolioLayout = ({
-  deferInitialEffects = false,
-}: PortfolioLayoutProps) => {
+export const PortfolioLayout = ({ deferInitialEffects = false }: PortfolioLayoutProps) => {
   const { phase, visibleSlug, returnToGallery } = useProjectTransition();
   const { getProject } = useProjectCatalog();
   const visibleProject = visibleSlug ? getProject(visibleSlug) : null;
   useEffect(() => {
     if (deferInitialEffects) return;
     const raf = requestAnimationFrame(() => {
-      try {
-        gsap.ticker.lagSmoothing(500, 33);
-      } catch {}
+      gsap.ticker.lagSmoothing(500, 33);
     });
     return () => cancelAnimationFrame(raf);
   }, [deferInitialEffects]);
@@ -31,15 +27,17 @@ export const PortfolioLayout = ({
       <SiteHeader
         transitionPhase={phase}
         projectActive={Boolean(visibleProject) && phase !== 'opening'}
-        projectInfo={visibleProject ? {
-          name: visibleProject.title,
-          details: visibleProject.details ?? [],
-        } : undefined}
+        projectInfo={
+          visibleProject
+            ? {
+                name: visibleProject.title,
+                details: visibleProject.details ?? [],
+              }
+            : undefined
+        }
         onBackToGallery={visibleProject && phase !== 'opening' ? returnToGallery : undefined}
       />
       <PortfolioScene />
     </FilterProvider>
   );
 };
-
-export default PortfolioLayout;

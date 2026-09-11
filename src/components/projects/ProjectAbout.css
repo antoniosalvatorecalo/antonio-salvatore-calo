@@ -29,7 +29,6 @@
   transition: color 0.2s ease;
 }
 
-
 .project-about-toggle:hover {
   color: var(--text-secondary);
 }
@@ -57,7 +56,9 @@
   font-weight: 400;
   line-height: 1;
   color: var(--text-muted);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease;
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.2s ease;
 }
 
 .project-about.is-open .project-about-icon {
@@ -121,7 +122,9 @@
   text-decoration: none;
   border-bottom: 1px solid var(--border-default);
   padding-bottom: 2px;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .project-about-links a:hover {
@@ -226,7 +229,6 @@
   .project-about-cta {
     grid-template-columns: minmax(0, 1fr);
   }
-
 }
 
 /* Tablet keeps 5 columns but tightens spacing */
@@ -254,7 +256,9 @@
     font-size: 11px;
   }
 
-  .project-about-description { font-size: 0.75rem; }
+  .project-about-description {
+    font-size: 0.75rem;
+  }
 
   .project-about-credits {
     grid-template-columns: minmax(0, 1fr);

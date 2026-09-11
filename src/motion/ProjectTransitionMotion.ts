@@ -37,13 +37,19 @@ function createTimeline(
   const current = parseFloat(planes.scene.style.getPropertyValue('--scene-angle')) || 0;
   return gsap.timeline({ onComplete }).to(planes.scene, {
     '--scene-angle': `${angle}deg`,
-    duration: reducedMotion ? 0 : PROJECT_TRANSITION_DURATION * Math.abs(angle - current) / 90,
+    duration: reducedMotion ? 0 : (PROJECT_TRANSITION_DURATION * Math.abs(angle - current)) / 90,
     ease: PROJECT_TRANSITION_EASE,
   });
 }
 
-export const createOpenTimeline = (planes: ScenePlanes, reducedMotion: boolean, onComplete: () => void) =>
-  createTimeline(planes, -90, reducedMotion, onComplete);
+export const createOpenTimeline = (
+  planes: ScenePlanes,
+  reducedMotion: boolean,
+  onComplete: () => void,
+) => createTimeline(planes, -90, reducedMotion, onComplete);
 
-export const createCloseTimeline = (planes: ScenePlanes, reducedMotion: boolean, onComplete: () => void) =>
-  createTimeline(planes, 0, reducedMotion, onComplete);
+export const createCloseTimeline = (
+  planes: ScenePlanes,
+  reducedMotion: boolean,
+  onComplete: () => void,
+) => createTimeline(planes, 0, reducedMotion, onComplete);

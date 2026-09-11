@@ -21,7 +21,11 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: calc(var(--project-layout-header-height) + var(--space-6) + clamp(0.75rem, 2vh, 1.5rem) + var(--project-carousel-top-gap)) var(--space-4) var(--space-8);
+  padding: calc(
+      var(--project-layout-header-height) + var(--space-6) + clamp(0.75rem, 2vh, 1.5rem) +
+        var(--project-carousel-top-gap)
+    )
+    var(--space-4) var(--space-8);
   box-sizing: border-box;
   position: relative;
 }
@@ -38,8 +42,12 @@
 }
 
 @keyframes project-content-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -90,7 +98,10 @@
   max-width: 100%;
   max-height: max(
     12rem,
-    calc(100svh - var(--project-layout-header-height) - var(--project-carousel-top-gap) - var(--space-8) - var(--space-8) - 24px)
+    calc(
+      100svh - var(--project-layout-header-height) - var(--project-carousel-top-gap) -
+        var(--space-8) - var(--space-8) - 24px
+    )
   );
   background: transparent;
   cursor: pointer;
@@ -241,7 +252,9 @@
   line-height: 1;
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 180ms ease-out, background-color 180ms ease-out;
+  transition:
+    transform 180ms ease-out,
+    background-color 180ms ease-out;
 }
 
 .single-project-media-control:hover,
@@ -269,7 +282,8 @@
   }
 
   .single-project-content {
-    padding: calc(var(--site-header-height, 320px) + clamp(0.5rem, 1.25vh, 0.75rem)) var(--space-3) clamp(1rem, 3vh, 1.5rem);
+    padding: calc(var(--site-header-height, 320px) + clamp(0.5rem, 1.25vh, 0.75rem)) var(--space-3)
+      clamp(1rem, 3vh, 1.5rem);
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
@@ -335,7 +349,7 @@
 
 .project-media-gallery-header .filter-bar {
   margin-left: 0;
-  padding-inline: 0;
+  padding: 0;
 }
 
 .project-media-filter {
@@ -647,7 +661,6 @@
     aspect-ratio: 61 / 40 !important;
     max-width: calc(100vw - (2 * var(--project-gallery-padding)));
   }
-
 }
 
 @media (min-width: 768px) {

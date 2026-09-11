@@ -49,11 +49,19 @@ export function PortfolioScene() {
       <div ref={rollRef} className="scene-roll">
         <div className="scene-depth">
           <div ref={rotorRef} className="scene-rotor">
-            <div ref={indexPlaneRef} className="scene-plane scene-plane--index" aria-hidden={!galleryInteractive}>
+            <div
+              ref={indexPlaneRef}
+              className="scene-plane scene-plane--index"
+              aria-hidden={!galleryInteractive}
+            >
               <ProjectIndex interactive={galleryInteractive} mediaActive={galleryMediaActive} />
             </div>
             {shouldRenderProject && project && (
-              <div ref={projectPlaneRef} className="scene-plane scene-plane--project" aria-hidden={phase !== 'project'}>
+              <div
+                ref={projectPlaneRef}
+                className="scene-plane scene-plane--project"
+                aria-hidden={phase !== 'project'}
+              >
                 <div className="scene-project-content">
                   <SingleProjectView
                     key={project.slug}
@@ -70,5 +78,3 @@ export function PortfolioScene() {
     </main>
   );
 }
-
-export default PortfolioScene;

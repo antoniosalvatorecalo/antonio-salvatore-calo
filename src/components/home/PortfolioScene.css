@@ -21,9 +21,15 @@
   transform-origin: 50% 50%;
 }
 
-.scene-roll { transform: rotateZ(var(--scene-angle)); }
-.scene-depth { transform: translateZ(calc(-1 * var(--scene-depth))); }
-.scene-rotor { transform: rotateY(var(--scene-angle)); }
+.scene-roll {
+  transform: rotateZ(var(--scene-angle));
+}
+.scene-depth {
+  transform: translateZ(calc(-1 * var(--scene-depth)));
+}
+.scene-rotor {
+  transform: rotateY(var(--scene-angle));
+}
 
 .scene-plane {
   backface-visibility: hidden;
@@ -51,7 +57,9 @@
   will-change: transform;
 }
 
-.scene-plane[inert] { pointer-events: none; }
+.scene-plane[inert] {
+  pointer-events: none;
+}
 
 /* The mounted gallery retains its scroll and filter state while parked. */
 .portfolio-scene[data-transition-phase='project'] .scene-plane--index {
@@ -60,8 +68,10 @@
 
 /* At either endpoint the composed matrix is identity. Flatten it explicitly so
    hit testing, fixed lightboxes and text rendering use ordinary viewport geometry. */
-.portfolio-scene[data-transition-phase='idle'] :is(.scene-roll, .scene-depth, .scene-rotor, .scene-plane--index),
-.portfolio-scene[data-transition-phase='project'] :is(.scene-roll, .scene-depth, .scene-rotor, .scene-plane--project, .scene-project-content) {
+.portfolio-scene[data-transition-phase='idle']
+  :is(.scene-roll, .scene-depth, .scene-rotor, .scene-plane--index),
+.portfolio-scene[data-transition-phase='project']
+  :is(.scene-roll, .scene-depth, .scene-rotor, .scene-plane--project, .scene-project-content) {
   transform: none;
   transform-style: flat;
 }

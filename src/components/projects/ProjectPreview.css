@@ -137,6 +137,6 @@
   }
 }
 
-html[data-motion="reduced"] .project-preview {
+html[data-motion='reduced'] .project-preview {
   transition: none;
 }

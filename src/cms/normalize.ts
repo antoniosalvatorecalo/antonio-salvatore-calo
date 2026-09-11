@@ -1,4 +1,4 @@
-import type {PROJECTS_QUERY_RESULT, SITE_SETTINGS_QUERY_RESULT} from './sanity.types';
+import type { PROJECTS_QUERY_RESULT, SITE_SETTINGS_QUERY_RESULT } from './sanity.types';
 import type {
   CmsLocale,
   ProjectDetail,
@@ -8,7 +8,7 @@ import type {
   SiteSettings,
 } from './domain';
 
-type LocalizedValue = {en?: string | null; it?: string | null} | null | undefined;
+type LocalizedValue = { en?: string | null; it?: string | null } | null | undefined;
 
 export type CmsProjectResult = PROJECTS_QUERY_RESULT[number];
 export type CmsSiteSettingsResult = NonNullable<SITE_SETTINGS_QUERY_RESULT>;
@@ -26,7 +26,9 @@ function normalizeSeo(value: RawSeo | null | undefined, locale: CmsLocale): SeoC
   if (!value) return undefined;
   return {
     title: value.title ? localized(value.title, locale, 'seo.title') : undefined,
-    description: value.description ? localized(value.description, locale, 'seo.description') : undefined,
+    description: value.description
+      ? localized(value.description, locale, 'seo.description')
+      : undefined,
     canonicalPath: value.canonicalPath ?? undefined,
     openGraphImage: value.openGraphImage ?? undefined,
     twitterCard: value.twitterCard ?? undefined,
@@ -37,19 +39,41 @@ function normalizeCmsDetails(
   project: CmsProjectResult,
   locale: CmsLocale,
 ): ProjectDetail[] | undefined {
-  const labels = locale === 'IT'
-    ? {context: 'contesto', challenge: 'sfida', solution: 'soluzione', credits: 'credits', links: 'link'}
-    : {context: 'context', challenge: 'challenge', solution: 'solution', credits: 'credits', links: 'links'};
+  const labels =
+    locale === 'IT'
+      ? {
+          context: 'contesto',
+          challenge: 'sfida',
+          solution: 'soluzione',
+          credits: 'credits',
+          links: 'link',
+        }
+      : {
+          context: 'context',
+          challenge: 'challenge',
+          solution: 'solution',
+          credits: 'credits',
+          links: 'links',
+        };
   const details: ProjectDetail[] = [];
 
   if (project.details?.context) {
-    details.push({label: labels.context, text: localized(project.details.context, locale, 'details.context')});
+    details.push({
+      label: labels.context,
+      text: localized(project.details.context, locale, 'details.context'),
+    });
   }
   if (project.details?.challenge) {
-    details.push({label: labels.challenge, text: localized(project.details.challenge, locale, 'details.challenge')});
+    details.push({
+      label: labels.challenge,
+      text: localized(project.details.challenge, locale, 'details.challenge'),
+    });
   }
   if (project.details?.solution) {
-    details.push({label: labels.solution, text: localized(project.details.solution, locale, 'details.solution')});
+    details.push({
+      label: labels.solution,
+      text: localized(project.details.solution, locale, 'details.solution'),
+    });
   }
   if (project.credits?.length) {
     details.push({
@@ -63,20 +87,19 @@ function normalizeCmsDetails(
   if (project.links?.length) {
     details.push({
       label: labels.links,
-      cta: project.links.map((link, index) => ({
-        label: localized(link.label, locale, `links[${index}].label`),
-        href: link.href ?? '',
-      })).filter((link) => link.href),
+      cta: project.links
+        .map((link, index) => ({
+          label: localized(link.label, locale, `links[${index}].label`),
+          href: link.href ?? '',
+        }))
+        .filter((link) => link.href),
     });
   }
 
   return details.length ? details : undefined;
 }
 
-export function normalizeProject(
-  project: CmsProjectResult,
-  locale: CmsLocale,
-): ProjectDomain {
+export function normalizeProject(project: CmsProjectResult, locale: CmsLocale): ProjectDomain {
   const slug = project.slug?.current;
   if (!slug) throw new Error(`CMS project ${project._id} has no slug.`);
   if (!project.gallery?.length) throw new Error(`CMS project ${slug} has an empty gallery.`);
@@ -127,17 +150,21 @@ export function normalizeProject(
   };
 }
 
-export function normalizeSiteSettings(settings: CmsSiteSettingsResult, locale: CmsLocale): SiteSettings {
-  const publicContacts = settings.publicContacts?.map((item, index) => {
-    if (!['email', 'phone', 'location'].includes(item.kind ?? '') || !item.value) {
-      throw new Error(`CMS siteSettings.publicContacts[${index}] is invalid.`);
-    }
-    return {
-      kind: item.kind as 'email' | 'phone' | 'location',
-      value: item.value,
-      href: item.href ?? undefined,
-    };
-  }) ?? [];
+export function normalizeSiteSettings(
+  settings: CmsSiteSettingsResult,
+  locale: CmsLocale,
+): SiteSettings {
+  const publicContacts =
+    settings.publicContacts?.map((item, index) => {
+      if (!['email', 'phone', 'location'].includes(item.kind ?? '') || !item.value) {
+        throw new Error(`CMS siteSettings.publicContacts[${index}] is invalid.`);
+      }
+      return {
+        kind: item.kind as 'email' | 'phone' | 'location',
+        value: item.value,
+        href: item.href ?? undefined,
+      };
+    }) ?? [];
 
   const seo = normalizeSeo(settings.seo, locale);
   if (!seo?.title || !seo.description) throw new Error('CMS siteSettings.seo is incomplete.');
@@ -145,23 +172,39 @@ export function normalizeSiteSettings(settings: CmsSiteSettingsResult, locale: C
   return {
     displayName: localized(settings.displayName, locale, 'displayName'),
     bio: localized(settings.bio, locale, 'bio'),
-    recognition: settings.recognition?.map((item, index) => localized(item, locale, `recognition[${index}]`)) ?? [],
+    recognition:
+      settings.recognition?.map((item, index) =>
+        localized(item, locale, `recognition[${index}]`),
+      ) ?? [],
     publicContacts,
-    socials: settings.socials?.flatMap((item, index) => item.href ? [{label: localized(item.label, locale, `socials[${index}].label`), href: item.href}] : []) ?? [
+    socials: settings.socials?.flatMap((item, index) =>
+      item.href
+        ? [{ label: localized(item.label, locale, `socials[${index}].label`), href: item.href }]
+        : [],
+    ) ?? [
       { label: 'LinkedIn', href: 'https://linkedin.com/in/antonio-salvatore-calò' },
       { label: 'Instagram', href: 'https://instagram.com/antonio.salvatore.calo' },
       { label: 'Behance', href: 'https://behance.net/antoniosalvatorecalo' },
       { label: 'GitHub', href: 'https://github.com/antoniosalvatorecalo' },
     ],
-    downloads: settings.downloads?.flatMap((item, index) => {
-      if (!item.href || (item.kind !== 'cv' && item.kind !== 'portfolio')) return [];
-      return [{kind: item.kind, label: localized(item.label, locale, `downloads[${index}].label`), href: item.href}];
-    }) ?? [],
+    downloads:
+      settings.downloads?.flatMap((item, index) => {
+        if (!item.href || (item.kind !== 'cv' && item.kind !== 'portfolio')) return [];
+        return [
+          {
+            kind: item.kind,
+            label: localized(item.label, locale, `downloads[${index}].label`),
+            href: item.href,
+          },
+        ];
+      }) ?? [],
     canonicalBaseUrl: settings.canonicalBaseUrl ?? undefined,
-    branding: settings.branding ? {
-      favicon: settings.branding.favicon?.asset?.url ?? undefined,
-      themeColor: settings.branding.themeColor ?? undefined,
-    } : undefined,
+    branding: settings.branding
+      ? {
+          favicon: settings.branding.favicon?.asset?.url ?? undefined,
+          themeColor: settings.branding.themeColor ?? undefined,
+        }
+      : undefined,
     seo,
   };
 }

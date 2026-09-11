@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowIcon } from './ArrowIcon';
-import { LetterSwapForward } from './letter-swap';
 import { useEntranceReveal } from '@/hooks/animation/useEntranceReveal';
 import { useLanguage } from '../../providers/LanguageProvider';
 import './ContactFormExperience.css';
@@ -158,18 +157,24 @@ interface CompletedStepPhraseProps {
   onConnectorTyped: (stepId: StepId) => void;
 }
 
-const CompletedStepPhrase = memo(({ step, value, isConnectorTyped, onConnectorTyped }: CompletedStepPhraseProps) => {
-  const handleConnectorComplete = useCallback(() => {
-    onConnectorTyped(step.id);
-  }, [onConnectorTyped, step.id]);
+const CompletedStepPhrase = memo(
+  ({ step, value, isConnectorTyped, onConnectorTyped }: CompletedStepPhraseProps) => {
+    const handleConnectorComplete = useCallback(() => {
+      onConnectorTyped(step.id);
+    }, [onConnectorTyped, step.id]);
 
-  return (
-    <span className="inline">
-      {isConnectorTyped ? step.connector : <TypingText value={step.connector} onComplete={handleConnectorComplete} />}
-      {isConnectorTyped && <StaticAnswer value={value} />}
-    </span>
-  );
-});
+    return (
+      <span className="inline">
+        {isConnectorTyped ? (
+          step.connector
+        ) : (
+          <TypingText value={step.connector} onComplete={handleConnectorComplete} />
+        )}
+        {isConnectorTyped && <StaticAnswer value={value} />}
+      </span>
+    );
+  },
+);
 
 CompletedStepPhrase.displayName = 'CompletedStepPhrase';
 
@@ -206,9 +211,10 @@ const SelectStack = ({ step, onSelect, compact = false }: SelectStackProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.18, ease: EXPO }}
-            className={compact
-              ? 'relative inline-flex flex-row flex-nowrap gap-x-2 mt-1'
-              : 'absolute left-0 top-full z-20 mt-2 flex min-w-[14rem] flex-col items-start gap-1 bg-[var(--bg-primary)] py-2'
+            className={
+              compact
+                ? 'relative inline-flex flex-row flex-nowrap gap-x-2 mt-1'
+                : 'absolute left-0 top-full z-20 mt-2 flex min-w-[14rem] flex-col items-start gap-1 bg-[var(--bg-primary)] py-2'
             }
           >
             {step.options!.map((opt, index) => (
@@ -220,10 +226,7 @@ const SelectStack = ({ step, onSelect, compact = false }: SelectStackProps) => {
                 exit={{ opacity: 0, y: -3 }}
                 transition={{ delay: index * 0.05, duration: 0.18, ease: EXPO }}
                 onClick={() => onSelect(opt)}
-                className={compact
-                  ? 'dropdown-option compact'
-                  : 'dropdown-option'
-                }
+                className={compact ? 'dropdown-option compact' : 'dropdown-option'}
               >
                 {opt}
               </motion.button>
@@ -237,7 +240,9 @@ const SelectStack = ({ step, onSelect, compact = false }: SelectStackProps) => {
 
 type SubmissionState = 'idle' | 'loading' | 'success' | 'error';
 
-async function submitToApi(data: Record<string, string>): Promise<{ success: boolean; fallback?: string; mailtoHref?: string }> {
+async function submitToApi(
+  data: Record<string, string>,
+): Promise<{ success: boolean; fallback?: string; mailtoHref?: string }> {
   const payload = {
     name: data.name,
     projectType: data.type,
@@ -299,6 +304,7 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
       const t = setTimeout(() => inputRef.current?.focus(), 80);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [isCurrentConnectorTyped, step]);
 
   useEffect(() => {
@@ -324,7 +330,7 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
       setInputValue('');
       setStepIndex((i) => i + 1);
     },
-    [step]
+    [step],
   );
 
   const handleSend = useCallback(async () => {
@@ -347,7 +353,7 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
       console.error('Contact submission failed:', err);
       setSubmissionState('error');
       setSubmissionError(
-        err instanceof Error ? err.message : 'Failed to send message. Please try again.'
+        err instanceof Error ? err.message : 'Failed to send message. Please try again.',
       );
     }
   }, [data]);
@@ -362,19 +368,24 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
   }, []);
 
   return (
-    <div ref={entranceRef} className={`flex flex-col h-full min-h-0 justify-between${compact ? ' contact-form-experience--compact' : ''}`}>
+    <div
+      ref={entranceRef}
+      className={`flex flex-col h-full min-h-0 justify-between${compact ? ' contact-form-experience--compact' : ''}`}
+    >
       {!isDone && step && submissionState === 'idle' && (
         <div data-entrance-item className={`shrink-0 ${headerSpacing} flex items-center gap-3`}>
-          <span className="contact-step-number">
-            [{stepIndex + 1}]
-          </span>
-          <span className="contact-step-label">
-            {step.label}
-          </span>
+          <span className="contact-step-number">[{stepIndex + 1}]</span>
+          <span className="contact-step-label">{step.label}</span>
         </div>
       )}
 
-      <div ref={contentRef} data-entrance-item className={`flex-1 min-h-0 overflow-y-auto hide-scrollbar ${contentPadding}`} aria-live="polite" aria-busy={submissionState === 'loading'}>
+      <div
+        ref={contentRef}
+        data-entrance-item
+        className={`flex-1 min-h-0 overflow-y-auto hide-scrollbar ${contentPadding}`}
+        aria-live="polite"
+        aria-busy={submissionState === 'loading'}
+      >
         {submissionState === 'success' && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -457,105 +468,104 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
                 Sending message...
               </span>
             </p>
-            <p className="text-[var(--text-muted)] text-base">
-              Hold tight — this takes a second.
-            </p>
+            <p className="text-[var(--text-muted)] text-base">Hold tight — this takes a second.</p>
           </motion.div>
         )}
 
         {submissionState === 'idle' && (
-        <div
-          className="sentence-line leading-[1.4]"
-          style={{
-            letterSpacing: '-0.008em',
-            overflowWrap: 'break-word',
-            wordBreak: 'normal',
-          }}
-        >
-          {STEPS.slice(0, stepIndex).map((s) => (
-            <CompletedStepPhrase
-              key={s.id}
-              step={s}
-              value={data[s.id] ?? ''}
-              isConnectorTyped={!!typedConnectors[s.id]}
-              onConnectorTyped={markConnectorTyped}
-            />
-          ))}
+          <div
+            className="sentence-line leading-[1.4]"
+            style={{
+              letterSpacing: '-0.008em',
+              overflowWrap: 'break-word',
+              wordBreak: 'normal',
+            }}
+          >
+            {STEPS.slice(0, stepIndex).map((s) => (
+              <CompletedStepPhrase
+                key={s.id}
+                step={s}
+                value={data[s.id] ?? ''}
+                isConnectorTyped={!!typedConnectors[s.id]}
+                onConnectorTyped={markConnectorTyped}
+              />
+            ))}
 
-          {!isDone && step && isSelectStep && (
-            <motion.span
-              key={step.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: EXPO }}
-              className="inline"
-            >
-              {isCurrentConnectorTyped ? step.connector : (
-                <TypingText value={step.connector} onComplete={handleCurrentConnectorComplete} />
-              )}
-              {isCurrentConnectorTyped && <SelectStack step={step} onSelect={advance} compact={compact} />}
-            </motion.span>
-          )}
+            {!isDone && step && isSelectStep && (
+              <motion.span
+                key={step.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: EXPO }}
+                className="inline"
+              >
+                {isCurrentConnectorTyped ? (
+                  step.connector
+                ) : (
+                  <TypingText value={step.connector} onComplete={handleCurrentConnectorComplete} />
+                )}
+                {isCurrentConnectorTyped && (
+                  <SelectStack step={step} onSelect={advance} compact={compact} />
+                )}
+              </motion.span>
+            )}
 
-          {step?.id === 'email' && <span className="inline">. </span>}
-          {!isDone && step && !isSelectStep && (
-            <motion.span
-              key={step.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: EXPO }}
-              className={step.id === 'email' ? 'block' : 'inline'}
-            >
-              {isCurrentConnectorTyped ? step.connector : (
-                <TypingText value={step.connector} onComplete={handleCurrentConnectorComplete} />
-              )}
+            {step?.id === 'email' && <span className="inline">. </span>}
+            {!isDone && step && !isSelectStep && (
+              <motion.span
+                key={step.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: EXPO }}
+                className={step.id === 'email' ? 'block' : 'inline'}
+              >
+                {isCurrentConnectorTyped ? (
+                  step.connector
+                ) : (
+                  <TypingText value={step.connector} onComplete={handleCurrentConnectorComplete} />
+                )}
 
-              {isTypingStep && isCurrentConnectorTyped && (
-                <span className="inline relative" style={{ paddingRight: '1.5rem' }}>
-                  <span
-                    className="inline-grid"
-                    style={{
-                      verticalAlign: 'baseline',
-                      minWidth: '6ch',
-                    }}
-                  >
+                {isTypingStep && isCurrentConnectorTyped && (
+                  <span className="inline relative" style={{ paddingRight: '1.5rem' }}>
                     <span
-                      aria-hidden
-                      className="inline-block invisible pointer-events-none font-bold"
-                    >
-                      {inputValue || step.placeholder}
-                    </span>
-                    <input
-                      ref={inputRef}
-                      type={step.inputType}
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && inputValue.trim()) advance(inputValue.trim());
-                      }}
-                      placeholder={step.placeholder}
-                      autoComplete="off"
-                      autoCapitalize="words"
-                      className="absolute inset-0 w-full bg-transparent outline-none font-bold text-inherit tracking-inherit leading-inherit placeholder:text-inherit placeholder:opacity-25 placeholder:font-normal"
+                      className="inline-grid"
                       style={{
-                        color: 'var(--text-primary)',
-                        caretColor: 'var(--text-primary)',
+                        verticalAlign: 'baseline',
+                        minWidth: '6ch',
                       }}
-                    />
-                  </span>
-                  
-                  {inputValue.trim() && (
-                    <span className="input-enter-hint">
-                      [Enter]
+                    >
+                      <span
+                        aria-hidden
+                        className="inline-block invisible pointer-events-none font-bold"
+                      >
+                        {inputValue || step.placeholder}
+                      </span>
+                      <input
+                        ref={inputRef}
+                        type={step.inputType}
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && inputValue.trim()) advance(inputValue.trim());
+                        }}
+                        placeholder={step.placeholder}
+                        autoComplete="off"
+                        autoCapitalize="words"
+                        className="absolute inset-0 w-full bg-transparent outline-none font-bold text-inherit tracking-inherit leading-inherit placeholder:text-inherit placeholder:opacity-25 placeholder:font-normal"
+                        style={{
+                          color: 'var(--text-primary)',
+                          caretColor: 'var(--text-primary)',
+                        }}
+                      />
                     </span>
-                  )}
-                </span>
-              )}
 
-            </motion.span>
-          )}
+                    {inputValue.trim() && <span className="input-enter-hint">[Enter]</span>}
+                  </span>
+                )}
+              </motion.span>
+            )}
 
-          {isDone && (
+            {isDone && (
               <motion.span
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -572,11 +582,9 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
                   style={{ verticalAlign: 'middle' }}
                 >
                   <span className="relative hover-underline">
-                    <LetterSwapForward
-                      label={t('cta.send-message')}
-                      className="text-[length:var(--text-base)] font-[600] leading-[1.4] tracking-[-0.005em]"
-                      reverse={false}
-                    />
+                    <span className="text-[length:var(--text-base)] font-[600] leading-[1.4] tracking-[-0.005em]">
+                      {t('cta.send-message')}
+                    </span>
                   </span>
                   <span className="w-3 h-3 transform transition-transform duration-300 ease-out group-hover:-rotate-45 origin-center">
                     <ArrowIcon size={12} />
@@ -584,10 +592,9 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
                 </motion.button>
               </motion.span>
             )}
-        </div>
+          </div>
         )}
       </div>
-
-      </div>
+    </div>
   );
 };

@@ -10,23 +10,23 @@ Editorial, typography-led portfolio with a restrained monochrome palette, media-
 
 ### Color tokens
 
-| Token | Value | Use |
-|---|---|---|
-| `--bg-primary` | `#FFFFFF` | page surface |
-| `--bg-secondary` | `#F0F0F0` | secondary/active surfaces |
-| `--bg-tertiary` | `#E8E8E8` | tertiary surface |
-| `--bg-inverse` | `#141414` | inverse/dark surface |
-| `--bg-inverse-subtle` | `#1F1F1F` | subtle inverse surface |
-| `--text-primary` | `#0A0A0A` | primary text |
-| `--text-secondary` | `#3D3D3D` | secondary text |
-| `--text-muted` | `#6B6B6B` | labels/muted text |
-| `--text-inverse` | `#F5F5F5` | text on inverse surfaces |
-| `--text-inverse-muted` | `#A0A0A0` | muted inverse text |
-| `--cta-color` | `#0A0A0A` | CTA links |
-| `--border-subtle` | `#E2E2E2` | separators |
-| `--border-default` | `#C8C8C8` | default borders |
-| `--border-strong` | `#0A0A0A` | active/focus borders |
-| `--border-inverse` | `rgba(245,245,245,0.1)` | inverse separators |
+| Token                  | Value                   | Use                       |
+| ---------------------- | ----------------------- | ------------------------- |
+| `--bg-primary`         | `#FFFFFF`               | page surface              |
+| `--bg-secondary`       | `#F0F0F0`               | secondary/active surfaces |
+| `--bg-tertiary`        | `#E8E8E8`               | tertiary surface          |
+| `--bg-inverse`         | `#141414`               | inverse/dark surface      |
+| `--bg-inverse-subtle`  | `#1F1F1F`               | subtle inverse surface    |
+| `--text-primary`       | `#0A0A0A`               | primary text              |
+| `--text-secondary`     | `#3D3D3D`               | secondary text            |
+| `--text-muted`         | `#6B6B6B`               | labels/muted text         |
+| `--text-inverse`       | `#F5F5F5`               | text on inverse surfaces  |
+| `--text-inverse-muted` | `#A0A0A0`               | muted inverse text        |
+| `--cta-color`          | `#0A0A0A`               | CTA links                 |
+| `--border-subtle`      | `#E2E2E2`               | separators                |
+| `--border-default`     | `#C8C8C8`               | default borders           |
+| `--border-strong`      | `#0A0A0A`               | active/focus borders      |
+| `--border-inverse`     | `rgba(245,245,245,0.1)` | inverse separators        |
 
 Additional implemented values: `.plain-overlay` uses `rgba(0,0,0,0.6)`; glass-nav defaults are transparent; focus outlines use `rgba(10,10,10,0.55)`.
 

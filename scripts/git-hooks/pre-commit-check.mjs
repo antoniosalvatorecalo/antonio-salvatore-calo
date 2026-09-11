@@ -15,10 +15,7 @@ import { existsSync, statSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 // ── Config ──────────────────────────────────────────────────────────────────
-const ALLOWED_VSCODE = new Set([
-  '.vscode/extensions.json',
-  '.vscode/settings.json',
-]);
+const ALLOWED_VSCODE = new Set(['.vscode/extensions.json', '.vscode/settings.json']);
 
 // Categories: [pattern, description] — pattern is a function returning boolean
 const BLOCKERS = [
@@ -27,8 +24,14 @@ const BLOCKERS = [
   // 2. Dependencies
   [(f) => f.startsWith('node_modules/'), 'Dependencies directory'],
   // 3. Cache / coverage
-  [(f) => f.endsWith('.tsbuildinfo') || f.includes('.cache/') ||
-         f.startsWith('.cache/') || f.startsWith('coverage/'), 'Cache or coverage artifact'],
+  [
+    (f) =>
+      f.endsWith('.tsbuildinfo') ||
+      f.includes('.cache/') ||
+      f.startsWith('.cache/') ||
+      f.startsWith('coverage/'),
+    'Cache or coverage artifact',
+  ],
   // 4. Logs
   [(f) => f.endsWith('.log') || f.startsWith('npm-debug.log'), 'Log file'],
   // 5. Temp files
@@ -46,20 +49,35 @@ const BLOCKERS = [
   // 11. External AI repos
   [(f) => f.startsWith('agency-agents/'), 'External AI agent repository'],
   // 12. Environment files (except .env.example)
-  [(f) => f === '.env' || (f.startsWith('.env.') && f !== '.env.example'), 'Environment file (use .env.example)'],
+  [
+    (f) => f === '.env' || (f.startsWith('.env.') && f !== '.env.example'),
+    'Environment file (use .env.example)',
+  ],
   // 13. Editor files (except allowed VSCode)
-  [(f) => (f.startsWith('.vscode/') && !ALLOWED_VSCODE.has(f)) ||
-         f.startsWith('.idea/') ||
-         f.endsWith('.swp') || f.endsWith('.swo'), 'Editor/IDE file'],
+  [
+    (f) =>
+      (f.startsWith('.vscode/') && !ALLOWED_VSCODE.has(f)) ||
+      f.startsWith('.idea/') ||
+      f.endsWith('.swp') ||
+      f.endsWith('.swo'),
+    'Editor/IDE file',
+  ],
   // 14. Planning / vault
   [(f) => f.startsWith('.planning/'), 'GSD planning directory (local)'],
   [(f) => f.startsWith('Maximum Effort/'), 'Obsidian personal vault'],
   [(f) => f === '.vercel', 'Vercel local config'],
   // 15. Screenshots outside assets
-  [(f) => isImage(f) && !f.startsWith('public/') && !f.startsWith('src/assets/'), 'Image outside public/ or src/assets/'],
+  [
+    (f) => isImage(f) && !f.startsWith('public/') && !f.startsWith('src/assets/'),
+    'Image outside public/ or src/assets/',
+  ],
   // 16. Test run artifacts
-  [(f) => f.startsWith('stages/04_testing/test-results/') ||
-         f.startsWith('stages/04_testing/playwright-report/'), 'Test run artifacts'],
+  [
+    (f) =>
+      f.startsWith('stages/04_testing/test-results/') ||
+      f.startsWith('stages/04_testing/playwright-report/'),
+    'Test run artifacts',
+  ],
 ];
 
 const WARNINGS = [
@@ -71,10 +89,18 @@ const WARNINGS = [
 ];
 
 const AI_RUNTIME_PATTERNS = [
-  '.opencode/', '.codex/', '.qwen/', '.witsy/',
-  '.windsurf/', '.aider/', '.cursor/', '.agent/',
-  'ai-output/', 'ai-experiments/',
-  '_agents/', '_ai/',
+  '.opencode/',
+  '.codex/',
+  '.qwen/',
+  '.witsy/',
+  '.windsurf/',
+  '.aider/',
+  '.cursor/',
+  '.agent/',
+  'ai-output/',
+  'ai-experiments/',
+  '_agents/',
+  '_ai/',
 ];
 
 const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.ico', '.webp']);
@@ -161,13 +187,21 @@ function main() {
   let files;
   if (mode === 'working tree') {
     // All files not ignored by git
-    const tracked = execSync('git ls-files', { encoding: 'utf8' }).trim().split('\n').filter(Boolean);
-    const untracked = execSync('git ls-files --others --exclude-standard', { encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+    const tracked = execSync('git ls-files', { encoding: 'utf8' })
+      .trim()
+      .split('\n')
+      .filter(Boolean);
+    const untracked = execSync('git ls-files --others --exclude-standard', { encoding: 'utf8' })
+      .trim()
+      .split('\n')
+      .filter(Boolean);
     files = [...new Set([...tracked, ...untracked])];
   } else {
     // Staged changes (added, copied, modified, renamed)
     files = execSync('git diff --cached --name-only --diff-filter=ACMR', { encoding: 'utf8' })
-      .trim().split('\n').filter(Boolean);
+      .trim()
+      .split('\n')
+      .filter(Boolean);
   }
 
   const blocked = [];
@@ -222,7 +256,9 @@ function main() {
   if (blocked.length > 0 || warnings.length > 0) {
     console.log(`\x1b[36m── Summary ────────────────────────────────────────────\x1b[0m`);
     if (blocked.length > 0) {
-      console.log(`  \x1b[31m${blocked.length} BLOCKED\x1b[0m  — fix and re-stage before committing`);
+      console.log(
+        `  \x1b[31m${blocked.length} BLOCKED\x1b[0m  — fix and re-stage before committing`,
+      );
     }
     if (warnings.length > 0) {
       console.log(`  \x1b[33m${warnings.length} WARNINGS\x1b[0m  — review before committing`);

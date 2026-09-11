@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Locale } from '../i18n/translations';
 import { t as translate } from '../i18n/translations';
 
@@ -14,14 +14,15 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>('EN');
 
+  useEffect(() => {
+    document.documentElement.lang = locale.toLowerCase();
+  }, [locale]);
+
   const toggleLocale = useCallback(() => {
-    setLocale(prev => prev === 'EN' ? 'IT' : 'EN');
+    setLocale((prev) => (prev === 'EN' ? 'IT' : 'EN'));
   }, []);
 
-  const translateKey = useCallback(
-    (key: string) => translate(key, locale),
-    [locale],
-  );
+  const translateKey = useCallback((key: string) => translate(key, locale), [locale]);
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale, toggleLocale, t: translateKey }}>

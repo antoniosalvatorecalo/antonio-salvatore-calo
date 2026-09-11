@@ -1,4 +1,4 @@
-import {defineQuery} from 'groq';
+import { defineQuery } from 'groq';
 
 export const PROJECTS_QUERY = defineQuery(`
   *[_type == "project"] | order(order asc){

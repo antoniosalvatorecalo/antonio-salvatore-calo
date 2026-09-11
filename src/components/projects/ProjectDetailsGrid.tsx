@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { ProjectAbout } from './ProjectAbout';
 import { useLanguage } from '../../providers/LanguageProvider';
 import './ProjectDetailsGrid.css';
+import { AnimatedLink } from '../ui/AnimatedLink';
 
 export interface ProjectDetailColumn {
   /** Small uppercase label (e.g. "contesto", "sfida", "soluzione", "credits", "links"). */
@@ -51,16 +52,10 @@ export function ProjectDetailsGrid({ columns }: ProjectDetailsGridProps) {
             {hasCredits && (
               <dl className="project-about-credits">
                 {column.credits!.map((entry, entryIndex) => (
-                  <div
-                    key={`${entry.label}-${entryIndex}`}
-                    className="project-about-credit-item"
-                  >
+                  <div key={`${entry.label}-${entryIndex}`} className="project-about-credit-item">
                     <dt className="project-about-credit-label">{entry.label}</dt>
                     {entry.values.map((value, valueIndex) => (
-                      <dd
-                        key={valueIndex}
-                        className="project-about-credit-value"
-                      >
+                      <dd key={valueIndex} className="project-about-credit-value">
                         {value}
                       </dd>
                     ))}
@@ -72,9 +67,12 @@ export function ProjectDetailsGrid({ columns }: ProjectDetailsGridProps) {
               <ul className="project-about-cta">
                 {column.cta!.map((link) => (
                   <li key={link.href}>
-                    <a href={link.href} target="_blank" rel="noopener noreferrer">
-                      {link.href.includes('behance.net') ? t('cta.process') : t('cta.live')}
-                    </a>
+                    <AnimatedLink
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      label={link.href.includes('behance.net') ? t('cta.process') : t('cta.live')}
+                    />
                   </li>
                 ))}
               </ul>
@@ -97,5 +95,3 @@ export function ProjectDetailsGrid({ columns }: ProjectDetailsGridProps) {
     </section>
   );
 }
-
-export default ProjectDetailsGrid;

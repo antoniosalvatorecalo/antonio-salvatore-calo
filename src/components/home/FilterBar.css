@@ -77,7 +77,9 @@
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.15s ease, opacity 0.15s ease;
+  transition:
+    color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .filter-bar-item:hover {

@@ -3,11 +3,10 @@ import { MotionConfig } from 'motion/react';
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
-const getInitialReducedMotion = () => (
+const getInitialReducedMotion = () =>
   typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     ? window.matchMedia(REDUCED_MOTION_QUERY).matches
-    : false
-);
+    : false;
 
 const MotionPreferenceContext = createContext(false);
 
@@ -34,9 +33,7 @@ export const MotionPreferenceProvider: React.FC<{ children: React.ReactNode }> =
 
   return (
     <MotionPreferenceContext.Provider value={value}>
-      <MotionConfig reducedMotion={reducedMotion ? 'always' : 'never'}>
-        {children}
-      </MotionConfig>
+      <MotionConfig reducedMotion={reducedMotion ? 'always' : 'never'}>{children}</MotionConfig>
     </MotionPreferenceContext.Provider>
   );
 };

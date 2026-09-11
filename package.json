@@ -11,10 +11,18 @@
   "homepage": "https://github.com/antoniosalvatorecalo/antonio-salvatore-calo",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir .ssr && tsx scripts/prerender.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "budget:check": "node scripts/check-performance-budget.mjs",
+    "verify:prerender": "node scripts/verify-prerender.mjs",
+    "verify:agentic": "node scripts/verify-agentic.mjs",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run budget:check",
     "verify:task2": "node scripts/verify-task2.mjs",
     "verify:task3": "node scripts/verify-task2.mjs",
     "hooks:install": "node scripts/git-hooks/pre-commit-check.mjs --hook-install",
@@ -23,7 +31,6 @@
   "dependencies": {
     "@sanity/client": "^8.5.0",
     "groq": "^6.12.0",
-    "lodash": "^4.18.1",
     "motion": "^12.23.24",
     "nodemailer": "^8.0.10",
     "react": "^19.0.0",
@@ -31,6 +38,7 @@
     "react-router-dom": "^7.14.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/vite": "^4.1.14",
     "@types/node": "^22.14.0",
@@ -39,9 +47,17 @@
     "@types/react-dom": "^18.3.7",
     "@vercel/node": "^5.8.9",
     "@vitejs/plugin-react": "^5.0.4",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^6.1.1",
+    "globals": "^16.5.0",
     "gsap": "^3.14.2",
+    "prettier": "^3.9.6",
     "tailwindcss": "^4.1.14",
+    "tsx": "^4.23.13",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.70.0",
     "vite": "^6.2.0"
   }
 }

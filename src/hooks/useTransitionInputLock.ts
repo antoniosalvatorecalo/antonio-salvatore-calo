@@ -1,6 +1,16 @@
 import { useLayoutEffect } from 'react';
 
-const SCROLL_KEYS = new Set([' ', 'Enter', 'Tab', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End']);
+const SCROLL_KEYS = new Set([
+  ' ',
+  'Enter',
+  'Tab',
+  'ArrowUp',
+  'ArrowDown',
+  'PageUp',
+  'PageDown',
+  'Home',
+  'End',
+]);
 
 export function useTransitionInputLock(active: boolean) {
   useLayoutEffect(() => {
@@ -13,7 +23,8 @@ export function useTransitionInputLock(active: boolean) {
     };
     const blockScroll = (event: Event) => event.preventDefault();
     const blockKeyboard = (event: KeyboardEvent) => {
-      if (!event.metaKey && !event.ctrlKey && !event.altKey && SCROLL_KEYS.has(event.key)) blockPointer(event);
+      if (!event.metaKey && !event.ctrlKey && !event.altKey && SCROLL_KEYS.has(event.key))
+        blockPointer(event);
     };
 
     window.addEventListener('pointerdown', blockPointer, true);

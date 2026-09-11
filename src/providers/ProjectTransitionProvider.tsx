@@ -1,5 +1,11 @@
 import {
-  createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState,
+  createContext,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
   type ReactNode,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -8,14 +14,18 @@ import { waitForProjectMedia } from '@/lib/project-media-ready';
 import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 import { useReducedMotionPreference } from './MotionPreferenceProvider';
 import {
-  createCloseTimeline, createOpenTimeline, setHomePlaneState, setProjectPlaneState,
-  updateSceneGeometry, type ScenePlanes,
+  createCloseTimeline,
+  createOpenTimeline,
+  setHomePlaneState,
+  setProjectPlaneState,
+  updateSceneGeometry,
+  type ScenePlanes,
 } from '@/motion/ProjectTransitionMotion';
 import { useTransitionInputLock } from '@/hooks/useTransitionInputLock';
 
-export type ProjectTransitionPhase = 'idle' | 'opening' | 'project' | 'closing';
+type ProjectTransitionPhase = 'idle' | 'opening' | 'project' | 'closing';
 
-export interface ProjectTransitionRequest {
+interface ProjectTransitionRequest {
   slug: string;
   mediaKey: string;
   imageSrc: string;
@@ -51,16 +61,23 @@ interface ProjectTransitionContextValue {
 }
 
 const ProjectTransitionContext = createContext<ProjectTransitionContextValue | null>(null);
-const HOME: TransitionState = {phase: 'idle', slug: null, mediaKey: undefined, imageSrc: undefined};
+const HOME: TransitionState = {
+  phase: 'idle',
+  slug: null,
+  mediaKey: undefined,
+  imageSrc: undefined,
+};
 const getRouteSelection = (state: unknown) => {
-  if (!state || typeof state !== 'object') return {mediaKey: undefined, imageSrc: undefined};
+  if (!state || typeof state !== 'object') return { mediaKey: undefined, imageSrc: undefined };
   return {
-    mediaKey: 'selectedMediaKey' in state && typeof state.selectedMediaKey === 'string'
-      ? state.selectedMediaKey
-      : undefined,
-    imageSrc: 'selectedImageSrc' in state && typeof state.selectedImageSrc === 'string'
-      ? state.selectedImageSrc
-      : undefined,
+    mediaKey:
+      'selectedMediaKey' in state && typeof state.selectedMediaKey === 'string'
+        ? state.selectedMediaKey
+        : undefined,
+    imageSrc:
+      'selectedImageSrc' in state && typeof state.selectedImageSrc === 'string'
+        ? state.selectedImageSrc
+        : undefined,
   };
 };
 
@@ -68,14 +85,17 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
   const navigate = useNavigate();
   const location = useLocation();
   const reducedMotion = useReducedMotionPreference();
-  const {getProject} = useProjectCatalog();
-  const getRouteSlug = useCallback((pathname: string) => {
-    const slug = pathname.match(/^\/projects\/([^/]+)$/)?.[1];
-    return slug && getProject(slug) ? slug : null;
-  }, [getProject]);
+  const { getProject } = useProjectCatalog();
+  const getRouteSlug = useCallback(
+    (pathname: string) => {
+      const slug = pathname.match(/^\/projects\/([^/]+)$/)?.[1];
+      return slug && getProject(slug) ? slug : null;
+    },
+    [getProject],
+  );
   const [state, setState] = useState<TransitionState>(() => {
     const slug = getRouteSlug(location.pathname);
-    return slug ? {phase: 'project', slug, ...getRouteSelection(location.state)} : HOME;
+    return slug ? { phase: 'project', slug, ...getRouteSelection(location.state) } : HOME;
   });
   const stateRef = useRef(state);
   const locationRef = useRef(location);
@@ -133,35 +153,41 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     const origin = originRef.current;
     const destination = origin?.url ?? '/';
     internalNavigationRef.current = destination;
-    if (origin && projectHistoryKeyRef.current === currentLocation.key
-      && currentLocation.pathname === `/projects/${origin.slug}`) {
+    if (
+      origin &&
+      projectHistoryKeyRef.current === currentLocation.key &&
+      currentLocation.pathname === `/projects/${origin.slug}`
+    ) {
       navigate(-1);
     } else {
       navigate(destination);
     }
   }, [commit, navigate, restoreGallery]);
 
-  const startProjectTransition = useCallback((request: ProjectTransitionRequest) => {
-    const project = getProject(request.slug);
-    if (stateRef.current.phase !== 'idle' || !project) return;
-    if (!project.media.some((media) => media.key === request.mediaKey)) return;
-    const grid = request.sourceElement.closest<HTMLElement>('[data-project-transition-grid]');
-    const currentLocation = locationRef.current;
-    originRef.current = {
-      url: currentLocation.pathname + currentLocation.search + currentLocation.hash,
-      slug: request.slug,
-      galleryScrollTop: grid?.scrollTop ?? 0,
-      windowScrollY: window.scrollY,
-      sourceElement: request.sourceElement,
-    };
-    projectHistoryKeyRef.current = null;
-    commit({
-      phase: 'opening',
-      slug: request.slug,
-      mediaKey: request.mediaKey,
-      imageSrc: request.imageSrc,
-    });
-  }, [commit, getProject]);
+  const startProjectTransition = useCallback(
+    (request: ProjectTransitionRequest) => {
+      const project = getProject(request.slug);
+      if (stateRef.current.phase !== 'idle' || !project) return;
+      if (!project.media.some((media) => media.key === request.mediaKey)) return;
+      const grid = request.sourceElement.closest<HTMLElement>('[data-project-transition-grid]');
+      const currentLocation = locationRef.current;
+      originRef.current = {
+        url: currentLocation.pathname + currentLocation.search + currentLocation.hash,
+        slug: request.slug,
+        galleryScrollTop: grid?.scrollTop ?? 0,
+        windowScrollY: window.scrollY,
+        sourceElement: request.sourceElement,
+      };
+      projectHistoryKeyRef.current = null;
+      commit({
+        phase: 'opening',
+        slug: request.slug,
+        mediaKey: request.mediaKey,
+        imageSrc: request.imageSrc,
+      });
+    },
+    [commit, getProject],
+  );
 
   const returnToGallery = useCallback(() => {
     if (stateRef.current.phase !== 'project') return;
@@ -186,7 +212,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     const current = stateRef.current;
     if (slug) {
       projectHistoryKeyRef.current = location.key;
-      commit({phase: 'project', slug, ...getRouteSelection(location.state)});
+      commit({ phase: 'project', slug, ...getRouteSelection(location.state) });
     } else if (current.phase === 'project' || current.phase === 'closing') {
       closeSourceRef.current = 'pop';
       if (current.phase !== 'closing') commit({ ...current, phase: 'closing' });
@@ -268,36 +294,48 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     };
   }, [planes, state.phase, state.slug, reducedMotion, finishOpen, finishClose, restoreGallery]);
 
-  useLayoutEffect(() => () => {
-    if (restoreFrameRef.current !== null) cancelAnimationFrame(restoreFrameRef.current);
-  }, []);
+  useLayoutEffect(
+    () => () => {
+      if (restoreFrameRef.current !== null) cancelAnimationFrame(restoreFrameRef.current);
+    },
+    [],
+  );
 
   const scene = planes?.scene;
-  useLayoutEffect(() => () => {
-    scene?.style.removeProperty('--scene-angle');
-    scene?.style.removeProperty('--scene-depth');
-  }, [scene]);
+  useLayoutEffect(
+    () => () => {
+      scene?.style.removeProperty('--scene-angle');
+      scene?.style.removeProperty('--scene-depth');
+    },
+    [scene],
+  );
 
   const registerScenePlanes = useCallback((next: ScenePlanes | null) => setPlanes(next), []);
-  const value = useMemo<ProjectTransitionContextValue>(() => ({
-    phase: state.phase,
-    selectedSlug: state.slug,
-    selectedMediaKey: state.mediaKey,
-    visibleSlug: state.slug,
-    shouldRenderProject: Boolean(state.slug),
-    galleryInteractive: state.phase === 'idle',
-    galleryMediaActive: state.phase !== 'project',
-    registerScenePlanes,
-    startProjectTransition,
-    returnToGallery,
-  }), [state, registerScenePlanes, startProjectTransition, returnToGallery]);
+  const value = useMemo<ProjectTransitionContextValue>(
+    () => ({
+      phase: state.phase,
+      selectedSlug: state.slug,
+      selectedMediaKey: state.mediaKey,
+      visibleSlug: state.slug,
+      shouldRenderProject: Boolean(state.slug),
+      galleryInteractive: state.phase === 'idle',
+      galleryMediaActive: state.phase !== 'project',
+      registerScenePlanes,
+      startProjectTransition,
+      returnToGallery,
+    }),
+    [state, registerScenePlanes, startProjectTransition, returnToGallery],
+  );
 
-  return <ProjectTransitionContext.Provider value={value}>{children}</ProjectTransitionContext.Provider>;
+  return (
+    <ProjectTransitionContext.Provider value={value}>{children}</ProjectTransitionContext.Provider>
+  );
 };
 
 export const useProjectTransition = () => {
   const context = useContext(ProjectTransitionContext);
-  if (!context) throw new Error('useProjectTransition must be used within ProjectTransitionProvider');
+  if (!context)
+    throw new Error('useProjectTransition must be used within ProjectTransitionProvider');
   return context;
 };
 

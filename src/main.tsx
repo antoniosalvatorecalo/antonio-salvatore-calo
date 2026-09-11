@@ -1,16 +1,46 @@
 import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { router } from './providers/AppRouter';
-import { MotionPreferenceProvider } from './providers/MotionPreferenceProvider';
+import { createRoot, hydrateRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { AppShell } from './AppShell';
+import { AppRoutes } from './providers/AppRouter';
+import { Suspense, lazy } from 'react';
 import { initGSAP } from './lib/gsap-setup';
+import type { SiteSnapshot } from './cms/snapshot';
 import './index.css';
 
 initGSAP();
 
-createRoot(document.getElementById('root')!).render(
+const ContactPage = lazy(() => import('./pages/contact/ContactPage'));
+const snapshotElement = document.getElementById('__SITE_SNAPSHOT__');
+let initialSnapshot: SiteSnapshot | undefined;
+if (snapshotElement?.textContent) {
+  try {
+    initialSnapshot = JSON.parse(snapshotElement.textContent) as SiteSnapshot;
+  } catch (error) {
+    console.error('Invalid prerender snapshot.', error);
+  }
+}
+
+const app = (
   <StrictMode>
-    <MotionPreferenceProvider>
-      {router}
-    </MotionPreferenceProvider>
+    <AppShell>
+      <BrowserRouter>
+        <AppRoutes
+          initialSnapshot={initialSnapshot}
+          contactElement={
+            <Suspense
+              fallback={<div style={{ padding: 40, color: 'var(--text-primary)' }}>Loading…</div>}
+            >
+              <ContactPage />
+            </Suspense>
+          }
+        />
+      </BrowserRouter>
+    </AppShell>
   </StrictMode>
 );
+
+const root = document.getElementById('root');
+if (!root) throw new Error('Application root element is missing.');
+if (initialSnapshot) hydrateRoot(root, app);
+else createRoot(root).render(app);

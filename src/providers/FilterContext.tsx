@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
-export type FilterKey = 'all' | string;
+type FilterKey = 'all' | string;
 
 interface FilterContextValue {
   active: FilterKey;
@@ -11,11 +11,7 @@ const FilterContext = createContext<FilterContextValue | null>(null);
 
 export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const [active, setActive] = useState<FilterKey>('all');
-  return (
-    <FilterContext.Provider value={{ active, setActive }}>
-      {children}
-    </FilterContext.Provider>
-  );
+  return <FilterContext.Provider value={{ active, setActive }}>{children}</FilterContext.Provider>;
 };
 
 export const useFilter = (): FilterContextValue => {

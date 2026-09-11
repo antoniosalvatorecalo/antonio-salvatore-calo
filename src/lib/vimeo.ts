@@ -19,9 +19,8 @@ export function getVimeoEmbedUrl(src: string): string {
 }
 
 export function getVimeoVideoId(src: string): string | null {
-  const match = typeof src === 'string'
-    ? src.match(/vimeo\.com\/(?:video\/|manage\/videos\/)?(\d+)/i)
-    : null;
+  const match =
+    typeof src === 'string' ? src.match(/vimeo\.com\/(?:video\/|manage\/videos\/)?(\d+)/i) : null;
   return match?.[1] ?? null;
 }
 

@@ -35,12 +35,8 @@ export function ProjectPreviewCarousel({ media }: ProjectPreviewCarouselProps) {
     <div className="project-preview is-visible">
       <div className="project-preview-inner">
         <PreviewMediaAsset key={currentMedia.key} media={currentMedia} staticPreview />
-        <div className="project-preview-name">
-          [{getPreviewMediaName(currentMedia)}]
-        </div>
+        <div className="project-preview-name">[{getPreviewMediaName(currentMedia)}]</div>
       </div>
     </div>
   );
 }
-
-export default ProjectPreviewCarousel;

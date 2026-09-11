@@ -1,4 +1,4 @@
-import {createClient} from '@sanity/client';
+import { createClient } from '@sanity/client';
 
 export const SANITY_PROJECT_ID = 'dw4juo8a';
 export const SANITY_DATASET = 'production';

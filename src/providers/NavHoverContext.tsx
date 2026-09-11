@@ -15,7 +15,9 @@ export function NavHoverProvider({ children }: { children: ReactNode }) {
   const [navProjectMedia, setNavProjectMedia] = useState<ProjectMedia[]>([]);
 
   return (
-    <NavHoverContext.Provider value={{ navHoveredProject, setNavHoveredProject, navProjectMedia, setNavProjectMedia }}>
+    <NavHoverContext.Provider
+      value={{ navHoveredProject, setNavHoveredProject, navProjectMedia, setNavProjectMedia }}
+    >
       {children}
     </NavHoverContext.Provider>
   );

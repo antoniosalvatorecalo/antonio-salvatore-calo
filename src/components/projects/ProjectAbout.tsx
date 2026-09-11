@@ -50,10 +50,7 @@ export function ProjectAbout({
   };
 
   return (
-    <section
-      className={`project-about ${isOpen ? 'is-open' : ''}`}
-      aria-label={label}
-    >
+    <section className={`project-about ${isOpen ? 'is-open' : ''}`} aria-label={label}>
       <button
         type="button"
         className="project-about-toggle"
@@ -79,5 +76,3 @@ export function ProjectAbout({
     </section>
   );
 }
-
-export default ProjectAbout;

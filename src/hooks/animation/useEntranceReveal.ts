@@ -1,6 +1,6 @@
 import { useLayoutEffect } from 'react';
 import type { RefObject } from 'react';
-import { gsap, ScrollTrigger } from '../../lib/gsap-setup';
+import { gsap, initScrollTrigger, ScrollTrigger } from '@/lib/gsap-scroll-trigger';
 import { useReducedMotionPreference } from '../../providers/MotionPreferenceProvider';
 
 export interface EntranceRevealPhase {
@@ -41,7 +41,7 @@ function getRevealTargets(container: HTMLElement, selector: string): HTMLElement
       !el.dataset.entranceSkip &&
       !el.classList.contains(COMPLETE_CLASS) &&
       !el.classList.contains('entry-reveal-done') &&
-      !el.classList.contains('reveal-complete')
+      !el.classList.contains('reveal-complete'),
   );
 }
 
@@ -62,11 +62,12 @@ export function useEntranceReveal<T extends HTMLElement = HTMLDivElement>(
     once = true,
     disabled = false,
     phases,
-  }: EntranceRevealOptions = {}
+  }: EntranceRevealOptions = {},
 ) {
   const prefersReducedMotion = useReducedMotionPreference();
 
   useLayoutEffect(() => {
+    initScrollTrigger();
     const container = containerRef.current;
     if (!container || disabled) return;
 
@@ -90,9 +91,7 @@ export function useEntranceReveal<T extends HTMLElement = HTMLDivElement>(
 
       if (!resolvedPhases.length) return;
 
-      const uniqueTargets = Array.from(
-        new Set(resolvedPhases.flatMap((phase) => phase.targets))
-      );
+      const uniqueTargets = Array.from(new Set(resolvedPhases.flatMap((phase) => phase.targets)));
 
       if (prefersReducedMotion) {
         gsap.set(uniqueTargets, { ...finalState, duration: 0 });
@@ -137,7 +136,7 @@ export function useEntranceReveal<T extends HTMLElement = HTMLDivElement>(
                 ease: phaseEase,
                 stagger: phaseStagger,
               },
-              phasePosition
+              phasePosition,
             );
           });
 
@@ -225,5 +224,3 @@ export function useEntranceReveal<T extends HTMLElement = HTMLDivElement>(
     prefersReducedMotion,
   ]);
 }
-
-export default useEntranceReveal;

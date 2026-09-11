@@ -1,4 +1,4 @@
-/* Hover underline — instant, text-width only */
+/* Shared underline — draws in from the left and retracts from the right. */
 .hover-underline {
   position: relative;
   text-decoration: none;
@@ -14,15 +14,51 @@
   width: 100%;
   background-color: currentColor;
   transform: scaleX(0);
-  transform-origin: left;
+  transform-origin: right center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (hover: hover) {
-  .hover-underline:hover::after {
+.hover-underline:hover::after {
+    transform-origin: left center;
     transform: scaleX(1);
   }
 }
 
 .hover-underline:focus-visible::after {
+  transform-origin: left center;
   transform: scaleX(1);
+}
+
+.animated-link {
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
+  text-decoration: none;
+}
+
+.animated-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animated-link:hover::after,
+.animated-link:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-underline::after,
+  .animated-link::after {
+    transition-duration: 0.01ms;
+  }
 }

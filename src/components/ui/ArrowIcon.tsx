@@ -1,10 +1,4 @@
-export const ArrowIcon = ({
-  className = '',
-  size = 16,
-}: {
-  className?: string;
-  size?: number;
-}) => (
+export const ArrowIcon = ({ className = '', size = 16 }: { className?: string; size?: number }) => (
   <svg
     width={size}
     height={size}

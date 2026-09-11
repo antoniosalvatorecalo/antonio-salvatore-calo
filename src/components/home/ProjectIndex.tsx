@@ -10,9 +10,12 @@ import { useProjectTransition } from '@/providers/ProjectTransitionProvider';
 import { useFilter } from '@/providers/FilterContext';
 import './ProjectIndex.css';
 
-function filterProjectsByService(projects: ProjectDomain[], service: string | null): ProjectDomain[] {
+function filterProjectsByService(
+  projects: ProjectDomain[],
+  service: string | null,
+): ProjectDomain[] {
   if (!service || service === 'all') return projects;
-  return projects.filter(p => p.category === service);
+  return projects.filter((p) => p.category === service);
 }
 
 interface ProjectIndexProps {
@@ -20,25 +23,37 @@ interface ProjectIndexProps {
   mediaActive?: boolean;
 }
 
-export const ProjectIndex: React.FC<ProjectIndexProps> = ({ interactive = true, mediaActive = true }) => {
+export const ProjectIndex: React.FC<ProjectIndexProps> = ({
+  interactive = true,
+  mediaActive = true,
+}) => {
   const { active: activeFilter } = useFilter();
   const [hoveredMedia, setHoveredMedia] = useState<ProjectMedia | null>(null);
   const { navProjectMedia } = useNavHover();
   const { startProjectTransition } = useProjectTransition();
   const { projects } = useProjectCatalog();
 
-  const filteredProjects = filterProjectsByService(projects, activeFilter === 'all' ? null : activeFilter);
+  const filteredProjects = filterProjectsByService(
+    projects,
+    activeFilter === 'all' ? null : activeFilter,
+  );
 
-  const handleProjectClick = useCallback((projectId: string, mediaKey: string, imageSrc: string, sourceElement: HTMLElement) => {
-    if (!interactive) return;
-    setHoveredMedia(null);
-    startProjectTransition({ slug: projectId, mediaKey, imageSrc, sourceElement });
-  }, [interactive, startProjectTransition]);
+  const handleProjectClick = useCallback(
+    (projectId: string, mediaKey: string, imageSrc: string, sourceElement: HTMLElement) => {
+      if (!interactive) return;
+      setHoveredMedia(null);
+      startProjectTransition({ slug: projectId, mediaKey, imageSrc, sourceElement });
+    },
+    [interactive, startProjectTransition],
+  );
 
-  const handleMouseEnter = useCallback((_projectId: string, media: ProjectMedia) => {
-    if (!interactive) return;
-    setHoveredMedia(media);
-  }, [interactive]);
+  const handleMouseEnter = useCallback(
+    (_projectId: string, media: ProjectMedia) => {
+      if (!interactive) return;
+      setHoveredMedia(media);
+    },
+    [interactive],
+  );
 
   const handleMouseLeave = useCallback(() => {
     setHoveredMedia(null);
@@ -65,5 +80,3 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({ interactive = true, 
     </>
   );
 };
-
-export default ProjectIndex;

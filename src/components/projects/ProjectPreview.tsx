@@ -15,6 +15,7 @@ export function ProjectPreview({ media }: ProjectPreviewProps) {
     if (media) {
       setCurrentMedia(media);
       setIsVisible(true);
+      return undefined;
     } else {
       setIsVisible(false);
       const timer = setTimeout(() => {
@@ -32,12 +33,8 @@ export function ProjectPreview({ media }: ProjectPreviewProps) {
     <div className={`project-preview ${isVisible ? 'is-visible' : ''}`}>
       <div className="project-preview-inner">
         <PreviewMediaAsset media={currentMedia} />
-        <div className="project-preview-name">
-          [{getPreviewMediaName(currentMedia)}]
-        </div>
+        <div className="project-preview-name">[{getPreviewMediaName(currentMedia)}]</div>
       </div>
     </div>
   );
 }
-
-export default ProjectPreview;
