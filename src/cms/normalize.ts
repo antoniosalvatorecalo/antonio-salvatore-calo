@@ -57,7 +57,12 @@ function normalizeCmsDetails(
         };
   const details: ProjectDetail[] = [];
 
-  if (project.details?.context) {
+  if (project.details?.about) {
+    details.push({
+      label: locale === 'IT' ? 'about' : 'about',
+      text: localized(project.details.about, locale, 'details.about'),
+    });
+  } else if (project.details?.context) {
     details.push({
       label: labels.context,
       text: localized(project.details.context, locale, 'details.context'),

@@ -17,14 +17,14 @@ export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: schema.json
 export type SanityImageAssetReference = {
   _ref: string;
-  _type: "reference";
+  _type: 'reference';
   _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+  [internalGroqTypeReferenceTo]?: 'sanity.imageAsset';
 };
 
 export type SiteSettings = {
   _id: string;
-  _type: "siteSettings";
+  _type: 'siteSettings';
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
@@ -36,10 +36,10 @@ export type SiteSettings = {
     } & LocalizedString
   >;
   publicContacts?: Array<{
-    kind?: "email" | "phone" | "location";
+    kind?: 'email' | 'phone' | 'location';
     value?: string;
     href?: string;
-    _type: "publicContact";
+    _type: 'publicContact';
     _key: string;
   }>;
   socials?: Array<
@@ -48,10 +48,10 @@ export type SiteSettings = {
     } & ExternalLink
   >;
   downloads?: Array<{
-    kind?: "cv" | "portfolio";
+    kind?: 'cv' | 'portfolio';
     label?: LocalizedString;
     href?: string;
-    _type: "downloadLink";
+    _type: 'downloadLink';
     _key: string;
   }>;
   branding?: {
@@ -60,7 +60,7 @@ export type SiteSettings = {
       media?: unknown;
       hotspot?: SanityImageHotspot;
       crop?: SanityImageCrop;
-      _type: "image";
+      _type: 'image';
     };
     themeColor?: string;
   };
@@ -69,7 +69,7 @@ export type SiteSettings = {
 };
 
 export type Seo = {
-  _type: "seo";
+  _type: 'seo';
   title?: LocalizedString;
   description?: LocalizedText;
   canonicalPath?: string;
@@ -78,13 +78,13 @@ export type Seo = {
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
-    _type: "image";
+    _type: 'image';
   };
-  twitterCard?: "summary_large_image" | "summary";
+  twitterCard?: 'summary_large_image' | 'summary';
 };
 
 export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
+  _type: 'sanity.imageCrop';
   top?: number;
   bottom?: number;
   left?: number;
@@ -92,7 +92,7 @@ export type SanityImageCrop = {
 };
 
 export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
+  _type: 'sanity.imageHotspot';
   x?: number;
   y?: number;
   height?: number;
@@ -100,28 +100,27 @@ export type SanityImageHotspot = {
 };
 
 export type LocalizedString = {
-  _type: "localizedString";
+  _type: 'localizedString';
   en?: string;
   it?: string;
 };
 
 export type LocalizedText = {
-  _type: "localizedText";
+  _type: 'localizedText';
   en?: string;
   it?: string;
 };
 
 export type Project = {
   _id: string;
-  _type: "project";
+  _type: 'project';
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
   title?: LocalizedString;
   slug?: Slug;
   order?: number;
-  service?:
-    "Web Design" | "UI/UX Design" | "Development" | "UI Design" | "UX Design";
+  service?: 'Web Design' | 'UI/UX Design' | 'Development' | 'UI Design' | 'UX Design';
   description?: LocalizedText;
   details?: ProjectDetails;
   credits?: Array<
@@ -146,59 +145,60 @@ export type Project = {
 };
 
 export type ProjectDetails = {
-  _type: "projectDetails";
+  _type: 'projectDetails';
+  about?: LocalizedText;
   context?: LocalizedText;
   challenge?: LocalizedText;
   solution?: LocalizedText;
 };
 
 export type Slug = {
-  _type: "slug";
+  _type: 'slug';
   current?: string;
   source?: string;
 };
 
 export type VimeoMedia = {
-  _type: "vimeoMedia";
+  _type: 'vimeoMedia';
   url?: string;
   poster?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
-    _type: "image";
+    _type: 'image';
   };
   alt?: LocalizedString;
   label?: LocalizedString;
 };
 
 export type ImageMedia = {
-  _type: "imageMedia";
+  _type: 'imageMedia';
   image?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
-    _type: "image";
+    _type: 'image';
   };
   alt?: LocalizedString;
   label?: LocalizedString;
 };
 
 export type ExternalLink = {
-  _type: "externalLink";
+  _type: 'externalLink';
   label?: LocalizedString;
   href?: string;
 };
 
 export type CreditGroup = {
-  _type: "creditGroup";
+  _type: 'creditGroup';
   label?: LocalizedString;
   values?: Array<string>;
 };
 
 export type SanityImagePaletteSwatch = {
-  _type: "sanity.imagePaletteSwatch";
+  _type: 'sanity.imagePaletteSwatch';
   background?: string;
   foreground?: string;
   population?: number;
@@ -206,7 +206,7 @@ export type SanityImagePaletteSwatch = {
 };
 
 export type SanityImagePalette = {
-  _type: "sanity.imagePalette";
+  _type: 'sanity.imagePalette';
   darkMuted?: SanityImagePaletteSwatch;
   lightVibrant?: SanityImagePaletteSwatch;
   darkVibrant?: SanityImagePaletteSwatch;
@@ -217,14 +217,14 @@ export type SanityImagePalette = {
 };
 
 export type SanityImageDimensions = {
-  _type: "sanity.imageDimensions";
+  _type: 'sanity.imageDimensions';
   height?: number;
   width?: number;
   aspectRatio?: number;
 };
 
 export type SanityImageMetadata = {
-  _type: "sanity.imageMetadata";
+  _type: 'sanity.imageMetadata';
   location?: Geopoint;
   dimensions?: SanityImageDimensions;
   palette?: SanityImagePalette;
@@ -237,7 +237,7 @@ export type SanityImageMetadata = {
 
 export type SanityFileAsset = {
   _id: string;
-  _type: "sanity.fileAsset";
+  _type: 'sanity.fileAsset';
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
@@ -258,7 +258,7 @@ export type SanityFileAsset = {
 };
 
 export type SanityAssetSourceData = {
-  _type: "sanity.assetSourceData";
+  _type: 'sanity.assetSourceData';
   name?: string;
   id?: string;
   url?: string;
@@ -266,7 +266,7 @@ export type SanityAssetSourceData = {
 
 export type SanityImageAsset = {
   _id: string;
-  _type: "sanity.imageAsset";
+  _type: 'sanity.imageAsset';
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
@@ -288,7 +288,7 @@ export type SanityImageAsset = {
 };
 
 export type Geopoint = {
-  _type: "geopoint";
+  _type: 'geopoint';
   lat?: number;
   lng?: number;
   alt?: number;
@@ -320,21 +320,21 @@ export type AllSanitySchemaTypes =
 
 // Source: ../antonio-salvatore-calo/src/cms/queries.ts
 // Variable: PROJECTS_QUERY
-// Query: *[_type == "project"] | order(order asc){    _id,    title,    slug,    order,    service,    description,    details,    credits[]{_key, label, values},    links[]{_key, label, href},    seo{      title,      description,      canonicalPath,      "openGraphImage": openGraphImage.asset->url,      twitterCard    },    gallery[]{      _key,      _type,      alt,      label,      url,      image{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      },      poster{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      }    }  }
+// Query: *[_type == "project"] | order(order asc){    _id,    title,    slug,    order,    service,    description,    details{_type, about, context, challenge, solution},    credits[]{_key, label, values},    links[]{_key, label, href},    seo{      title,      description,      canonicalPath,      "openGraphImage": openGraphImage.asset->url,      twitterCard    },    gallery[]{      _key,      _type,      alt,      label,      url,      image{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      },      poster{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      }    }  }
 export type PROJECTS_QUERY_RESULT = Array<{
   _id: string;
   title: LocalizedString | null;
   slug: Slug | null;
   order: number | null;
-  service:
-    | "Development"
-    | "UI Design"
-    | "UI/UX Design"
-    | "UX Design"
-    | "Web Design"
-    | null;
+  service: 'Development' | 'UI Design' | 'UI/UX Design' | 'UX Design' | 'Web Design' | null;
   description: LocalizedText | null;
-  details: ProjectDetails | null;
+  details: {
+    _type: 'projectDetails';
+    about: LocalizedText | null;
+    context: LocalizedText | null;
+    challenge: LocalizedText | null;
+    solution: LocalizedText | null;
+  } | null;
   credits: Array<{
     _key: string;
     label: LocalizedString | null;
@@ -350,12 +350,12 @@ export type PROJECTS_QUERY_RESULT = Array<{
     description: LocalizedText | null;
     canonicalPath: string | null;
     openGraphImage: string | null;
-    twitterCard: "summary_large_image" | "summary" | null;
+    twitterCard: 'summary_large_image' | 'summary' | null;
   } | null;
   gallery: Array<
     | {
         _key: string;
-        _type: "imageMedia";
+        _type: 'imageMedia';
         alt: LocalizedString | null;
         label: LocalizedString | null;
         url: null;
@@ -375,7 +375,7 @@ export type PROJECTS_QUERY_RESULT = Array<{
       }
     | {
         _key: string;
-        _type: "vimeoMedia";
+        _type: 'vimeoMedia';
         alt: LocalizedString | null;
         label: LocalizedString | null;
         url: string | null;
@@ -409,7 +409,7 @@ export type SITE_SETTINGS_QUERY_RESULT = {
   > | null;
   publicContacts: Array<{
     _key: string;
-    kind: "email" | "location" | "phone" | null;
+    kind: 'email' | 'location' | 'phone' | null;
     value: string | null;
     href: string | null;
   }> | null;
@@ -420,7 +420,7 @@ export type SITE_SETTINGS_QUERY_RESULT = {
   }> | null;
   downloads: Array<{
     _key: string;
-    kind: "cv" | "portfolio" | null;
+    kind: 'cv' | 'portfolio' | null;
     label: LocalizedString | null;
     href: string | null;
   }> | null;
@@ -438,18 +438,18 @@ export type SITE_SETTINGS_QUERY_RESULT = {
     description: LocalizedText | null;
     canonicalPath: string | null;
     openGraphImage: string | null;
-    twitterCard: "summary_large_image" | "summary" | null;
+    twitterCard: 'summary_large_image' | 'summary' | null;
   } | null;
 } | null;
 
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n  *[_type == "project"] | order(order asc){\n    _id,\n    title,\n    slug,\n    order,\n    service,\n    description,\n    details,\n    credits[]{_key, label, values},\n    links[]{_key, label, href},\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    },\n    gallery[]{\n      _key,\n      _type,\n      alt,\n      label,\n      url,\n      image{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      },\n      poster{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      }\n    }\n  }\n': PROJECTS_QUERY_RESULT;
+    '\n  *[_type == "project"] | order(order asc){\n    _id,\n    title,\n    slug,\n    order,\n    service,\n    description,\n    details{_type, about, context, challenge, solution},\n    credits[]{_key, label, values},\n    links[]{_key, label, href},\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    },\n    gallery[]{\n      _key,\n      _type,\n      alt,\n      label,\n      url,\n      image{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      },\n      poster{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      }\n    }\n  }\n': PROJECTS_QUERY_RESULT;
     '\n  *[_type == "siteSettings" && _id == "siteSettings"][0]{\n    displayName,\n    bio,\n    recognition,\n    publicContacts[]{_key, kind, value, href},\n    socials[]{_key, label, href},\n    downloads[]{_key, kind, label, href},\n    canonicalBaseUrl,\n    branding{themeColor, favicon{asset->{url}}},\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    }\n  }\n': SITE_SETTINGS_QUERY_RESULT;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too
-declare module "@sanity/client" {
+declare module '@sanity/client' {
   interface SanityQueries extends globalThis.SanityQueries {}
 }

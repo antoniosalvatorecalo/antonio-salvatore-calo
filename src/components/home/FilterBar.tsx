@@ -49,9 +49,10 @@ export function FilterBar() {
   return (
     <nav
       className="filter-bar"
+      data-motion-home-surface
       aria-label={locale === 'IT' ? 'Filtri progetti' : 'Project filters'}
     >
-      <div className="filter-bar-summary">
+      <div className="filter-bar-summary" data-motion-text data-motion-order="7">
         <button
           type="button"
           className="filter-bar-toggle"

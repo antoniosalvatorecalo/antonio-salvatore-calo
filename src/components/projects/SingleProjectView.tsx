@@ -48,6 +48,7 @@ export function SingleProjectView({
   const [mediaFilter, setMediaFilter] = useState<MediaFilter>('all');
   const [isMediaFilterOpen, setIsMediaFilterOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [isAtGalleryEnd, setIsAtGalleryEnd] = useState(false);
   const galleryViewportRef = useRef<HTMLDivElement>(null);
   const lightboxCloseRef = useRef<HTMLButtonElement>(null);
   const mediaCardRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -85,7 +86,26 @@ export function SingleProjectView({
     setMediaFilter('all');
     setIsMediaFilterOpen(false);
     setLightboxOpen(false);
+    setIsAtGalleryEnd(false);
   }, [initialMediaIndex, project.slug]);
+
+  useEffect(() => {
+    const viewport = galleryViewportRef.current;
+    if (!viewport) return;
+
+    const updateGalleryPosition = () => {
+      const maxScrollLeft = viewport.scrollWidth - viewport.clientWidth;
+      setIsAtGalleryEnd(maxScrollLeft > 0 && viewport.scrollLeft >= maxScrollLeft - 4);
+    };
+
+    updateGalleryPosition();
+    viewport.addEventListener('scroll', updateGalleryPosition, { passive: true });
+    window.addEventListener('resize', updateGalleryPosition);
+    return () => {
+      viewport.removeEventListener('scroll', updateGalleryPosition);
+      window.removeEventListener('resize', updateGalleryPosition);
+    };
+  }, [filteredMedia.length, mediaFilter, project.slug]);
 
   useEffect(() => {
     const viewport = galleryViewportRef.current;
@@ -205,6 +225,11 @@ export function SingleProjectView({
     setLightboxOpen(false);
     setMediaFilter(nextFilter);
     setIsMediaFilterOpen(false);
+    setIsAtGalleryEnd(false);
+  };
+
+  const handleGalleryBack = () => {
+    galleryViewportRef.current?.scrollTo({ left: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
   };
 
   const handleMediaClick = (index: number) => {
@@ -221,10 +246,11 @@ export function SingleProjectView({
         className={`single-project-view${interactive ? ' is-project-ready' : ' is-transitioning'}`}
         data-project-transition-shell
         data-project-content-visible={interactive}
+        data-motion-project-surface
       >
         <div className="single-project-content">
           <div className="project-media-gallery" data-project-transition-target={project.slug}>
-            <div className="project-media-gallery-header">
+            <div className="project-media-gallery-header" data-motion-text data-motion-order="8">
               <nav
                 className="filter-bar project-media-filter"
                 aria-label={locale === 'IT' ? 'Filtra media progetto' : 'Filter project media'}
@@ -280,9 +306,19 @@ export function SingleProjectView({
                   </div>
                 )}
               </nav>
-              <span className="project-media-scroll-hint">
-                {locale === 'IT' ? 'Scorri per esplorare →' : 'Scroll to explore →'}
-              </span>
+              {isAtGalleryEnd ? (
+                <button
+                  type="button"
+                  className="project-media-scroll-hint"
+                  onClick={handleGalleryBack}
+                >
+                  {locale === 'IT' ? 'Indietro ↑' : 'Back ↑'}
+                </button>
+              ) : (
+                <span className="project-media-scroll-hint">
+                  {locale === 'IT' ? 'Scorri per esplorare →' : 'Scroll to explore →'}
+                </span>
+              )}
             </div>
             {/* The scrollable drag region also provides equivalent keyboard controls. */}
             {/* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
@@ -314,14 +350,28 @@ export function SingleProjectView({
                 <motion.div
                   key={mediaFilter}
                   className="project-media-gallery-track"
-                  initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.985 }}
-                  animate={{ opacity: 1, y: 0, scale: 1, pointerEvents: 'auto' }}
+                  initial={
+                    reducedMotion
+                      ? { opacity: 1 }
+                      : { opacity: 0.72, y: 14, clipPath: 'inset(0 0 100% 0)' }
+                  }
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    clipPath: 'inset(0 0 0% 0)',
+                    pointerEvents: 'auto',
+                  }}
                   exit={
                     reducedMotion
                       ? { opacity: 1, pointerEvents: 'none' }
-                      : { opacity: 0, y: -6, scale: 0.99, pointerEvents: 'none' }
+                      : {
+                          opacity: 0.72,
+                          y: -10,
+                          clipPath: 'inset(0 0 100% 0)',
+                          pointerEvents: 'none',
+                        }
                   }
-                  transition={{ duration: reducedMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: reducedMotion ? 0 : 0.55, ease: [0.16, 1, 0.3, 1] }}
                   style={{ transformOrigin: 'left top' }}
                 >
                   {filteredMedia.map((media, index) => {

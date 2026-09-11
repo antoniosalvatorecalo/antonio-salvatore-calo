@@ -4,9 +4,18 @@ import { AnimatedLink } from './AnimatedLink';
 
 import { useProjectCatalog, useSiteSettings } from '@/cms/ProjectCatalogProvider';
 import { shouldEnhanceNavigation } from '@/lib/navigation';
+import { gsap } from '@/lib/gsap-setup';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useNavHover } from '@/providers/NavHoverContext';
+import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
 import { useOptionalProjectTransition } from '@/providers/ProjectTransitionProvider';
+import {
+  createTextEnterTimeline,
+  createTextExitTimeline,
+  getTextMotionTargets,
+  setTextMotionHidden,
+  setTextMotionVisible,
+} from '@/motion/TextRevealMotion';
 
 import { ProjectDetailsGrid, type ProjectDetailColumn } from '../projects/ProjectDetailsGrid';
 import { AnimatedContactPanel } from './AnimatedContactPanel';
@@ -37,15 +46,25 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   transitionPhase,
 }) => {
   const headerRef = useRef<HTMLElement>(null);
+  const motionTimelineRef = useRef<gsap.core.Timeline | null>(null);
   const startProjectButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
   const { locale, setLocale, t } = useLanguage();
+  const prefersReducedMotion = useReducedMotionPreference();
   const { setNavHoveredProject, setNavProjectMedia } = useNavHover();
   const transition = useOptionalProjectTransition();
   const { getProject, projects } = useProjectCatalog();
   const siteSettings = useSiteSettings();
 
   const [contactOpen, setContactOpen] = useState(false);
+  const [introComplete, setIntroComplete] = useState(false);
+
+  useEffect(() => {
+    if (document.documentElement.dataset.introComplete === 'true') setIntroComplete(true);
+    const handleIntroComplete = () => setIntroComplete(true);
+    window.addEventListener('portfolio:intro-complete', handleIntroComplete);
+    return () => window.removeEventListener('portfolio:intro-complete', handleIntroComplete);
+  }, []);
 
   const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
   useEffect(() => {
@@ -71,12 +90,45 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   useLayoutEffect(() => {
     const header = headerRef.current;
     if (!header) return;
+    const supplementalSurface = document.querySelector<HTMLElement>(
+      isProjectPage ? '[data-motion-project-surface]' : '[data-motion-home-surface]',
+    );
+    const targets = getTextMotionTargets(header, supplementalSurface);
+    const mobile = window.matchMedia('(max-width: 767px)').matches;
+    motionTimelineRef.current?.kill();
+
+    if (!introComplete) {
+      setTextMotionHidden(targets, mobile);
+      return;
+    }
+    if (prefersReducedMotion) {
+      setTextMotionVisible(targets);
+      return;
+    }
+
+    const context = gsap.context(() => {
+      motionTimelineRef.current =
+        transitionPhase === 'opening' || (transitionPhase === 'closing' && isProjectPage)
+          ? createTextExitTimeline(targets, { mobile })
+          : createTextEnterTimeline(targets, { mobile });
+    }, header);
+    return () => {
+      motionTimelineRef.current?.kill();
+      motionTimelineRef.current = null;
+      context.revert();
+    };
+  }, [introComplete, isProjectPage, prefersReducedMotion, projectInfo?.name, transitionPhase]);
+
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
     const update = () =>
       document.documentElement.style.setProperty(
         '--site-header-height',
         `${header.offsetHeight}px`,
       );
     update();
+    if (isProjectPage) return;
     const observer = new ResizeObserver(update);
     observer.observe(header);
     return () => observer.disconnect();
@@ -125,7 +177,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         {/* LEFT: Bio */}
         <div className="site-header-col site-header-col--info">
           <div className="site-header-info-name">
-            <p className="site-header-bio">
+            <p className="site-header-bio" data-motion-text data-motion-order="0">
               <AnimatedLink
                 to="/"
                 onClick={handleGoHome}
@@ -134,7 +186,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               />{' '}
               {siteSettings.bio}
             </p>
-            <div className="site-header-ctas">
+            <div className="site-header-ctas" data-motion-text data-motion-order="1">
               <AnimatedLink
                 href={PUBLIC_EMAIL_HREF}
                 className="site-header-cta-mini"
@@ -152,8 +204,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               {onBackToGallery && (
                 <button
                   onClick={onBackToGallery}
-                  className="site-header-cta-mini"
+                  className="site-header-cta-mini site-header-project-back--desktop"
                   data-transition-control
+                  data-motion-text
+                  data-motion-order="0"
                 >
                   {t('header.back')}
                 </button>
@@ -178,7 +232,18 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
 
         {isProjectPage && projectInfo && (
           <div className="site-header-col site-header-col--project" data-transition-control>
-            <div className="site-header-project-heading">
+            {onBackToGallery && (
+              <button
+                onClick={onBackToGallery}
+                className="site-header-cta-mini site-header-project-back--mobile"
+                data-transition-control
+                data-motion-text
+                data-motion-order="0"
+              >
+                {t('header.back')}
+              </button>
+            )}
+            <div className="site-header-project-heading" data-motion-text data-motion-order="0">
               <h1 className="site-header-project-title">{projectInfo.name}</h1>
               <div className="site-header-project-language">
                 <div className="site-header-switches">
@@ -206,7 +271,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           <div className="site-header-col site-header-col--nav" data-transition-control>
             <div className="site-header-nav-row">
               <div className="site-header-nav-group">
-                <div className="site-header-nav-item site-header-nav-item--select-work">
+                <div
+                  className="site-header-nav-item site-header-nav-item--select-work"
+                  data-motion-text
+                  data-motion-order="2"
+                >
                   <span className="site-header-nav-label">{t('header.select-work')}</span>
                   <div className="site-header-nav-values">
                     {projects.map((project) => (
@@ -223,7 +292,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     ))}
                   </div>
                 </div>
-                <div className="site-header-nav-item">
+                <div
+                  className="site-header-nav-item site-header-nav-item--recognition"
+                  data-motion-text
+                  data-motion-order="3"
+                >
                   <span className="site-header-nav-label">{t('header.recognition')}</span>
                   <div className="site-header-nav-values">
                     {siteSettings.recognition.map((item) => {
@@ -243,7 +316,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   </div>
                 </div>
                 {siteSettings.socials.length > 0 && (
-                  <div className="site-header-nav-item">
+                  <div
+                    className="site-header-nav-item site-header-nav-item--social"
+                    data-motion-text
+                    data-motion-order="4"
+                  >
                     <span className="site-header-nav-label">Social</span>
                     <div className="site-header-nav-values">
                       {siteSettings.socials.map((social) => (
@@ -260,7 +337,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   </div>
                 )}
                 {!isProjectPage && (
-                  <div className="site-header-nav-item site-header-nav-item--cta">
+                  <div
+                    className="site-header-nav-item site-header-nav-item--cta site-header-nav-item--start-project"
+                    data-motion-text
+                    data-motion-order="5"
+                  >
                     <button
                       ref={startProjectButtonRef}
                       type="button"
@@ -291,7 +372,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
 
         {/* LANGUAGE: Dedicated column */}
         {!isProjectPage && (
-          <div className="site-header-col site-header-col--language" data-transition-control>
+          <div
+            className="site-header-col site-header-col--language"
+            data-transition-control
+            data-motion-text
+            data-motion-order="6"
+          >
             <div className="site-header-switches">
               <button
                 type="button"

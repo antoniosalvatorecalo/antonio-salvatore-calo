@@ -55,6 +55,7 @@ interface ProjectTransitionContextValue {
   shouldRenderProject: boolean;
   galleryInteractive: boolean;
   galleryMediaActive: boolean;
+  homeRevealReady: boolean;
   registerScenePlanes: (planes: ScenePlanes | null) => void;
   startProjectTransition: (request: ProjectTransitionRequest) => void;
   returnToGallery: () => void;
@@ -106,6 +107,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
   const closeSourceRef = useRef<'ui' | 'pop'>('ui');
   const restoreFrameRef = useRef<number | null>(null);
   const [planes, setPlanes] = useState<ScenePlanes | null>(null);
+  const [homeRevealReady, setHomeRevealReady] = useState(false);
 
   const commit = useCallback((next: TransitionState) => {
     stateRef.current = next;
@@ -179,6 +181,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
         sourceElement: request.sourceElement,
       };
       projectHistoryKeyRef.current = null;
+      setHomeRevealReady(false);
       commit({
         phase: 'opening',
         slug: request.slug,
@@ -192,6 +195,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
   const returnToGallery = useCallback(() => {
     if (stateRef.current.phase !== 'project') return;
     closeSourceRef.current = 'ui';
+    setHomeRevealReady(false);
     commit({ ...stateRef.current, phase: 'closing' });
   }, [commit]);
 
@@ -215,7 +219,10 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
       commit({ phase: 'project', slug, ...getRouteSelection(location.state) });
     } else if (current.phase === 'project' || current.phase === 'closing') {
       closeSourceRef.current = 'pop';
-      if (current.phase !== 'closing') commit({ ...current, phase: 'closing' });
+      if (current.phase !== 'closing') {
+        setHomeRevealReady(false);
+        commit({ ...current, phase: 'closing' });
+      }
     } else if (current.phase === 'opening') {
       commit(HOME);
       restoreGallery();
@@ -243,7 +250,10 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
       if (isOpening || state.phase === 'project') setProjectPlaneState(planes);
       else setHomePlaneState(planes);
       if (isOpening) finishOpen();
-      else if (isClosing) finishClose();
+      else if (isClosing) {
+        setHomeRevealReady(true);
+        finishClose();
+      }
     };
 
     if (!isOpening && !isClosing) {
@@ -259,7 +269,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
         context.add(() => {
           timeline = isOpening
             ? createOpenTimeline(planes, false, settle)
-            : createCloseTimeline(planes, false, settle);
+            : createCloseTimeline(planes, false, settle, () => setHomeRevealReady(true));
         });
       };
       if (isOpening && planes.projectPlane) {
@@ -320,11 +330,12 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
       shouldRenderProject: Boolean(state.slug),
       galleryInteractive: state.phase === 'idle',
       galleryMediaActive: state.phase !== 'project',
+      homeRevealReady,
       registerScenePlanes,
       startProjectTransition,
       returnToGallery,
     }),
-    [state, registerScenePlanes, startProjectTransition, returnToGallery],
+    [state, homeRevealReady, registerScenePlanes, startProjectTransition, returnToGallery],
   );
 
   return (

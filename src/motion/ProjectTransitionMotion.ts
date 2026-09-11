@@ -1,4 +1,5 @@
 import { gsap } from '@/lib/gsap-setup';
+import { TEXT_MOTION } from './TextRevealMotion';
 
 export interface ScenePlanes {
   scene: HTMLElement;
@@ -52,4 +53,11 @@ export const createCloseTimeline = (
   planes: ScenePlanes,
   reducedMotion: boolean,
   onComplete: () => void,
-) => createTimeline(planes, 0, reducedMotion, onComplete);
+  onHomeReveal?: () => void,
+) => {
+  const timeline = createTimeline(planes, 0, reducedMotion, onComplete);
+  if (onHomeReveal && !reducedMotion) {
+    timeline.call(onHomeReveal, [], Math.max(0, timeline.duration() - TEXT_MOTION.routeOverlap));
+  }
+  return timeline;
+};

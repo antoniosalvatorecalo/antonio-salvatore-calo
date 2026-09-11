@@ -8,7 +8,7 @@
 }
 
 .single-project-view.is-project-ready {
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior-y: contain;
 }
 
@@ -58,10 +58,9 @@
 
 @media (min-width: 1024px) {
   .single-project-content {
-    /* The carousel stays anchored while a project accordion expands. */
-    --project-layout-header-height: var(--header-height);
-    /* Reserve room for the expanded credits panel without moving the carousel. */
-    --project-carousel-top-gap: clamp(9rem, 15vh, 12rem);
+    /* Follow the measured header when credits or links expand. */
+    --project-layout-header-height: var(--site-header-height, var(--header-height));
+    --project-carousel-top-gap: clamp(2rem, 4vh, 4rem);
     padding-right: var(--space-6);
     padding-left: var(--space-6);
   }
@@ -282,12 +281,16 @@
   }
 
   .single-project-content {
-    padding: calc(var(--site-header-height, 320px) + clamp(0.5rem, 1.25vh, 0.75rem)) var(--space-3)
-      clamp(1rem, 3vh, 1.5rem);
+    --project-mobile-details-reserve: clamp(1rem, 3vh, 2rem);
+    padding: calc(
+        var(--site-header-height, 320px) + var(--project-mobile-details-reserve) + var(--space-4) +
+          clamp(0.5rem, 1.25vh, 0.75rem)
+      )
+      var(--space-3) clamp(1rem, 3vh, 1.5rem);
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
-    align-items: flex-end;
+    align-items: flex-start;
   }
 
   .single-project-carousel {
@@ -296,7 +299,7 @@
     width: 100%;
     height: auto;
     min-height: 0;
-    align-self: flex-end;
+    align-self: flex-start;
   }
 
   .single-project-media-frame {
@@ -446,12 +449,25 @@
 
 .project-media-scroll-hint {
   display: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--text-muted);
   font-size: 0.625rem;
+  font-family: inherit;
   letter-spacing: 0.1em;
   line-height: 1.2;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.project-media-scroll-hint:is(button) {
+  cursor: pointer;
+}
+
+.project-media-scroll-hint:is(button):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
 }
 
 .project-media-gallery-viewport {
@@ -628,7 +644,7 @@
   }
 
   .project-media-card-name {
-    margin-top: 0.5rem;
+    margin-top: var(--space-1);
     padding-top: 0;
     line-height: 1.1;
   }
@@ -657,7 +673,10 @@
     width: min(78vw, 22rem);
     height: auto;
     min-width: min(78vw, 22rem);
-    max-height: calc(100dvh - var(--site-header-height, 320px) - 2.5rem);
+    max-height: calc(
+      100dvh - var(--site-header-height, 320px) - var(--project-mobile-details-reserve) -
+        var(--space-8)
+    );
     aspect-ratio: 61 / 40 !important;
     max-width: calc(100vw - (2 * var(--project-gallery-padding)));
   }

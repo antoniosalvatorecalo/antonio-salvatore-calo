@@ -177,12 +177,13 @@ html[data-motion='reduced'] .gallery-grid-item::after {
     height: 100dvh;
     min-height: 0;
   }
+
   .gallery-grid-wrap {
     min-height: 0;
     overflow-y: auto;
   }
   .gallery-grid-stage {
-    top: max(calc(var(--site-header-height, 320px) + var(--space-2)), calc(100dvh - 13.5vh));
+    top: max(calc(var(--site-header-height, 320px) + var(--space-2)), calc(100dvh - 16vh));
     padding-inline: 12px;
     box-sizing: border-box;
   }

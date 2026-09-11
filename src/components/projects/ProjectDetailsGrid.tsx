@@ -1,6 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { ProjectAbout } from './ProjectAbout';
-import { useLanguage } from '../../providers/LanguageProvider';
 import './ProjectDetailsGrid.css';
 import { AnimatedLink } from '../ui/AnimatedLink';
 
@@ -21,37 +20,67 @@ export interface ProjectDetailsGridProps {
   columns: ProjectDetailColumn[];
 }
 
+interface ProjectMetaAccordionProps {
+  label: string;
+  children: ReactNode;
+}
+
+function ProjectMetaAccordion({ label, children }: ProjectMetaAccordionProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const contentId = useId();
+
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 767px)').matches) setIsOpen(true);
+  }, []);
+
+  return (
+    <section className={`project-details-meta-block${isOpen ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="project-details-meta-toggle"
+        onClick={() => setIsOpen((open) => !open)}
+        aria-expanded={isOpen}
+        aria-controls={contentId}
+      >
+        <span className="project-details-meta-label">{label}</span>
+        <span className="project-details-meta-icon" aria-hidden="true">
+          {isOpen ? '−' : '+'}
+        </span>
+      </button>
+      <div
+        id={contentId}
+        className={`project-details-meta-content${isOpen ? ' is-expanded' : ''}`}
+        aria-hidden={!isOpen}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
+
 /**
- * Row of independent accordions rendered at the top of a project page.
- * Each cell can be opened / closed on its own; only one cell is expanded at
- * a time (the user can also close the open cell by clicking it again).
- *
- * Cells, in order:
- *   1. contesto      — context narrative
- *   2. sfida         — challenge narrative
- *   3. soluzione     — solution narrative
- *   4. credits       — structured credits list
- *   5. links         — process and live project links
+ * Static editorial details rendered at the top of a project page.
  */
 export function ProjectDetailsGrid({ columns }: ProjectDetailsGridProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const { t } = useLanguage();
-
   if (columns.length === 0) return null;
+
+  const about = columns
+    .map((column) => column.text?.trim())
+    .filter((text): text is string => Boolean(text))
+    .join(' ');
+  const credits = columns.flatMap((column) => column.credits ?? []);
+  const links = columns.flatMap((column) => column.cta ?? []);
 
   return (
     <section className="project-details-grid" aria-label="Project header details">
-      {columns.map((column, index) => {
-        const description = column.text ?? '';
-        const hasCredits = column.credits && column.credits.length > 0;
-        const hasCtas = column.cta && column.cta.length > 0;
-        const isOpen = openIndex === index;
+      {about && <ProjectAbout label="[about]" description={about} entranceIndex={1} />}
 
-        const children: ReactNode = (
-          <>
-            {hasCredits && (
+      {(credits.length > 0 || links.length > 0) && (
+        <div className="project-details-meta" data-motion-text data-motion-order="2">
+          {credits.length > 0 && (
+            <ProjectMetaAccordion label="credits">
               <dl className="project-about-credits">
-                {column.credits!.map((entry, entryIndex) => (
+                {credits.map((entry, entryIndex) => (
                   <div key={`${entry.label}-${entryIndex}`} className="project-about-credit-item">
                     <dt className="project-about-credit-label">{entry.label}</dt>
                     {entry.values.map((value, valueIndex) => (
@@ -62,36 +91,27 @@ export function ProjectDetailsGrid({ columns }: ProjectDetailsGridProps) {
                   </div>
                 ))}
               </dl>
-            )}
-            {hasCtas && (
+            </ProjectMetaAccordion>
+          )}
+
+          {links.length > 0 && (
+            <ProjectMetaAccordion label="links">
               <ul className="project-about-cta">
-                {column.cta!.map((link) => (
+                {links.map((link) => (
                   <li key={link.href}>
                     <AnimatedLink
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      label={link.href.includes('behance.net') ? t('cta.process') : t('cta.live')}
+                      label={link.label}
                     />
                   </li>
                 ))}
               </ul>
-            )}
-          </>
-        );
-
-        return (
-          <ProjectAbout
-            key={`${column.label}-${index}`}
-            label={column.label}
-            description={description}
-            isOpen={isOpen}
-            onToggle={() => setOpenIndex(isOpen ? null : index)}
-          >
-            {children}
-          </ProjectAbout>
-        );
-      })}
+            </ProjectMetaAccordion>
+          )}
+        </div>
+      )}
     </section>
   );
 }

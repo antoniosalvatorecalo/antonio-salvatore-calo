@@ -11,7 +11,7 @@ interface PortfolioLayoutProps {
 }
 
 export const PortfolioLayout = ({ deferInitialEffects = false }: PortfolioLayoutProps) => {
-  const { phase, visibleSlug, returnToGallery } = useProjectTransition();
+  const { phase, visibleSlug, returnToGallery, homeRevealReady } = useProjectTransition();
   const { getProject } = useProjectCatalog();
   const visibleProject = visibleSlug ? getProject(visibleSlug) : null;
   useEffect(() => {
@@ -26,7 +26,11 @@ export const PortfolioLayout = ({ deferInitialEffects = false }: PortfolioLayout
     <FilterProvider>
       <SiteHeader
         transitionPhase={phase}
-        projectActive={Boolean(visibleProject) && phase !== 'opening'}
+        projectActive={
+          Boolean(visibleProject) &&
+          phase !== 'opening' &&
+          !(phase === 'closing' && homeRevealReady)
+        }
         projectInfo={
           visibleProject
             ? {

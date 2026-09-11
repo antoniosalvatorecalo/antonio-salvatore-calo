@@ -8,7 +8,7 @@ export const PROJECTS_QUERY = defineQuery(`
     order,
     service,
     description,
-    details,
+    details{_type, about, context, challenge, solution},
     credits[]{_key, label, values},
     links[]{_key, label, href},
     seo{
