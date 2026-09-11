@@ -1,17 +1,20 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { defineConfig } from 'vite';
+import nodemailer from 'nodemailer';
+import { defineConfig, loadEnv } from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const contactEmail = env.CONTACT_EMAIL || 'antonio.salvatore.calo@gmail.com';
   return {
     plugins: [
       react(),
       tailwindcss(),
       {
-        name: 'api-mock',
-        configureServer(server) {
-          server.middlewares.use('/api/contact', (req, res) => {
+          name: 'api-mock',
+          configureServer(server) {
+            server.middlewares.use('/api/contact', (req, res) => {
             if (req.method === 'POST') {
               let body = '';
               req.on('data', (chunk) => {
@@ -20,22 +23,40 @@ export default defineConfig(() => {
               req.on('end', () => {
                 try {
                   const data = JSON.parse(body);
-                  // Simula successo e ritorna mailto fallback
-                  const subject = encodeURIComponent(
-                    `New project: ${data.projectType || 'inquiry'}`,
-                  );
                   const text = `Hi Antonio, my name is ${data.name}.\n\nI need a ${data.projectType || 'project'} for a ${data.clientType || 'client'}, focused on ${data.focus || 'design'}.\nBudget ${data.budget || 'TBD'}, in ${data.timeline || 'TBD'}.\n\nReach me at ${data.email || 'your@email.com'}.`;
-                  const bodyEncoded = encodeURIComponent(text);
-                  const mailtoHref = `mailto:antonio.salvatore.calo@gmail.com?subject=${subject}&body=${bodyEncoded}`;
-
                   res.setHeader('Content-Type', 'application/json');
-                  res.end(
-                    JSON.stringify({
+
+                  if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) {
+                    const subject = encodeURIComponent(`New project: ${data.projectType || 'inquiry'}`);
+                    const bodyEncoded = encodeURIComponent(text);
+                    res.end(JSON.stringify({
                       success: true,
                       fallback: 'mailto',
-                      mailtoHref,
-                    }),
-                  );
+                      mailtoHref: `mailto:${contactEmail}?subject=${subject}&body=${bodyEncoded}`,
+                    }));
+                    return;
+                  }
+
+                  const transporter = nodemailer.createTransport({
+                    host: env.SMTP_HOST,
+                    port: Number(env.SMTP_PORT) || 587,
+                    secure: Number(env.SMTP_PORT) === 465,
+                    auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+                  });
+
+                  void transporter.sendMail({
+                    from: env.SMTP_USER,
+                    to: contactEmail,
+                    replyTo: data.email,
+                    subject: `New project inquiry: ${data.projectType || 'inquiry'} from ${data.name || 'unknown'}`,
+                    text,
+                  }).then(() => {
+                    res.end(JSON.stringify({ success: true, message: 'Message sent successfully.' }));
+                  }).catch((error) => {
+                    console.error('Contact API error:', error);
+                    res.statusCode = 500;
+                    res.end(JSON.stringify({ success: false, error: 'Failed to send message.' }));
+                  });
                 } catch {
                   res.statusCode = 400;
                   res.end(JSON.stringify({ error: 'Invalid request body' }));

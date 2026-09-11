@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useRef, useEffect, useCallback, memo, useLayoutEffect } from 'react';
+import { motion } from 'motion/react';
 import { ArrowIcon } from './ArrowIcon';
 import { useEntranceReveal } from '@/hooks/animation/useEntranceReveal';
 import { useLanguage } from '../../providers/LanguageProvider';
+import { createTextEnterTimeline } from '@/motion/TextRevealMotion';
+import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
 import './ContactFormExperience.css';
 
 type StepId = 'name' | 'type' | 'client' | 'focus' | 'budget' | 'timeline' | 'email';
@@ -83,6 +85,8 @@ const SELECT_PROMPTS: Partial<Record<StepId, string>> = {
   timeline: 'timeline',
 };
 
+const capitalizeFirst = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
 interface TypingTextProps {
   value: string;
 }
@@ -92,62 +96,31 @@ interface TypingTextWithCompleteProps extends TypingTextProps {
 }
 
 const TypingText = ({ value, onComplete }: TypingTextWithCompleteProps) => {
-  const [visibleLength, setVisibleLength] = useState(0);
-  const onCompleteRef = useRef(onComplete);
-
-  useEffect(() => {
-    onCompleteRef.current = onComplete;
-  }, [onComplete]);
-
-  useEffect(() => {
-    setVisibleLength(0);
-    if (!value) {
-      onCompleteRef.current?.();
-      return;
-    }
-
-    let nextLength = 0;
-    let timeoutId: number | undefined;
-
-    const typeNextCharacter = () => {
-      nextLength += 1;
-      setVisibleLength(nextLength);
-
-      if (nextLength >= value.length) {
-        onCompleteRef.current?.();
-        return;
-      }
-
-      const nextChar = value[nextLength] ?? '';
-      const delay = nextChar === ' ' ? 14 : /[.,]/.test(nextChar) ? 70 : 22;
-      timeoutId = window.setTimeout(typeNextCharacter, delay);
-    };
-
-    timeoutId = window.setTimeout(typeNextCharacter, 80);
-
+  const ref = useRef<HTMLSpanElement>(null);
+  const reducedMotion = useReducedMotionPreference();
+  const completeRef = useRef(onComplete);
+  completeRef.current = onComplete;
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    const timeline = createTextEnterTimeline([ref.current], {
+      mobile: window.matchMedia('(max-width: 767px)').matches,
+      reducedMotion,
+    });
+    if (reducedMotion) completeRef.current?.();
+    else timeline.eventCallback('onComplete', () => completeRef.current?.());
     return () => {
-      if (timeoutId !== undefined) {
-        window.clearTimeout(timeoutId);
-      }
+      timeline.kill();
     };
-  }, [value]);
-
+  }, [value, reducedMotion]);
   return (
-    <>
-      {value.slice(0, visibleLength)}
-      {visibleLength < value.length && (
-        <span aria-hidden className="contact-builder-cursor">
-          |
-        </span>
-      )}
-    </>
+    <span ref={ref} className="contact-text-reveal">
+      {value}
+    </span>
   );
 };
 
 const StaticAnswer = ({ value }: TypingTextProps) => (
-  <span className="inline font-[700] underline underline-offset-[6px] decoration-[var(--text-primary)]">
-    {value}
-  </span>
+  <span className="contact-answer">{value}</span>
 );
 
 interface CompletedStepPhraseProps {
@@ -185,55 +158,43 @@ interface SelectStackProps {
 }
 
 const SelectStack = ({ step, onSelect, compact = false }: SelectStackProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const prompt = SELECT_PROMPTS[step.id] ?? `choose ${step.placeholder}`;
+  const optionsRef = useRef<HTMLSpanElement>(null);
+  const reducedMotion = useReducedMotionPreference();
+  const prompt = SELECT_PROMPTS[step.id] ?? step.placeholder;
+
+  useLayoutEffect(() => {
+    if (!optionsRef.current) return;
+    const options = Array.from(optionsRef.current.children) as HTMLButtonElement[];
+    const timeline = createTextEnterTimeline(options, {
+      mobile: window.matchMedia('(max-width: 767px)').matches,
+      reducedMotion,
+    });
+    options[0]?.focus({ preventScroll: true });
+    return () => {
+      timeline.kill();
+    };
+  }, [step.id, reducedMotion]);
 
   return (
-    <span className="relative inline-block align-baseline">
-      <button
-        type="button"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((current) => !current)}
-        className="inline font-[600] underline underline-offset-[5px] decoration-[var(--text-primary)] text-left text-[var(--text-primary)] opacity-70 transition-opacity duration-150 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--text-primary)]"
-        style={{
-          fontSize: 'inherit',
-          letterSpacing: 'inherit',
-          lineHeight: 'inherit',
-        }}
+    <span className="contact-select">
+      <span className="contact-select-trigger">{prompt}</span>
+      <span
+        ref={optionsRef}
+        role="group"
+        aria-label={step.label.toLowerCase()}
+        className="contact-select-options"
       >
-        {prompt}
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.span
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.18, ease: EXPO }}
-            className={
-              compact
-                ? 'relative inline-flex flex-row flex-nowrap gap-x-2 mt-1'
-                : 'absolute left-0 top-full z-20 mt-2 flex min-w-[14rem] flex-col items-start gap-1 bg-[var(--bg-primary)] py-2'
-            }
+        {step.options!.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onSelect(option)}
+            className={compact ? 'dropdown-option compact' : 'dropdown-option'}
           >
-            {step.options!.map((opt, index) => (
-              <motion.button
-                key={opt}
-                type="button"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -3 }}
-                transition={{ delay: index * 0.05, duration: 0.18, ease: EXPO }}
-                onClick={() => onSelect(opt)}
-                className={compact ? 'dropdown-option compact' : 'dropdown-option'}
-              >
-                {opt}
-              </motion.button>
-            ))}
-          </motion.span>
-        )}
-      </AnimatePresence>
+            {capitalizeFirst(option)}
+          </button>
+        ))}
+      </span>
     </span>
   );
 };
@@ -370,19 +331,21 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
   return (
     <div
       ref={entranceRef}
-      className={`flex flex-col h-full min-h-0 justify-between${compact ? ' contact-form-experience--compact' : ''}`}
+      className={`contact-form-experience flex flex-col h-full min-h-0 justify-between${compact ? ' contact-form-experience--compact' : ''}`}
     >
       {!isDone && step && submissionState === 'idle' && (
         <div data-entrance-item className={`shrink-0 ${headerSpacing} flex items-center gap-3`}>
-          <span className="contact-step-number">[{stepIndex + 1}]</span>
-          <span className="contact-step-label">{step.label}</span>
+          <span className="contact-step-label">[{step.label}]</span>
+          <span className="sr-only" aria-live="polite">
+            Step {stepIndex + 1} of {STEPS.length}: {step.label.toLowerCase()}
+          </span>
         </div>
       )}
 
       <div
         ref={contentRef}
         data-entrance-item
-        className={`flex-1 min-h-0 overflow-y-auto hide-scrollbar ${contentPadding}`}
+        className={`contact-form-content flex-1 min-h-0 ${contentPadding}`}
         aria-live="polite"
         aria-busy={submissionState === 'loading'}
       >
@@ -526,40 +489,45 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
                 )}
 
                 {isTypingStep && isCurrentConnectorTyped && (
-                  <span className="inline relative" style={{ paddingRight: '1.5rem' }}>
-                    <span
-                      className="inline-grid"
-                      style={{
-                        verticalAlign: 'baseline',
-                        minWidth: '6ch',
-                      }}
-                    >
-                      <span
-                        aria-hidden
-                        className="inline-block invisible pointer-events-none font-bold"
-                      >
+                  <span className="contact-input-group">
+                    <span className="contact-input-field">
+                      <span aria-hidden="true" className="contact-input-mirror">
                         {inputValue || step.placeholder}
                       </span>
                       <input
                         ref={inputRef}
                         type={step.inputType}
                         value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && inputValue.trim()) advance(inputValue.trim());
+                        onChange={(event) => setInputValue(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                            event.preventDefault();
+                            if (event.currentTarget.checkValidity()) advance(inputValue.trim());
+                            else event.currentTarget.reportValidity();
+                          }
                         }}
+                        required
+                        size={1}
                         placeholder={step.placeholder}
-                        autoComplete="off"
-                        autoCapitalize="words"
-                        className="absolute inset-0 w-full bg-transparent outline-none font-bold text-inherit tracking-inherit leading-inherit placeholder:text-inherit placeholder:opacity-25 placeholder:font-normal"
-                        style={{
-                          color: 'var(--text-primary)',
-                          caretColor: 'var(--text-primary)',
-                        }}
+                        aria-label={step.label.toLowerCase()}
+                        autoComplete={step.id === 'email' ? 'email' : 'name'}
+                        autoCapitalize={step.id === 'email' ? 'none' : 'words'}
+                        inputMode={step.id === 'email' ? 'email' : 'text'}
+                        className="contact-input"
                       />
                     </span>
-
-                    {inputValue.trim() && <span className="input-enter-hint">[Enter]</span>}
+                    {inputValue.trim() && (
+                      <button
+                        type="button"
+                        className="contact-continue"
+                        aria-label="Continue to next step"
+                        onClick={() => {
+                          if (inputRef.current?.reportValidity()) advance(inputValue.trim());
+                        }}
+                      >
+                        <span aria-hidden="true">[Enter]</span>
+                      </button>
+                    )}
                   </span>
                 )}
               </motion.span>

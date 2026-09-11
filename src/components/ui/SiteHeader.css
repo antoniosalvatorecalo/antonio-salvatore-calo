@@ -919,28 +919,38 @@
   position: relative;
   line-height: 1.3;
   padding: 0;
+  min-height: 44px;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .site-header-start-project::after {
+  display: none;
+}
+
+.site-header-start-project-label {
+  position: relative;
+  display: inline-block;
+}
+
+.site-header-start-project-label::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -1px;
+  bottom: -2px;
   height: 1px;
-  background-color: currentColor;
+  background: currentColor;
   transform: scaleX(0);
   transform-origin: right center;
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.site-header-start-project:hover::after,
-.site-header-start-project:focus-visible::after,
-.site-header-start-project.is-active::after {
-  transform-origin: left center;
+.site-header-start-project:hover .site-header-start-project-label::after,
+.site-header-start-project:focus-visible .site-header-start-project-label::after,
+.site-header-start-project.is-active .site-header-start-project-label::after {
   transform: scaleX(1);
+  transform-origin: left center;
 }
 
 .site-header-start-project:focus-visible {
@@ -1006,8 +1016,8 @@
 /* Mobile: prevent overflow issues */
 @media (max-width: 767px) {
   .site-header-contact-form {
-    max-height: calc(100dvh - var(--header-height) - 60px);
-    overflow-y: auto;
+    max-height: none;
+    overflow: visible;
   }
 }
 
@@ -1020,15 +1030,54 @@
 
 /* ── Contact Panel ───────────────────────────────────────────── */
 .contact-panel-wrapper {
-  position: absolute;
-  top: calc(100% + 14px);
-  left: 0;
-  width: clamp(14rem, 18vw, 18rem);
+  position: relative;
+  width: 100%;
   min-width: 0;
-  z-index: 3;
+  z-index: var(--z-nav);
   background: var(--bg-primary);
+  padding-top: 0;
+  border-top: 0;
   overflow: visible;
   transform-origin: top left;
+}
+
+@media (min-width: 1024px) {
+  .site-header-inner:not(.is-project) {
+    grid-template-columns:
+      minmax(16rem, calc((100% - clamp(var(--space-6), 4vw, var(--space-12))) * 5 / 12))
+      minmax(0, 1fr) auto;
+    column-gap: clamp(var(--space-6), 4vw, var(--space-12));
+  }
+  .site-header-col--nav .site-header-nav-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.55fr) minmax(0, 1.6fr);
+    width: 100%;
+    min-width: 0;
+    gap: var(--space-3);
+    align-items: start;
+  }
+  .site-header-col--nav .site-header-nav-item {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .site-header-col--nav .site-header-nav-values a {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .site-header-nav-item--start-project {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .site-header-start-project {
+    max-width: 100%;
+    align-items: baseline;
+    min-height: 24px;
+    line-height: var(--ui-label-line-height);
+    white-space: normal;
+    text-align: left;
+  }
 }
 
 /* Mobile/Tablet: ensure panel stays within viewport */
@@ -1151,6 +1200,43 @@
 }
 
 @media (max-width: 767px) {
+  .site-header-nav-item--start-project {
+    width: 100%;
+  }
+
+  .site-header-start-project {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .contact-panel-wrapper {
+    position: static;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    margin-top: var(--space-2);
+    background: transparent;
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .site-header-start-project::after,
+  .site-header-start-project:hover::after,
+  .site-header-start-project:focus-visible::after,
+  .site-header-start-project.is-active::after {
+    transform: scaleX(0);
+  }
+
+  .site-header-start-project-label::after {
+    display: none;
+  }
+
+  .contact-panel-wrapper .site-header-contact-form {
+    max-height: none;
+    overflow: visible;
+    padding-bottom: var(--space-3);
+  }
+
   .site-header-inner {
     gap: var(--space-2);
   }
@@ -1164,7 +1250,7 @@
     gap: var(--space-3);
   }
   .site-header-bio {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     line-height: 1.35;
   }
   .site-header-contact {

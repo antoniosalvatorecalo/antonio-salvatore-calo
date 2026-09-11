@@ -337,20 +337,20 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   </div>
                 )}
                 {!isProjectPage && (
-                  <div
-                    className="site-header-nav-item site-header-nav-item--cta site-header-nav-item--start-project"
-                    data-motion-text
-                    data-motion-order="5"
-                  >
+                  <div className="site-header-nav-item site-header-nav-item--cta site-header-nav-item--start-project">
                     <button
                       ref={startProjectButtonRef}
                       type="button"
+                      data-motion-text
+                      data-motion-order="5"
                       className={`site-header-start-project${contactOpen ? ' is-active' : ''}`}
                       onClick={() => setContactOpen((open) => !open)}
                       aria-expanded={contactOpen}
                       aria-controls="header-contact-popover"
                     >
-                      <span>{t('header.menu-cta.contact')}</span>
+                      <span className="site-header-start-project-label">
+                        {t('header.menu-cta.contact')}
+                      </span>
                       <span className="site-header-start-project-indicator" aria-hidden="true" />
                     </button>
 

@@ -1,34 +1,37 @@
-import { motion } from 'motion/react';
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { createTextEnterTimeline } from '@/motion/TextRevealMotion';
+import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
 
 interface AnimatedContactPanelProps {
   open: boolean;
   children: ReactNode;
 }
 
-const EASING: [number, number, number, number] = [0.22, 1, 0.36, 1];
-const DURATION = 0.32;
-
 export const AnimatedContactPanel = ({ open, children }: AnimatedContactPanelProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotionPreference();
+  useLayoutEffect(() => {
+    if (!open || !ref.current) return;
+    const timeline = createTextEnterTimeline([ref.current], {
+      mobile: window.matchMedia('(max-width: 767px)').matches,
+      reducedMotion,
+    });
+    return () => {
+      timeline.kill();
+    };
+  }, [open, reducedMotion]);
   return (
-    <motion.div
+    <div
+      ref={ref}
       className="contact-panel-wrapper"
-      initial={{ opacity: 0, y: -6 }}
-      animate={{
-        opacity: open ? 1 : 0,
-        y: open ? 0 : -6,
-      }}
-      transition={{
-        duration: DURATION,
-        ease: EASING,
-      }}
       aria-hidden={!open}
       style={{
+        display: open ? undefined : 'none',
         visibility: open ? 'visible' : 'hidden',
         pointerEvents: open ? 'auto' : 'none',
       }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 };
