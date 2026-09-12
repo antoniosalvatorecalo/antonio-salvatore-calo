@@ -19,6 +19,7 @@ interface ContactBody {
   budget?: string;
   timeline?: string;
   email?: string;
+  locale?: 'EN' | 'IT';
 }
 
 interface EnvConfig {
@@ -66,25 +67,37 @@ function validateBody(body: unknown): body is ContactBody {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function isItalian(data: ContactBody): boolean {
+  return data.locale === 'IT';
+}
+
 function buildEmailHtml(data: ContactBody): string {
+  const italian = isItalian(data);
   const lines = [
-    `<p><strong>Hi Antonio,</strong></p>`,
-    `<p>My name is <strong>${escapeHtml(data.name!)}</strong>.</p>`,
-    `<p>I need a <strong>${escapeHtml(data.projectType!)}</strong> for a <strong>${escapeHtml(data.clientType!)}</strong>, focused on <strong>${escapeHtml(data.focus!)}</strong>.</p>`,
-    `<p>Budget: <strong>${escapeHtml(data.budget!)}</strong>, Timeline: <strong>${escapeHtml(data.timeline!)}</strong>.</p>`,
-    `<p>Reach me at: <a href="mailto:${escapeHtml(data.email!)}">${escapeHtml(data.email!)}</a></p>`,
+    `<p><strong>${italian ? 'Ciao Antonio,' : 'Hi Antonio,'}</strong></p>`,
+    `<p>${italian ? 'Mi chiamo' : 'My name is'} <strong>${escapeHtml(data.name!)}</strong>.</p>`,
+    italian
+      ? `<p>Mi serve <strong>${escapeHtml(data.projectType!)}</strong> per <strong>${escapeHtml(data.clientType!)}</strong>, con focus su <strong>${escapeHtml(data.focus!)}</strong>.</p>`
+      : `<p>I need a <strong>${escapeHtml(data.projectType!)}</strong> for a <strong>${escapeHtml(data.clientType!)}</strong>, focused on <strong>${escapeHtml(data.focus!)}</strong>.</p>`,
+    `<p>${italian ? 'Budget' : 'Budget'}: <strong>${escapeHtml(data.budget!)}</strong>, ${italian ? 'Tempistiche' : 'Timeline'}: <strong>${escapeHtml(data.timeline!)}</strong>.</p>`,
+    `<p>${italian ? 'Puoi contattarmi a' : 'Reach me at'}: <a href="mailto:${escapeHtml(data.email!)}">${escapeHtml(data.email!)}</a></p>`,
   ];
   return lines.join('\n');
 }
 
 function buildEmailText(data: ContactBody): string {
+  const italian = isItalian(data);
   return [
-    `Hi Antonio, my name is ${data.name}.`,
+    italian ? `Ciao Antonio, mi chiamo ${data.name}.` : `Hi Antonio, my name is ${data.name}.`,
     ``,
-    `I need a ${data.projectType} for a ${data.clientType}, focused on ${data.focus}.`,
-    `Budget ${data.budget}, in ${data.timeline}.`,
+    italian
+      ? `Mi serve ${data.projectType} per ${data.clientType}, con focus su ${data.focus}.`
+      : `I need a ${data.projectType} for a ${data.clientType}, focused on ${data.focus}.`,
+    italian
+      ? `Budget ${data.budget}, tempistiche ${data.timeline}.`
+      : `Budget ${data.budget}, in ${data.timeline}.`,
     ``,
-    `Reach me at ${data.email}.`,
+    italian ? `Puoi contattarmi a ${data.email}.` : `Reach me at ${data.email}.`,
   ].join('\n');
 }
 
@@ -112,7 +125,9 @@ async function sendEmailViaSmtp(data: ContactBody, config: EnvConfig): Promise<b
     },
   });
 
-  const subject = `New project inquiry: ${data.projectType} from ${data.name}`;
+  const subject = isItalian(data)
+    ? `Nuova richiesta di progetto: ${data.projectType} da ${data.name}`
+    : `New project inquiry: ${data.projectType} from ${data.name}`;
 
   await transporter.sendMail({
     from: config.smtp.user,
@@ -127,9 +142,14 @@ async function sendEmailViaSmtp(data: ContactBody, config: EnvConfig): Promise<b
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const italian = (req.body as ContactBody | undefined)?.locale === 'IT';
   // Only accept POST
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed. Use POST.' });
+    res
+      .status(405)
+      .json({
+        error: italian ? 'Metodo non consentito. Usa POST.' : 'Method not allowed. Use POST.',
+      });
     return;
   }
 
@@ -138,7 +158,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   // Validate request body
   if (!validateBody(body)) {
     res.status(400).json({
-      error: 'Missing or invalid required fields.',
+      error: italian
+        ? 'Campi obbligatori mancanti o non validi.'
+        : 'Missing or invalid required fields.',
       required: ['name', 'projectType', 'clientType', 'focus', 'budget', 'timeline', 'email'],
     });
     return;
@@ -153,11 +175,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     if (sent) {
       res.status(200).json({
         success: true,
-        message: 'Message sent successfully.',
+        message: italian ? 'Messaggio inviato correttamente.' : 'Message sent successfully.',
       });
     } else {
       // SMTP not configured — return mailto fallback info
-      const subject = encodeURIComponent(`New project: ${data.projectType}`);
+      const subject = encodeURIComponent(
+        italian ? `Nuovo progetto: ${data.projectType}` : `New project: ${data.projectType}`,
+      );
       const text = buildEmailText(data);
       const bodyEncoded = encodeURIComponent(text);
       const mailtoHref = `mailto:${config.contactEmail}?subject=${subject}&body=${bodyEncoded}`;
@@ -166,14 +190,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         success: true,
         fallback: 'mailto',
         mailtoHref,
-        message: 'Email service not configured. Use the mailto link.',
+        message: italian
+          ? 'Servizio email non configurato. Usa il collegamento mailto.'
+          : 'Email service not configured. Use the mailto link.',
       });
     }
   } catch (error) {
     console.error('Contact API error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to send message. Please try again or send an email directly.',
+      error: italian
+        ? 'Invio del messaggio non riuscito. Riprova o invia un’email direttamente.'
+        : 'Failed to send message. Please try again or send an email directly.',
       fallback: 'mailto',
       mailtoHref: `mailto:${config.contactEmail}`,
     });

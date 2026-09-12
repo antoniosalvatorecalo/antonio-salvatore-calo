@@ -18,72 +18,78 @@ interface StepDef {
   connector: string;
 }
 
-const STEPS: StepDef[] = [
-  {
-    id: 'name',
-    label: 'YOUR NAME',
-    inputType: 'text',
-    connector: 'Hi Antonio, my name is ',
-    placeholder: 'your name',
-  },
-  {
-    id: 'type',
-    label: 'PROJECT TYPE',
-    inputType: 'select',
-    connector: '. I need a ',
-    placeholder: 'project type',
-    options: ['website', 'brand identity', 'product design', 'campaign'],
-  },
-  {
-    id: 'client',
-    label: 'CLIENT',
-    inputType: 'select',
-    connector: ' for a ',
-    placeholder: 'client type',
-    options: ['startup', 'studio', 'company', 'personal project'],
-  },
-  {
-    id: 'focus',
-    label: 'MAIN FOCUS',
-    inputType: 'select',
-    connector: ', focused on ',
-    placeholder: 'main focus',
-    options: ['UI design', 'UX strategy', 'brand identity', 'performance'],
-  },
-  {
-    id: 'budget',
-    label: 'BUDGET',
-    inputType: 'select',
-    connector: '. Budget ',
-    placeholder: 'budget',
-    options: ['under 3k', '3–8k', '8–20k', '20k+'],
-  },
-  {
-    id: 'timeline',
-    label: 'TIMELINE',
-    inputType: 'select',
-    connector: ', in ',
-    placeholder: 'timeline',
-    options: ['1–2 weeks', '1–2 months', '3–6 months', 'flexible'],
-  },
-  {
-    id: 'email',
-    label: 'YOUR EMAIL',
-    inputType: 'email',
-    connector: 'Reach me at ',
-    placeholder: 'your@email.com',
-  },
-];
+type Translate = (key: string) => string;
+
+function getSteps(t: Translate): StepDef[] {
+  return [
+    {
+      id: 'name',
+      label: t('contact.form.name.label'),
+      inputType: 'text',
+      connector: t('contact.form.name.connector'),
+      placeholder: t('contact.form.name.placeholder'),
+    },
+    {
+      id: 'type',
+      label: t('contact.form.type.label'),
+      inputType: 'select',
+      connector: t('contact.form.type.connector'),
+      placeholder: t('contact.form.type.placeholder'),
+      options: ['website', 'brand identity', 'product design', 'campaign'].map((option) =>
+        t(`contact.form.type.option.${option.replaceAll(' ', '-')}`),
+      ),
+    },
+    {
+      id: 'client',
+      label: t('contact.form.client.label'),
+      inputType: 'select',
+      connector: t('contact.form.client.connector'),
+      placeholder: t('contact.form.client.placeholder'),
+      options: ['startup', 'studio', 'company', 'personal project'].map((option) =>
+        t(`contact.form.client.option.${option.replaceAll(' ', '-')}`),
+      ),
+    },
+    {
+      id: 'focus',
+      label: t('contact.form.focus.label'),
+      inputType: 'select',
+      connector: t('contact.form.focus.connector'),
+      placeholder: t('contact.form.focus.placeholder'),
+      options: ['UI design', 'UX strategy', 'brand identity', 'performance'].map((option) =>
+        t(`contact.form.focus.option.${option.toLowerCase().replaceAll(' ', '-')}`),
+      ),
+    },
+    {
+      id: 'budget',
+      label: t('contact.form.budget.label'),
+      inputType: 'select',
+      connector: t('contact.form.budget.connector'),
+      placeholder: t('contact.form.budget.placeholder'),
+      options: ['under-3k', '3-8k', '8-20k', '20k-plus'].map((option) =>
+        t(`contact.form.budget.option.${option}`),
+      ),
+    },
+    {
+      id: 'timeline',
+      label: t('contact.form.timeline.label'),
+      inputType: 'select',
+      connector: t('contact.form.timeline.connector'),
+      placeholder: t('contact.form.timeline.placeholder'),
+      options: ['1-2-weeks', '1-2-months', '3-6-months', 'flexible'].map((option) =>
+        t(`contact.form.timeline.option.${option}`),
+      ),
+    },
+    {
+      id: 'email',
+      label: t('contact.form.email.label'),
+      inputType: 'email',
+      connector: t('contact.form.email.connector'),
+      placeholder: t('contact.form.email.placeholder'),
+    },
+  ];
+}
 
 const EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-const SELECT_PROMPTS: Partial<Record<StepId, string>> = {
-  type: 'project type',
-  client: 'client',
-  focus: 'focus',
-  budget: 'budget range',
-  timeline: 'timeline',
-};
 
 const capitalizeFirst = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 
@@ -155,13 +161,12 @@ interface SelectStackProps {
   step: StepDef;
   onSelect: (value: string) => void;
   compact?: boolean;
+  prompt: string;
 }
 
-const SelectStack = ({ step, onSelect, compact = false }: SelectStackProps) => {
+const SelectStack = ({ step, onSelect, compact = false, prompt }: SelectStackProps) => {
   const optionsRef = useRef<HTMLSpanElement>(null);
   const reducedMotion = useReducedMotionPreference();
-  const prompt = SELECT_PROMPTS[step.id] ?? step.placeholder;
-
   useLayoutEffect(() => {
     if (!optionsRef.current) return;
     const options = Array.from(optionsRef.current.children) as HTMLButtonElement[];
@@ -203,6 +208,7 @@ type SubmissionState = 'idle' | 'loading' | 'success' | 'error';
 
 async function submitToApi(
   data: Record<string, string>,
+  locale: 'EN' | 'IT',
 ): Promise<{ success: boolean; fallback?: string; mailtoHref?: string }> {
   const payload = {
     name: data.name,
@@ -212,6 +218,7 @@ async function submitToApi(
     budget: data.budget,
     timeline: data.timeline,
     email: data.email,
+    locale,
   };
 
   const response = await fetch('/api/contact', {
@@ -248,10 +255,12 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
     disabled: compact,
   });
 
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
+  const localeRef = useRef(locale);
+  const steps = getSteps(t);
 
-  const step = STEPS[stepIndex] as StepDef | undefined;
-  const isDone = stepIndex >= STEPS.length;
+  const step = steps[stepIndex] as StepDef | undefined;
+  const isDone = stepIndex >= steps.length;
   const isTypingStep = !isDone && !!step && step.inputType !== 'select';
   const isSelectStep = !isDone && !!step && step.inputType === 'select';
   const isCurrentConnectorTyped = !!step && !!typedConnectors[step.id];
@@ -259,6 +268,17 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
   // Compact spacing values for header context
   const headerSpacing = compact ? 'pt-0 pb-1' : 'pt-16 md:pt-24 pb-8';
   const contentPadding = compact ? 'pt-0 pb-1' : 'pt-2 pb-4';
+
+  useEffect(() => {
+    if (localeRef.current === locale) return;
+    localeRef.current = locale;
+    setStepIndex(0);
+    setData({});
+    setInputValue('');
+    setTypedConnectors({});
+    setSubmissionState('idle');
+    setSubmissionError(null);
+  }, [locale]);
 
   useEffect(() => {
     if (step && step.inputType !== 'select' && isCurrentConnectorTyped) {
@@ -300,7 +320,7 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
     setSubmissionError(null);
 
     try {
-      const result = await submitToApi(d);
+      const result = await submitToApi(d, locale);
 
       if (result.success && !result.fallback) {
         setSubmissionState('success');
@@ -313,11 +333,9 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
     } catch (err) {
       console.error('Contact submission failed:', err);
       setSubmissionState('error');
-      setSubmissionError(
-        err instanceof Error ? err.message : 'Failed to send message. Please try again.',
-      );
+      setSubmissionError(err instanceof Error ? err.message : t('contact.form.error.detail'));
     }
-  }, [data]);
+  }, [data, locale, t]);
 
   const handleReset = useCallback(() => {
     setStepIndex(0);
@@ -337,7 +355,8 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
         <div data-entrance-item className={`shrink-0 ${headerSpacing} flex items-center gap-3`}>
           <span className="contact-step-label">[{step.label}]</span>
           <span className="sr-only" aria-live="polite">
-            Step {stepIndex + 1} of {STEPS.length}: {step.label.toLowerCase()}
+            {t('contact.form.step')} {stepIndex + 1} {t('contact.form.of')} {steps.length}:{' '}
+            {step.label.toLowerCase()}
           </span>
         </div>
       )}
@@ -362,10 +381,10 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
                 lineHeight: '1.35',
               }}
             >
-              Message sent. Thank you! ✌️
+              {t('contact.form.success.title')}
             </p>
             <p className="text-[var(--text-muted)] text-base mb-6">
-              I'll get back to you soon at{' '}
+              {t('contact.form.success.detail')}{' '}
               <span className="font-[500] text-[var(--text-primary)]">{data.email}</span>.
             </p>
             <motion.button
@@ -428,10 +447,10 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
             >
               <span className="inline-flex items-center gap-3">
                 <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Sending message...
+                {t('contact.form.loading.title')}
               </span>
             </p>
-            <p className="text-[var(--text-muted)] text-base">Hold tight — this takes a second.</p>
+            <p className="text-[var(--text-muted)] text-base">{t('contact.form.loading.detail')}</p>
           </motion.div>
         )}
 
@@ -444,7 +463,7 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
               wordBreak: 'normal',
             }}
           >
-            {STEPS.slice(0, stepIndex).map((s) => (
+            {steps.slice(0, stepIndex).map((s) => (
               <CompletedStepPhrase
                 key={s.id}
                 step={s}
@@ -468,7 +487,12 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
                   <TypingText value={step.connector} onComplete={handleCurrentConnectorComplete} />
                 )}
                 {isCurrentConnectorTyped && (
-                  <SelectStack step={step} onSelect={advance} compact={compact} />
+                  <SelectStack
+                    step={step}
+                    onSelect={advance}
+                    compact={compact}
+                    prompt={t(`contact.form.${step.id}.prompt`)}
+                  />
                 )}
               </motion.span>
             )}
@@ -520,7 +544,7 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
                       <button
                         type="button"
                         className="contact-continue"
-                        aria-label="Continue to next step"
+                        aria-label={t('contact.form.continue')}
                         onClick={() => {
                           if (inputRef.current?.reportValidity()) advance(inputValue.trim());
                         }}

@@ -1062,8 +1062,20 @@
   }
   .site-header-col--nav .site-header-nav-values a {
     max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+  .site-header-col--nav .site-header-nav-values > span,
+  .site-header-col--nav .site-header-nav-values > button,
+  .site-header-col--nav .site-header-social-link {
+    font-size: 0.75rem;
+    line-height: 1.25;
+  }
+  .site-header-col--nav .site-header-nav-group {
+    grid-template-columns: minmax(max-content, 1.5fr) minmax(0, 0.8fr) minmax(0, 0.55fr) minmax(
+        0,
+        1.2fr
+      );
   }
   .site-header-nav-item--start-project {
     width: 100%;
