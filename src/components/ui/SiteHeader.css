@@ -1390,13 +1390,13 @@
   .site-header-project-back--mobile {
     display: inline-flex;
     align-self: flex-start;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     white-space: nowrap;
   }
 
   .site-header-cta-mini {
     min-width: 0;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     line-height: 1.2;
     letter-spacing: 0.02em;
   }
