@@ -8,15 +8,13 @@ export const PROJECTS_QUERY = defineQuery(`
     order,
     service,
     description,
-    details{_type, about, context, challenge, solution},
+    details{_type, about},
     credits[]{_key, label, values},
     links[]{_key, label, href},
     seo{
       title,
       description,
-      canonicalPath,
-      "openGraphImage": openGraphImage.asset->url,
-      twitterCard
+      "openGraphImage": openGraphImage.asset->url
     },
     gallery[]{
       _key,
@@ -51,9 +49,7 @@ export const SITE_SETTINGS_QUERY = defineQuery(`
     seo{
       title,
       description,
-      canonicalPath,
-      "openGraphImage": openGraphImage.asset->url,
-      twitterCard
+      "openGraphImage": openGraphImage.asset->url
     }
   }
 `);

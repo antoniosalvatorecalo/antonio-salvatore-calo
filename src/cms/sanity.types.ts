@@ -72,7 +72,6 @@ export type Seo = {
   _type: 'seo';
   title?: LocalizedString;
   description?: LocalizedText;
-  canonicalPath?: string;
   openGraphImage?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -80,7 +79,6 @@ export type Seo = {
     crop?: SanityImageCrop;
     _type: 'image';
   };
-  twitterCard?: 'summary_large_image' | 'summary';
 };
 
 export type SanityImageCrop = {
@@ -147,9 +145,6 @@ export type Project = {
 export type ProjectDetails = {
   _type: 'projectDetails';
   about?: LocalizedText;
-  context?: LocalizedText;
-  challenge?: LocalizedText;
-  solution?: LocalizedText;
 };
 
 export type Slug = {
@@ -320,7 +315,7 @@ export type AllSanitySchemaTypes =
 
 // Source: ../antonio-salvatore-calo/src/cms/queries.ts
 // Variable: PROJECTS_QUERY
-// Query: *[_type == "project"] | order(order asc){    _id,    title,    slug,    order,    service,    description,    details{_type, about, context, challenge, solution},    credits[]{_key, label, values},    links[]{_key, label, href},    seo{      title,      description,      canonicalPath,      "openGraphImage": openGraphImage.asset->url,      twitterCard    },    gallery[]{      _key,      _type,      alt,      label,      url,      image{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      },      poster{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      }    }  }
+// Query: *[_type == "project"] | order(order asc){    _id,    title,    slug,    order,    service,    description,    details{_type, about},    credits[]{_key, label, values},    links[]{_key, label, href},    seo{      title,      description,      "openGraphImage": openGraphImage.asset->url    },    gallery[]{      _key,      _type,      alt,      label,      url,      image{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      },      poster{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      }    }  }
 export type PROJECTS_QUERY_RESULT = Array<{
   _id: string;
   title: LocalizedString | null;
@@ -331,9 +326,6 @@ export type PROJECTS_QUERY_RESULT = Array<{
   details: {
     _type: 'projectDetails';
     about: LocalizedText | null;
-    context: LocalizedText | null;
-    challenge: LocalizedText | null;
-    solution: LocalizedText | null;
   } | null;
   credits: Array<{
     _key: string;
@@ -348,9 +340,7 @@ export type PROJECTS_QUERY_RESULT = Array<{
   seo: {
     title: LocalizedString | null;
     description: LocalizedText | null;
-    canonicalPath: string | null;
     openGraphImage: string | null;
-    twitterCard: 'summary_large_image' | 'summary' | null;
   } | null;
   gallery: Array<
     | {
@@ -398,7 +388,7 @@ export type PROJECTS_QUERY_RESULT = Array<{
 
 // Source: ../antonio-salvatore-calo/src/cms/queries.ts
 // Variable: SITE_SETTINGS_QUERY
-// Query: *[_type == "siteSettings" && _id == "siteSettings"][0]{    displayName,    bio,    recognition,    publicContacts[]{_key, kind, value, href},    socials[]{_key, label, href},    downloads[]{_key, kind, label, href},    canonicalBaseUrl,    branding{themeColor, favicon{asset->{url}}},    seo{      title,      description,      canonicalPath,      "openGraphImage": openGraphImage.asset->url,      twitterCard    }  }
+// Query: *[_type == "siteSettings" && _id == "siteSettings"][0]{    displayName,    bio,    recognition,    publicContacts[]{_key, kind, value, href},    socials[]{_key, label, href},    downloads[]{_key, kind, label, href},    canonicalBaseUrl,    branding{themeColor, favicon{asset->{url}}},    seo{      title,      description,      "openGraphImage": openGraphImage.asset->url    }  }
 export type SITE_SETTINGS_QUERY_RESULT = {
   displayName: LocalizedString | null;
   bio: LocalizedText | null;
@@ -436,17 +426,15 @@ export type SITE_SETTINGS_QUERY_RESULT = {
   seo: {
     title: LocalizedString | null;
     description: LocalizedText | null;
-    canonicalPath: string | null;
     openGraphImage: string | null;
-    twitterCard: 'summary_large_image' | 'summary' | null;
   } | null;
 } | null;
 
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n  *[_type == "project"] | order(order asc){\n    _id,\n    title,\n    slug,\n    order,\n    service,\n    description,\n    details{_type, about, context, challenge, solution},\n    credits[]{_key, label, values},\n    links[]{_key, label, href},\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    },\n    gallery[]{\n      _key,\n      _type,\n      alt,\n      label,\n      url,\n      image{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      },\n      poster{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      }\n    }\n  }\n': PROJECTS_QUERY_RESULT;
-    '\n  *[_type == "siteSettings" && _id == "siteSettings"][0]{\n    displayName,\n    bio,\n    recognition,\n    publicContacts[]{_key, kind, value, href},\n    socials[]{_key, label, href},\n    downloads[]{_key, kind, label, href},\n    canonicalBaseUrl,\n    branding{themeColor, favicon{asset->{url}}},\n    seo{\n      title,\n      description,\n      canonicalPath,\n      "openGraphImage": openGraphImage.asset->url,\n      twitterCard\n    }\n  }\n': SITE_SETTINGS_QUERY_RESULT;
+    '\n  *[_type == "project"] | order(order asc){\n    _id,\n    title,\n    slug,\n    order,\n    service,\n    description,\n    details{_type, about},\n    credits[]{_key, label, values},\n    links[]{_key, label, href},\n    seo{\n      title,\n      description,\n      "openGraphImage": openGraphImage.asset->url\n    },\n    gallery[]{\n      _key,\n      _type,\n      alt,\n      label,\n      url,\n      image{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      },\n      poster{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      }\n    }\n  }\n': PROJECTS_QUERY_RESULT;
+    '\n  *[_type == "siteSettings" && _id == "siteSettings"][0]{\n    displayName,\n    bio,\n    recognition,\n    publicContacts[]{_key, kind, value, href},\n    socials[]{_key, label, href},\n    downloads[]{_key, kind, label, href},\n    canonicalBaseUrl,\n    branding{themeColor, favicon{asset->{url}}},\n    seo{\n      title,\n      description,\n      "openGraphImage": openGraphImage.asset->url\n    }\n  }\n': SITE_SETTINGS_QUERY_RESULT;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too

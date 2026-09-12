@@ -20,7 +20,7 @@ interface StepDef {
 
 type Translate = (key: string) => string;
 
-function getSteps(t: Translate): StepDef[] {
+function getSteps(t: Translate, compact = false): StepDef[] {
   return [
     {
       id: 'name',
@@ -35,9 +35,15 @@ function getSteps(t: Translate): StepDef[] {
       inputType: 'select',
       connector: t('contact.form.type.connector'),
       placeholder: t('contact.form.type.placeholder'),
-      options: ['website', 'brand identity', 'product design', 'campaign'].map((option) =>
-        t(`contact.form.type.option.${option.replaceAll(' ', '-')}`),
-      ),
+      options: compact
+        ? [
+            t('contact.form.compact.type.option.web'),
+            t('contact.form.compact.type.option.brand'),
+            t('contact.form.compact.type.option.product'),
+          ]
+        : ['website', 'brand identity', 'product design'].map((option) =>
+            t(`contact.form.type.option.${option.replaceAll(' ', '-')}`),
+          ),
     },
     {
       id: 'client',
@@ -45,7 +51,7 @@ function getSteps(t: Translate): StepDef[] {
       inputType: 'select',
       connector: t('contact.form.client.connector'),
       placeholder: t('contact.form.client.placeholder'),
-      options: ['startup', 'studio', 'company', 'personal project'].map((option) =>
+      options: ['startup', 'studio', 'company'].map((option) =>
         t(`contact.form.client.option.${option.replaceAll(' ', '-')}`),
       ),
     },
@@ -55,9 +61,15 @@ function getSteps(t: Translate): StepDef[] {
       inputType: 'select',
       connector: t('contact.form.focus.connector'),
       placeholder: t('contact.form.focus.placeholder'),
-      options: ['UI design', 'UX strategy', 'brand identity', 'performance'].map((option) =>
-        t(`contact.form.focus.option.${option.toLowerCase().replaceAll(' ', '-')}`),
-      ),
+      options: compact
+        ? [
+            t('contact.form.compact.focus.option.ui'),
+            t('contact.form.compact.focus.option.ux'),
+            t('contact.form.compact.focus.option.brand'),
+          ]
+        : ['UI design', 'UX strategy', 'brand identity'].map((option) =>
+            t(`contact.form.focus.option.${option.toLowerCase().replaceAll(' ', '-')}`),
+          ),
     },
     {
       id: 'budget',
@@ -65,9 +77,13 @@ function getSteps(t: Translate): StepDef[] {
       inputType: 'select',
       connector: t('contact.form.budget.connector'),
       placeholder: t('contact.form.budget.placeholder'),
-      options: ['under-3k', '3-8k', '8-20k', '20k-plus'].map((option) =>
-        t(`contact.form.budget.option.${option}`),
-      ),
+      options: compact
+        ? [
+            t('contact.form.compact.budget.option.under-3k'),
+            t('contact.form.compact.budget.option.3-8k'),
+            t('contact.form.compact.budget.option.8-20k'),
+          ]
+        : ['under-3k', '3-8k', '8-20k'].map((option) => t(`contact.form.budget.option.${option}`)),
     },
     {
       id: 'timeline',
@@ -75,9 +91,15 @@ function getSteps(t: Translate): StepDef[] {
       inputType: 'select',
       connector: t('contact.form.timeline.connector'),
       placeholder: t('contact.form.timeline.placeholder'),
-      options: ['1-2-weeks', '1-2-months', '3-6-months', 'flexible'].map((option) =>
-        t(`contact.form.timeline.option.${option}`),
-      ),
+      options: compact
+        ? [
+            t('contact.form.compact.timeline.option.1-2w'),
+            t('contact.form.compact.timeline.option.1-2m'),
+            t('contact.form.compact.timeline.option.flexible'),
+          ]
+        : ['1-2-weeks', '1-2-months', 'flexible'].map((option) =>
+            t(`contact.form.timeline.option.${option}`),
+          ),
     },
     {
       id: 'email',
@@ -257,7 +279,7 @@ export const ContactFormExperience = ({ compact = false }: { compact?: boolean }
 
   const { locale, t } = useLanguage();
   const localeRef = useRef(locale);
-  const steps = getSteps(t);
+  const steps = getSteps(t, compact);
 
   const step = steps[stepIndex] as StepDef | undefined;
   const isDone = stepIndex >= steps.length;

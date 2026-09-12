@@ -312,7 +312,7 @@ export function SingleProjectView({
                   className="project-media-scroll-hint"
                   onClick={handleGalleryBack}
                 >
-                  {locale === 'IT' ? 'Indietro ↑' : 'Back ↑'}
+                  {locale === 'IT' ? 'Indietro ←' : 'Back ←'}
                 </button>
               ) : (
                 <span className="project-media-scroll-hint">

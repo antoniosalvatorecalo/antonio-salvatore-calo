@@ -35,6 +35,17 @@
   background: var(--bg-primary);
 }
 
+/* An expanded project accordion must not paint a full-width band over the gallery. */
+.site-header.is-project {
+  background: transparent;
+  pointer-events: none;
+}
+
+.site-header.is-project a,
+.site-header.is-project button {
+  pointer-events: auto;
+}
+
 /* The bio stays outside the scene. Only navigation participates in the handoff. */
 .site-header[data-transition-phase='opening'],
 .site-header[data-transition-phase='closing'] {
@@ -130,6 +141,7 @@
   gap: var(--space-4);
   align-items: flex-start;
   flex-shrink: 0;
+  min-width: 0;
   overflow-x: visible;
 }
 
@@ -388,6 +400,14 @@
 .site-header-project-language {
   flex: 0 0 auto;
   margin-left: auto;
+}
+
+.site-header.is-project .site-header-col--project {
+  background: transparent;
+}
+
+.site-header.is-project .project-details-meta-block.is-open {
+  background: var(--bg-primary);
 }
 
 .site-header-project-title {
@@ -1050,6 +1070,8 @@
   }
   .site-header-col--nav .site-header-nav-group {
     display: grid;
+    /* Keep the CTA in a dedicated, stable track so opening the form cannot
+       resize or move the three navigation columns before it. */
     grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.55fr) minmax(0, 1.6fr);
     width: 100%;
     min-width: 0;
@@ -1075,7 +1097,7 @@
   .site-header-col--nav .site-header-nav-group {
     grid-template-columns: minmax(max-content, 1.5fr) minmax(0, 0.8fr) minmax(0, 0.55fr) minmax(
         0,
-        1.2fr
+        1.5fr
       );
   }
   .contact-panel-wrapper {
@@ -1083,12 +1105,6 @@
     width: 100%;
     max-width: 100%;
     margin-top: var(--space-2);
-  }
-  .contact-panel-wrapper .contact-select-options {
-    flex-wrap: wrap;
-  }
-  .contact-panel-wrapper .contact-select-trigger {
-    white-space: normal;
   }
   .site-header-nav-item--start-project {
     width: 100%;

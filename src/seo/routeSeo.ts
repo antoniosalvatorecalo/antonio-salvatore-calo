@@ -55,18 +55,14 @@ export function deriveRouteSeo(
       project.seo?.description && project.seo.description !== settings.seo.description
         ? project.seo.description
         : project.description;
-    const requestedCanonical = project.seo?.canonicalPath;
-    const canonicalPath = requestedCanonical?.startsWith(`/projects/${project.slug}`)
-      ? requestedCanonical
-      : `/projects/${project.slug}`;
     const image = project.seo?.openGraphImage ?? projectImage(project);
     return {
       title,
       description,
-      canonical: absoluteUrl(canonicalPath, origin),
+      canonical: absoluteUrl(`/projects/${project.slug}`, origin),
       type: 'article',
       image: image ? absoluteUrl(image, origin) : undefined,
-      twitterCard: project.seo?.twitterCard ?? 'summary_large_image',
+      twitterCard: 'summary_large_image',
       project,
     };
   }
@@ -81,7 +77,7 @@ export function deriveRouteSeo(
     image: settings.seo.openGraphImage
       ? absoluteUrl(settings.seo.openGraphImage, origin)
       : undefined,
-    twitterCard: settings.seo.twitterCard ?? 'summary_large_image',
+    twitterCard: 'summary_large_image',
   };
 }
 

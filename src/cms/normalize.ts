@@ -29,9 +29,7 @@ function normalizeSeo(value: RawSeo | null | undefined, locale: CmsLocale): SeoC
     description: value.description
       ? localized(value.description, locale, 'seo.description')
       : undefined,
-    canonicalPath: value.canonicalPath ?? undefined,
     openGraphImage: value.openGraphImage ?? undefined,
-    twitterCard: value.twitterCard ?? undefined,
   };
 }
 
@@ -41,43 +39,14 @@ function normalizeCmsDetails(
 ): ProjectDetail[] | undefined {
   const labels =
     locale === 'IT'
-      ? {
-          context: 'contesto',
-          challenge: 'sfida',
-          solution: 'soluzione',
-          credits: 'credits',
-          links: 'link',
-        }
-      : {
-          context: 'context',
-          challenge: 'challenge',
-          solution: 'solution',
-          credits: 'credits',
-          links: 'links',
-        };
+      ? { credits: 'credits', links: 'link' }
+      : { credits: 'credits', links: 'links' };
   const details: ProjectDetail[] = [];
 
   if (project.details?.about) {
     details.push({
       label: locale === 'IT' ? 'about' : 'about',
       text: localized(project.details.about, locale, 'details.about'),
-    });
-  } else if (project.details?.context) {
-    details.push({
-      label: labels.context,
-      text: localized(project.details.context, locale, 'details.context'),
-    });
-  }
-  if (project.details?.challenge) {
-    details.push({
-      label: labels.challenge,
-      text: localized(project.details.challenge, locale, 'details.challenge'),
-    });
-  }
-  if (project.details?.solution) {
-    details.push({
-      label: labels.solution,
-      text: localized(project.details.solution, locale, 'details.solution'),
     });
   }
   if (project.credits?.length) {

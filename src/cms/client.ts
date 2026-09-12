@@ -8,5 +8,7 @@ export const sanityClient = createClient({
   projectId: SANITY_PROJECT_ID,
   dataset: SANITY_DATASET,
   apiVersion: SANITY_API_VERSION,
-  useCdn: true,
+  // The site hydrates from a prerendered snapshot, then refreshes in the browser.
+  // Bypass Sanity's CDN here so CMS edits become visible without waiting for CDN cache expiry.
+  useCdn: false,
 });

@@ -43,9 +43,7 @@ export interface ProjectDomain {
 export interface SeoContent {
   title?: string;
   description?: string;
-  canonicalPath?: string;
   openGraphImage?: string;
-  twitterCard?: 'summary' | 'summary_large_image';
 }
 
 export interface SiteSettings {

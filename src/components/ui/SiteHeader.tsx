@@ -23,7 +23,7 @@ import { AnimatedContactPanel } from './AnimatedContactPanel';
 import './SiteHeader.css';
 
 const FABER_MEETING_URL = 'https://www.fabermeeting.it/';
-const PUBLIC_EMAIL_HREF = 'mailto:antonio.salvatore.calo@gmail.com';
+const PUBLIC_EMAIL = 'antonio.salvatore.calo@gmail.com';
 
 const ContactFormExperience = lazy(() =>
   import('./ContactFormExperience').then((module) => ({ default: module.ContactFormExperience })),
@@ -58,6 +58,26 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
 
   const [contactOpen, setContactOpen] = useState(false);
   const [introComplete, setIntroComplete] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(PUBLIC_EMAIL);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = PUBLIC_EMAIL;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+
+    setEmailCopied(true);
+    window.setTimeout(() => setEmailCopied(false), 1800);
+  };
 
   useEffect(() => {
     if (document.documentElement.dataset.introComplete === 'true') setIntroComplete(true);
@@ -122,15 +142,22 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   useLayoutEffect(() => {
     const header = headerRef.current;
     if (!header) return;
+    const inner = header.querySelector<HTMLElement>('.site-header-inner');
     const update = () =>
       document.documentElement.style.setProperty(
         '--site-header-height',
-        `${header.offsetHeight}px`,
+        `${Math.max(
+          header.getBoundingClientRect().height,
+          header.scrollHeight,
+          inner?.getBoundingClientRect().height ?? 0,
+          inner?.scrollHeight ?? 0,
+        )}px`,
       );
     update();
     if (isProjectPage) return;
     const observer = new ResizeObserver(update);
     observer.observe(header);
+    if (inner) observer.observe(inner);
     return () => observer.disconnect();
   }, [isProjectPage, projectInfo?.name]);
 
@@ -187,11 +214,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               {siteSettings.bio}
             </p>
             <div className="site-header-ctas" data-motion-text data-motion-order="1">
-              <AnimatedLink
-                href={PUBLIC_EMAIL_HREF}
+              <button
+                type="button"
+                onClick={handleCopyEmail}
                 className="site-header-cta-mini"
-                label="Email Me"
-              />
+                aria-label={t('header.copy-email')}
+              >
+                {emailCopied ? t('header.email-copied') : t('header.email-me')}
+              </button>
               {siteSettings.downloads.map((download) => (
                 <AnimatedLink
                   key={download.kind}

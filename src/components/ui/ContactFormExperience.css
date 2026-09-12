@@ -100,7 +100,7 @@
 
 /* Compact form: sentence line styling */
 .contact-form-experience--compact .sentence-line {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 400;
   color: var(--text-primary);
   letter-spacing: -0.005em;
@@ -152,6 +152,15 @@
   overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
+.contact-form-experience--compact .contact-select-options {
+  flex-wrap: nowrap;
+  gap: 0 var(--space-2);
+  overflow-x: auto;
+  font-size: 0.625rem;
+}
+.contact-form-experience--compact .dropdown-option {
+  font-size: 0.625rem;
+}
 .dropdown-option,
 .dropdown-option.compact {
   flex: 0 0 auto;
@@ -186,14 +195,24 @@
   vertical-align: baseline;
   flex-wrap: nowrap;
   white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  break-inside: avoid;
+}
+.contact-form-experience--compact .contact-input-group {
+  max-width: none;
+}
+.contact-form-experience--compact .contact-input-field {
+  max-width: none;
 }
 .contact-input-field {
   display: inline-grid;
   grid-template-columns: minmax(0, 1fr);
+  width: max-content;
   min-width: 0;
   min-height: 1.7em;
   max-width: 100%;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
 }
 .contact-input-mirror,
 .contact-input {
@@ -217,6 +236,9 @@
   border-radius: 0;
   background: transparent;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow-x: auto;
+  text-overflow: clip;
 }
 .contact-input:focus-visible {
   background: transparent;
@@ -240,7 +262,7 @@
 }
 @media (max-width: 767px) {
   .contact-form-experience--compact .sentence-line {
-    font-size: 1rem;
+    font-size: 0.9375rem;
     line-height: 1.65;
   }
   .contact-select-options {

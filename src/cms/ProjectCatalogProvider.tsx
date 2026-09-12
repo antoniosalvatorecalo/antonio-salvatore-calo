@@ -61,7 +61,6 @@ export function ProjectCatalogProvider({
   const [requestVersion, setRequestVersion] = useState(0);
 
   useEffect(() => {
-    if (initialSnapshot && requestVersion === 0) return;
     let active = true;
     setRequestError(null);
     void fetchContent().then(
@@ -157,24 +156,39 @@ export function ProjectCatalogProvider({
 
 export function ProjectCatalogGate({ children }: { children: ReactNode }) {
   const { catalogStatus, catalogError, retryCatalog } = useProjectCatalog();
-  const intro = <EntranceIntro ready={catalogStatus === 'ready'} error={catalogStatus === 'error'} />;
+  const intro = (
+    <EntranceIntro ready={catalogStatus === 'ready'} error={catalogStatus === 'error'} />
+  );
 
   if (catalogStatus === 'loading') {
-    return <>{intro}<div aria-busy="true" aria-label="Loading project content" /></>;
+    return (
+      <>
+        {intro}
+        <div aria-busy="true" aria-label="Loading project content" />
+      </>
+    );
   }
   if (catalogStatus === 'error') {
-    return (<>
-      {intro}
-      <div role="alert">
-        <p>Project content is temporarily unavailable.</p>
-        {import.meta.env.DEV && catalogError && <pre>{catalogError.message}</pre>}
-        <button type="button" onClick={retryCatalog}>
-          Retry
-        </button>
-      </div></>);
+    return (
+      <>
+        {intro}
+        <div role="alert">
+          <p>Project content is temporarily unavailable.</p>
+          {import.meta.env.DEV && catalogError && <pre>{catalogError.message}</pre>}
+          <button type="button" onClick={retryCatalog}>
+            Retry
+          </button>
+        </div>
+      </>
+    );
   }
 
-  return <>{intro}{children}</>;
+  return (
+    <>
+      {intro}
+      {children}
+    </>
+  );
 }
 
 export function useProjectCatalog(): ProjectCatalogContextValue {
