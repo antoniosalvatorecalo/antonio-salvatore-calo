@@ -71,6 +71,10 @@ export function ProjectCatalogProvider({
         if (!active) return;
         const nextError =
           error instanceof Error ? error : new Error('Unknown Sanity request error.');
+        if (initialSnapshot) {
+          if (import.meta.env.DEV) console.warn('[Sanity][Projects] Refresh failed.', nextError);
+          return;
+        }
         if (import.meta.env.DEV) console.error('[Sanity][Projects]', nextError);
         setRequestError(nextError);
       },
