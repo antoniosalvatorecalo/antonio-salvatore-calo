@@ -11,7 +11,7 @@ export interface RouteSeo {
   project?: ProjectDomain;
 }
 
-const productionOrigin = 'https://antonio-salvatore-calo.vercel.app';
+const productionOrigin = 'https://antoniosalvatorecalo.com';
 
 function routePath(pathname: string): string {
   const path = pathname.split('?')[0]?.split('#')[0] ?? '/';
