@@ -133,6 +133,7 @@
 }
 .contact-text-reveal {
   display: inline-block;
+  max-width: 100%;
   vertical-align: bottom;
 }
 .contact-form-content {
@@ -180,6 +181,7 @@
   display: inline-flex;
   align-items: baseline;
   gap: var(--space-3);
+  width: max-content;
   max-width: 100%;
   vertical-align: baseline;
   flex-wrap: nowrap;
@@ -187,9 +189,11 @@
 }
 .contact-input-field {
   display: inline-grid;
-  min-width: max-content;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   min-height: 1.7em;
-  max-width: calc(100vw - (2 * var(--space-3)));
+  max-width: 100%;
+  flex: 0 1 auto;
 }
 .contact-input-mirror,
 .contact-input {
@@ -201,6 +205,7 @@
   visibility: hidden;
   padding-right: 0.25em;
   white-space: pre;
+  overflow: hidden;
 }
 .contact-input {
   width: 100%;
@@ -240,9 +245,6 @@
   }
   .contact-select-options {
     padding: 0;
-  }
-  .contact-input-field {
-    min-width: max-content;
   }
 }
 .contact-select-options::-webkit-scrollbar {

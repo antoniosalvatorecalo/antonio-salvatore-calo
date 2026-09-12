@@ -1079,10 +1079,16 @@
       );
   }
   .contact-panel-wrapper {
-    position: absolute;
-    top: calc(100% + var(--space-2));
-    right: 0;
-    width: clamp(22rem, 28vw, 26rem);
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin-top: var(--space-2);
+  }
+  .contact-panel-wrapper .contact-select-options {
+    flex-wrap: wrap;
+  }
+  .contact-panel-wrapper .contact-select-trigger {
+    white-space: normal;
   }
   .site-header-nav-item--start-project {
     width: 100%;
