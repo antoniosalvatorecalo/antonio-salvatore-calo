@@ -1,1 +1,153 @@
-.entrance-intro{position:fixed;inset:0;z-index:1100;display:grid;place-items:center;overflow:hidden;color:#fff;background:#000;isolation:isolate;animation:entrance-in .45s ease-out both}.entrance-intro[data-ready=true]{animation:entrance-out .8s cubic-bezier(.76,0,.24,1) 3.35s both;pointer-events:none}.entrance-intro__percentage{position:absolute;top:6vh;font-size:clamp(.78rem,1.2vw,1rem);font-weight:500;line-height:1;letter-spacing:-.04em}.entrance-intro__voices{position:absolute;top:50%;display:grid;width:min(90vw,44rem);text-align:center;font-size:clamp(.9rem,1.8vw,1.55rem);font-weight:600;line-height:.95;letter-spacing:-.045em;text-transform:uppercase;transform:translateY(-50%)}.entrance-intro__voices span{grid-area:1/1;opacity:0;color:#fff;animation:voice-cycle 780ms cubic-bezier(.22,1,.36,1) calc(var(--voice-index)*780ms + 120ms) both}.entrance-intro__bar{position:absolute;bottom:5vh;width:min(30vw,11rem);height:2px;background:rgba(255,255,255,.28)}.entrance-intro__bar span{display:block;width:100%;height:100%;background:#fff;transform-origin:left center;transition:transform 80ms linear}@keyframes entrance-in{from{opacity:0}to{opacity:1}}@keyframes voice-cycle{0%{opacity:0;transform:translateY(.7em)}18%,68%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-.35em)}}@keyframes entrance-out{0%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 0 100% 0)}}@media (prefers-reduced-motion:reduce){.entrance-intro,.entrance-intro[data-ready=true],.entrance-intro__voices span{animation:none}.entrance-intro__voices span{opacity:1}.entrance-intro[data-ready=true]{opacity:0;transition:opacity 1ms linear}}
+html:not([data-intro-complete='true']) body {
+  background-color: #0a0a0a;
+}
+
+.entrance-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: #f5f5f5;
+  background: #0a0a0a;
+  font-family: 'TT Interphases Pro', sans-serif;
+  isolation: isolate;
+  pointer-events: auto;
+}
+
+.entrance-intro[data-wipe-active='true'] {
+  pointer-events: none;
+}
+
+.entrance-intro[data-wipe-active='true'] .entrance-intro__identity,
+.entrance-intro[data-wipe-active='true'] .entrance-intro__loader {
+  visibility: hidden;
+}
+
+.entrance-intro__identity {
+  position: absolute;
+  z-index: 2;
+  top: clamp(1.25rem, 4vw, 3rem);
+  left: clamp(1rem, 2.5vw, 2.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.12em;
+  font-size: clamp(14px, 0.95vw, 15px);
+  font-weight: 400;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.entrance-intro__identity strong {
+  font-weight: 400;
+}
+
+.entrance-intro__line-mask {
+  overflow: hidden;
+  padding-block: 0.08em;
+  margin-block: -0.08em;
+}
+
+.entrance-intro__line-inner {
+  display: block;
+  will-change: transform, opacity;
+}
+
+.entrance-intro__numeric-line {
+  white-space: nowrap;
+}
+
+.entrance-intro__digit {
+  display: inline-block;
+  width: 0.7em;
+  height: 1.15em;
+  margin-right: 0.03em;
+  overflow: hidden;
+  vertical-align: bottom;
+  font-variant-numeric: tabular-nums;
+}
+
+.entrance-intro__digit-value {
+  display: block;
+  height: 1.15em;
+  line-height: 1.15em;
+  text-align: center;
+}
+
+.entrance-intro__separator {
+  display: inline-block;
+  min-width: 0.34ch;
+  text-align: center;
+}
+
+.entrance-intro__line-gap {
+  margin-top: 0.78em;
+}
+
+.entrance-intro__metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 0.14em;
+  margin-top: 0.18em;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.entrance-intro__loader {
+  position: absolute;
+  z-index: 2;
+  bottom: clamp(1.5rem, 4vw, 3rem);
+  left: 50%;
+  width: min(10rem, calc(100vw - 4rem));
+  transform: translateX(-50%);
+}
+
+.entrance-intro__bar {
+  width: 100%;
+  height: 2px;
+  overflow: hidden;
+  background: rgb(245 245 245 / 28%);
+}
+
+.entrance-intro__bar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #f5f5f5;
+  transform-origin: left center;
+}
+
+@media (max-width: 767px) {
+  .entrance-intro__identity {
+    top: 1.25rem;
+    left: 1rem;
+    font-size: clamp(13px, 3.4vw, 14px);
+  }
+
+  .entrance-intro__digit {
+    width: 0.74em;
+    margin-right: 0.03em;
+  }
+
+  .entrance-intro__metadata {
+    font-size: 13px;
+  }
+
+  .entrance-intro__loader {
+    bottom: 1.5rem;
+    width: min(10rem, calc(100vw - 4rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrance-intro__line-inner {
+    opacity: 1;
+    transform: none;
+  }
+}

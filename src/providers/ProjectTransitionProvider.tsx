@@ -275,7 +275,6 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
       if (isOpening && planes.projectPlane) {
         void waitForProjectMedia(planes.projectPlane, controller.signal).then(() => {
           if (controller.signal.aborted) return;
-          // Failed/slow media uses its placeholder, but never skips the opening.
           animate();
         });
       } else if (isClosing) {
@@ -299,8 +298,10 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
       observer.disconnect();
       // Revert scoped tweens without resetting the current angle when reversing.
       const angle = planes.scene.style.getPropertyValue('--scene-angle');
+      const progress = planes.scene.style.getPropertyValue('--scene-progress');
       context.revert();
       planes.scene.style.setProperty('--scene-angle', angle);
+      planes.scene.style.setProperty('--scene-progress', progress);
     };
   }, [planes, state.phase, state.slug, reducedMotion, finishOpen, finishClose, restoreGallery]);
 
@@ -316,6 +317,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     () => () => {
       scene?.style.removeProperty('--scene-angle');
       scene?.style.removeProperty('--scene-depth');
+      scene?.style.removeProperty('--scene-progress');
     },
     [scene],
   );

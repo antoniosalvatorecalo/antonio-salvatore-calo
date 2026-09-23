@@ -108,6 +108,61 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   }, [handleKeyDown]);
 
   useLayoutEffect(() => {
+    if (!contactOpen) return;
+
+    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    let scrollY = 0;
+    let locked = false;
+    let previousBodyStyles: {
+      position: string;
+      top: string;
+      width: string;
+      overflow: string;
+    } | null = null;
+    let previousRootOverflow = '';
+
+    const unlock = () => {
+      if (!locked || !previousBodyStyles) return;
+      document.body.style.position = previousBodyStyles.position;
+      document.body.style.top = previousBodyStyles.top;
+      document.body.style.width = previousBodyStyles.width;
+      document.body.style.overflow = previousBodyStyles.overflow;
+      document.documentElement.style.overflow = previousRootOverflow;
+      window.scrollTo(0, scrollY);
+      previousBodyStyles = null;
+      locked = false;
+    };
+
+    const syncScrollLock = () => {
+      if (mobileQuery.matches && !locked) {
+        scrollY = window.scrollY;
+        previousBodyStyles = {
+          position: document.body.style.position,
+          top: document.body.style.top,
+          width: document.body.style.width,
+          overflow: document.body.style.overflow,
+        };
+        previousRootOverflow = document.documentElement.style.overflow;
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+        locked = true;
+      } else if (!mobileQuery.matches) {
+        unlock();
+      }
+    };
+
+    syncScrollLock();
+    mobileQuery.addEventListener('change', syncScrollLock);
+    return () => {
+      mobileQuery.removeEventListener('change', syncScrollLock);
+      unlock();
+    };
+  }, [contactOpen]);
+
+  useLayoutEffect(() => {
     const header = headerRef.current;
     if (!header) return;
     const supplementalSurface = document.querySelector<HTMLElement>(
@@ -143,23 +198,47 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     const header = headerRef.current;
     if (!header) return;
     const inner = header.querySelector<HTMLElement>('.site-header-inner');
-    const update = () =>
-      document.documentElement.style.setProperty(
-        '--site-header-height',
-        `${Math.max(
-          header.getBoundingClientRect().height,
-          header.scrollHeight,
-          inner?.getBoundingClientRect().height ?? 0,
-          inner?.scrollHeight ?? 0,
-        )}px`,
+    const update = () => {
+      const mobileContactOpen =
+        contactOpen && window.matchMedia('(max-width: 767px)').matches;
+      const panel = mobileContactOpen
+        ? header.querySelector<HTMLElement>('.contact-panel-wrapper')
+        : null;
+      const previousDisplay = panel?.style.display;
+
+      // Measure the structural header while the mobile form is temporarily
+      // removed from layout; the expanded form must not move the gallery.
+      if (panel) panel.style.display = 'none';
+      const height = Math.max(
+        header.getBoundingClientRect().height,
+        header.scrollHeight,
+        inner?.getBoundingClientRect().height ?? 0,
+        inner?.scrollHeight ?? 0,
       );
+      if (panel && previousDisplay !== undefined) panel.style.display = previousDisplay;
+
+      const rootStyle = document.documentElement.style;
+      rootStyle.setProperty('--site-header-height', `${height}px`);
+      if (mobileContactOpen) {
+        const buttonBottom = startProjectButtonRef.current?.getBoundingClientRect().bottom;
+        if (buttonBottom !== undefined) {
+          rootStyle.setProperty('--contact-panel-top', `${buttonBottom}px`);
+        }
+      } else {
+        rootStyle.removeProperty('--contact-panel-top');
+      }
+      if (isProjectPage) {
+        rootStyle.setProperty('--project-layout-header-height', `${height}px`);
+      } else {
+        rootStyle.removeProperty('--project-layout-header-height');
+      }
+    };
     update();
-    if (isProjectPage) return;
     const observer = new ResizeObserver(update);
     observer.observe(header);
     if (inner) observer.observe(inner);
     return () => observer.disconnect();
-  }, [isProjectPage, projectInfo?.name]);
+  }, [contactOpen, isProjectPage, projectInfo?.name]);
 
   const handleGoHome = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isProjectPage || !onBackToGallery || !shouldEnhanceNavigation(e)) return;
@@ -199,6 +278,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       ref={headerRef}
       className={`site-header${isProjectPage ? ' is-project' : ''}`}
       data-transition-phase={transitionPhase}
+      data-contact-open={contactOpen ? 'true' : undefined}
     >
       <div className={`site-header-inner${isProjectPage ? ' is-project' : ''}`}>
         {/* LEFT: Bio */}
@@ -373,6 +453,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                       type="button"
                       data-motion-text
                       data-motion-order="5"
+                      data-motion-order-mobile="1.5"
                       className={`site-header-start-project${contactOpen ? ' is-active' : ''}`}
                       onClick={() => setContactOpen((open) => !open)}
                       aria-expanded={contactOpen}

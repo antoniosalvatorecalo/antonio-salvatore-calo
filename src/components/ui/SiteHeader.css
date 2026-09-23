@@ -1241,6 +1241,14 @@
 }
 
 @media (max-width: 767px) {
+  html:has(.site-header[data-contact-open='true']) {
+    overflow: hidden !important;
+  }
+
+  body:has(.site-header[data-contact-open='true']) {
+    overflow: hidden !important;
+  }
+
   .site-header-nav-item--start-project {
     width: 100%;
   }
@@ -1254,11 +1262,28 @@
     position: static;
     width: 100%;
     max-width: none;
-    max-height: none;
+    max-height: calc(
+      100dvh - var(--contact-panel-top, var(--site-header-height, 320px)) - var(--space-2) - var(--space-4)
+    );
     margin-top: var(--space-2);
-    background: transparent;
+    background: var(--bg-primary);
     border-top: 0;
     padding-top: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    pointer-events: auto;
+  }
+
+  .site-header[data-contact-open='true'] .site-header-nav-item--start-project {
+    overflow: visible;
+  }
+
+  .contact-panel-wrapper::-webkit-scrollbar {
+    display: none;
   }
 
   .site-header-start-project::after,
@@ -1306,10 +1331,10 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
+      'start-project'
       'select-work'
       'recognition'
-      'social'
-      'start-project';
+      'social';
     gap: var(--space-3) var(--space-2);
     width: 100%;
   }

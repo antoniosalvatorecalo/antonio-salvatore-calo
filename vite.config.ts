@@ -111,6 +111,13 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       hmr: true,
+      proxy: {
+        '/api/sanity': {
+          target: 'https://dw4juo8a.api.sanity.io',
+          changeOrigin: true,
+          rewrite: (requestPath) => requestPath.replace(/^\/api\/sanity/, ''),
+        },
+      },
     },
   };
 });

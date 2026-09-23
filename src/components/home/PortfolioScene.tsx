@@ -18,6 +18,7 @@ export function PortfolioScene() {
     visibleSlug,
     galleryInteractive,
     galleryMediaActive,
+    homeRevealReady,
     registerScenePlanes,
   } = useProjectTransition();
   const { getProject } = useProjectCatalog();
@@ -43,6 +44,9 @@ export function PortfolioScene() {
       ref={sceneRef}
       className="portfolio-scene"
       data-transition-phase={phase}
+      data-home-gallery-reveal={
+        phase === 'idle' || phase === 'opening' || (phase === 'closing' && homeRevealReady)
+      }
       aria-busy={phase === 'opening' || phase === 'closing'}
       data-scroll-root
     >
@@ -68,6 +72,7 @@ export function PortfolioScene() {
                     project={project}
                     initialMediaKey={selectedMediaKey}
                     interactive={phase === 'project'}
+                    transitionPhase={phase}
                   />
                 </div>
               </div>

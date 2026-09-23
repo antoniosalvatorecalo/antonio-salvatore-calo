@@ -1,11 +1,22 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { isVimeoUrl, getVimeoEmbedUrl, getVimeoThumbnailUrl } from '@/lib/vimeo';
+import { isVimeoUrl, getVimeoThumbnailUrl } from '@/lib/vimeo';
 import type { ProjectDomain, ProjectMedia } from '@/cms/domain';
 import { getSanityImageSources } from '@/cms/image';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { AnimatePresence, motion } from 'motion/react';
 import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
+import {
+  MEDIA_MOTION_CONSTANTS,
+  getMediaMotionConfig,
+  getMediaMotionTarget,
+  getMediaViewportMetrics,
+  getMotionAlpha,
+  type MediaMotionRect,
+  type MediaMotionTarget,
+} from './projectMediaMotion';
+import { ProjectMediaLightbox } from './ProjectMediaLightbox';
+import { useProjectGalleryEntrance } from './useProjectGalleryEntrance';
 import './SingleProjectView.css';
 import '../home/FilterBar.css';
 
@@ -15,6 +26,7 @@ interface SingleProjectViewProps {
   project: SliderProjectData;
   initialMediaKey?: string;
   interactive?: boolean;
+  transitionPhase?: 'idle' | 'opening' | 'project' | 'closing';
 }
 
 type MediaFilter = 'all' | 'image' | 'vimeo';
@@ -30,14 +42,104 @@ function getImageName(media: ProjectMedia): string {
   return name;
 }
 
+function getOffsetLeftWithin(element: HTMLElement, ancestor: HTMLElement) {
+  let offsetLeft = 0;
+  let current: HTMLElement | null = element;
+
+  while (current && current !== ancestor) {
+    offsetLeft += current.offsetLeft;
+    const offsetParent = current.offsetParent as HTMLElement | null;
+    if (!offsetParent) return null;
+    current = offsetParent;
+    if (current !== ancestor) offsetLeft -= current.scrollLeft;
+  }
+
+  return current === ancestor ? offsetLeft : null;
+}
+
+function getHorizontalSnapTarget(
+  viewport: HTMLElement,
+  track: HTMLElement,
+  card: HTMLElement,
+  cards: HTMLElement[],
+) {
+  const viewportStyle = getComputedStyle(viewport);
+  const length = (value: string) => Number.parseFloat(value) || 0;
+  const trackStyle = getComputedStyle(track);
+  const trackLeft = getOffsetLeftWithin(track, viewport);
+  const cardIndex = cards.indexOf(card);
+  if (trackLeft === null || cardIndex < 0) return null;
+
+  const borderBoxWidth = (style: CSSStyleDeclaration) => {
+    const width = length(style.width);
+    if (style.boxSizing === 'border-box') return width;
+    return (
+      width +
+      length(style.paddingInlineStart) +
+      length(style.paddingInlineEnd) +
+      length(style.borderInlineStartWidth) +
+      length(style.borderInlineEndWidth)
+    );
+  };
+  const gap = length(trackStyle.columnGap);
+  let cardBorderStart =
+    trackLeft +
+    length(trackStyle.borderInlineStartWidth) +
+    length(trackStyle.paddingInlineStart);
+
+  for (const precedingCard of cards.slice(0, cardIndex)) {
+    const precedingStyle = getComputedStyle(precedingCard);
+    cardBorderStart +=
+      length(precedingStyle.marginInlineStart) +
+      borderBoxWidth(precedingStyle) +
+      length(precedingStyle.marginInlineEnd) +
+      gap;
+  }
+
+  const cardStyle = getComputedStyle(card);
+  cardBorderStart += length(cardStyle.marginInlineStart);
+  const roundedOffsetLeft = getOffsetLeftWithin(card, viewport);
+  if (roundedOffsetLeft === null) return null;
+  const fractionalLayoutDelta = cardBorderStart - roundedOffsetLeft;
+  const exactCardBorderStart = roundedOffsetLeft + fractionalLayoutDelta;
+  const cardBorderEnd = exactCardBorderStart + borderBoxWidth(cardStyle);
+
+  const snapAlign = cardStyle.scrollSnapAlign.trim().split(/\s+/);
+  const inlineAlignment = snapAlign[1] ?? snapAlign[0];
+  const snapAreaStart = exactCardBorderStart - length(cardStyle.scrollMarginInlineStart);
+  const snapAreaEnd = cardBorderEnd + length(cardStyle.scrollMarginInlineEnd);
+  const snapportStart = length(viewportStyle.scrollPaddingInlineStart);
+  const snapportEnd = viewport.clientWidth - length(viewportStyle.scrollPaddingInlineEnd);
+
+  // offsetLeft is integer-rounded by the browser. Rebuild the fractional border
+  // box start from the same track padding, item widths, margins, and flex gap so
+  // the JS position matches CSS snap's snap area without a later browser nudge.
+  const cardStart = snapAreaStart;
+  const cardEnd = snapAreaEnd;
+  let target: number;
+  if (inlineAlignment === 'end') {
+    target = cardEnd - snapportEnd;
+  } else if (inlineAlignment === 'center') {
+    target = (cardStart + cardEnd - snapportStart - snapportEnd) / 2;
+  } else if (inlineAlignment === 'start') {
+    target = cardStart - snapportStart;
+  } else {
+    return null;
+  }
+
+  return Math.min(Math.max(target, 0), Math.max(0, viewport.scrollWidth - viewport.clientWidth));
+}
+
 export function SingleProjectView({
   project,
   initialMediaKey,
   interactive = true,
+  transitionPhase = 'project',
 }: SingleProjectViewProps) {
   const allMedia = useMemo(() => project.media, [project.media]);
   const { locale } = useLanguage();
   const reducedMotion = useReducedMotionPreference();
+  const [enteredThroughRotation] = useState(() => transitionPhase === 'opening');
   const initialMediaIndex = initialMediaKey
     ? Math.max(
         0,
@@ -50,8 +152,10 @@ export function SingleProjectView({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isAtGalleryEnd, setIsAtGalleryEnd] = useState(false);
   const galleryViewportRef = useRef<HTMLDivElement>(null);
-  const lightboxCloseRef = useRef<HTMLButtonElement>(null);
+  const galleryTrackRef = useRef<HTMLDivElement>(null);
   const mediaCardRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const mediaInnerRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const visualMotionValuesRef = useRef<Array<MediaMotionTarget | undefined>>([]);
   const activePointerIdRef = useRef<number | null>(null);
   const pointerStartXRef = useRef(0);
   const scrollStartLeftRef = useRef(0);
@@ -66,6 +170,12 @@ export function SingleProjectView({
   );
   const safeCurrentImageIndex = Math.min(currentImageIndex, Math.max(filteredMedia.length - 1, 0));
   const currentMedia = filteredMedia[safeCurrentImageIndex];
+  const transitionMediaIndex = mediaFilter === 'all' ? initialMediaIndex : 0;
+  const transitionMediaStart = Math.min(
+    transitionMediaIndex,
+    Math.max(0, filteredMedia.length - 3),
+  );
+  const transitionMediaEnd = Math.min(filteredMedia.length, transitionMediaStart + 3);
 
   const mediaFilterOptions: Array<{ value: MediaFilter; label: string }> = [
     { value: 'all', label: locale === 'IT' ? 'Tutti' : 'All' },
@@ -109,18 +219,248 @@ export function SingleProjectView({
 
   useEffect(() => {
     const viewport = galleryViewportRef.current;
-    if (!viewport) return;
+    const track = galleryTrackRef.current;
+    if (!viewport || !track) return;
 
-    const frame = window.requestAnimationFrame(() => {
-      mediaCardRefs.current[safeCurrentImageIndex]?.scrollIntoView({
-        behavior: 'auto',
-        block: 'nearest',
-        inline: 'start',
+    const innerElements = mediaInnerRefs.current.slice(0, filteredMedia.length);
+    const cachedMetrics: Array<{
+      offsetLeft: number;
+      width: number;
+      offsetParent: Element | null;
+    }> = [];
+    const writtenValues: Array<MediaMotionTarget | undefined> = [];
+    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    let metricsValid = false;
+    let useCachedOffsets = false;
+    let rafId: number | null = null;
+    let lastTime = 0;
+    let forceImmediateSync = true;
+    let previousScrollLeft = viewport.scrollLeft;
+    let velocity = 0;
+
+    const setMotionValue = (
+      inner: HTMLSpanElement,
+      property: '--media-motion-x' | '--media-motion-scale' | '--media-motion-opacity',
+      value: string,
+    ) => {
+      inner.style.setProperty(property, value);
+    };
+
+    const writeMotionValues = (index: number, inner: HTMLSpanElement, next: MediaMotionTarget) => {
+      const cached = writtenValues[index];
+      const restoringNeutral =
+        next.x === 0 &&
+        next.scale === 1 &&
+        next.opacity === 1 &&
+        (cached?.x !== 0 || cached?.scale !== 1 || cached?.opacity !== 1);
+      const previous = restoringNeutral ? undefined : cached;
+      if (!previous || Math.abs(previous.x - next.x) >= MEDIA_MOTION_CONSTANTS.xEpsilon) {
+        setMotionValue(inner, '--media-motion-x', `${next.x.toFixed(3)}px`);
+      }
+      if (
+        !previous ||
+        Math.abs(previous.scale - next.scale) >= MEDIA_MOTION_CONSTANTS.scaleEpsilon
+      ) {
+        setMotionValue(inner, '--media-motion-scale', next.scale.toFixed(5));
+      }
+      if (
+        !previous ||
+        Math.abs(previous.opacity - next.opacity) >= MEDIA_MOTION_CONSTANTS.opacityEpsilon
+      ) {
+        setMotionValue(inner, '--media-motion-opacity', next.opacity.toFixed(5));
+      }
+      // Keep the actual written values so sub-epsilon steps accumulate.
+      writtenValues[index] = {
+        x:
+          !previous || Math.abs(previous.x - next.x) >= MEDIA_MOTION_CONSTANTS.xEpsilon
+            ? next.x
+            : previous.x,
+        scale:
+          !previous || Math.abs(previous.scale - next.scale) >= MEDIA_MOTION_CONSTANTS.scaleEpsilon
+            ? next.scale
+            : previous.scale,
+        opacity:
+          !previous ||
+          Math.abs(previous.opacity - next.opacity) >= MEDIA_MOTION_CONSTANTS.opacityEpsilon
+            ? next.opacity
+            : previous.opacity,
+      };
+    };
+
+    const setNeutralMotion = () => {
+      innerElements.forEach((inner, index) => {
+        if (!inner) return;
+        const neutral = { x: 0, scale: 1, opacity: 1 };
+        visualMotionValuesRef.current[index] = neutral;
+        writeMotionValues(index, inner, neutral);
       });
-    });
+    };
 
-    return () => window.cancelAnimationFrame(frame);
-  }, [safeCurrentImageIndex, filteredMedia.length, project.slug]);
+    if (reducedMotion) {
+      setNeutralMotion();
+      return;
+    }
+
+    const invalidateMetrics = () => {
+      metricsValid = false;
+      queueGalleryMotionUpdate();
+    };
+
+    const refreshMetrics = () => {
+      const cards = mediaCardRefs.current.slice(0, filteredMedia.length);
+      if (cards.length !== filteredMedia.length || cards.some((card) => !card)) return false;
+
+      cachedMetrics.length = 0;
+      const parents = cards.map((card) => card?.offsetParent ?? null);
+      const commonOffsetParent = parents[0];
+      const stableOffsetParent =
+        commonOffsetParent === track &&
+        parents.every((parent) => parent === commonOffsetParent) &&
+        window.getComputedStyle(track).transform === 'none';
+      cards.forEach((card) => {
+        if (!card) return;
+        cachedMetrics.push({
+          offsetLeft: card.offsetLeft,
+          width: card.offsetWidth,
+          offsetParent: card.offsetParent,
+        });
+      });
+      useCachedOffsets = stableOffsetParent && cachedMetrics.every((metric) => metric.width > 0);
+      metricsValid = true;
+      return true;
+    };
+
+    const getCardRect = (index: number, coordinateParentRect: DOMRect): MediaMotionRect | null => {
+      const card = mediaCardRefs.current[index];
+      if (!card) return null;
+      const metric = cachedMetrics[index];
+      if (useCachedOffsets && metric) {
+        const left = coordinateParentRect.left + metric.offsetLeft;
+        return { left, right: left + metric.width, top: 0, bottom: 0 };
+      }
+      const rect = card.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+    };
+
+    const updateGalleryMotion = (time: number) => {
+      rafId = null;
+      if (document.visibilityState === 'hidden') return;
+
+      const viewportRect = viewport.getBoundingClientRect();
+      if (viewport.clientWidth <= 0 || viewportRect.width <= 0) return;
+      if (!metricsValid && !refreshMetrics()) return;
+
+      const coordinateParent = useCachedOffsets ? cachedMetrics[0]?.offsetParent : null;
+      const coordinateParentRect =
+        coordinateParent?.getBoundingClientRect() ?? track.getBoundingClientRect();
+      const deltaTime = lastTime === 0 ? 1000 / 60 : Math.min(time - lastTime, 64);
+      lastTime = time;
+      const scrollDelta = viewport.scrollLeft - previousScrollLeft;
+      previousScrollLeft = viewport.scrollLeft;
+      const measuredVelocity = forceImmediateSync
+        ? 0
+        : Math.max(-4500, Math.min(4500, (scrollDelta * 1000) / Math.max(deltaTime, 1)));
+      const velocityAlpha =
+        1 - Math.exp((-MEDIA_MOTION_CONSTANTS.velocityLambda * deltaTime) / 1000);
+      velocity = forceImmediateSync ? 0 : velocity + (measuredVelocity - velocity) * velocityAlpha;
+      if (Math.abs(velocity) < MEDIA_MOTION_CONSTANTS.velocityEpsilon && scrollDelta === 0)
+        velocity = 0;
+      const config = getMediaMotionConfig(mobileQuery.matches);
+      const alpha = forceImmediateSync ? 1 : getMotionAlpha(deltaTime);
+      let allSettled = velocity === 0;
+
+      innerElements.forEach((inner, index) => {
+        if (!inner) return;
+        const cardRect = getCardRect(index, coordinateParentRect);
+        if (!cardRect) return;
+        const metrics = getMediaViewportMetrics(cardRect, {
+          left: viewportRect.left,
+          right: viewportRect.right,
+          top: viewportRect.top,
+          bottom: viewportRect.bottom,
+        });
+        const target = getMediaMotionTarget(metrics, config, velocity);
+        const current = visualMotionValuesRef.current[index] ?? target;
+        const next = forceImmediateSync
+          ? target
+          : {
+              x: current.x + (target.x - current.x) * alpha,
+              scale: current.scale + (target.scale - current.scale) * alpha,
+              opacity: current.opacity + (target.opacity - current.opacity) * alpha,
+            };
+        const settled = {
+          x: Math.abs(next.x - target.x) < MEDIA_MOTION_CONSTANTS.xEpsilon,
+          scale: Math.abs(next.scale - target.scale) < MEDIA_MOTION_CONSTANTS.scaleEpsilon,
+          opacity: Math.abs(next.opacity - target.opacity) < MEDIA_MOTION_CONSTANTS.opacityEpsilon,
+        };
+        const snapped = settled.x && settled.scale && settled.opacity ? target : next;
+        visualMotionValuesRef.current[index] = snapped;
+        writeMotionValues(index, inner, snapped);
+        if (!settled.x || !settled.scale || !settled.opacity) allSettled = false;
+      });
+
+      forceImmediateSync = false;
+      if (!allSettled) queueGalleryMotionUpdate();
+      else lastTime = 0;
+    };
+
+    function queueGalleryMotionUpdate() {
+      if (rafId !== null || document.visibilityState === 'hidden') return;
+      rafId = window.requestAnimationFrame(updateGalleryMotion);
+    }
+
+    const handleScroll = () => queueGalleryMotionUpdate();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (rafId !== null) window.cancelAnimationFrame(rafId);
+        rafId = null;
+        lastTime = 0;
+        return;
+      }
+      forceImmediateSync = true;
+      invalidateMetrics();
+    };
+
+    const resizeObserver = new ResizeObserver(invalidateMetrics);
+    resizeObserver.observe(viewport);
+    resizeObserver.observe(track);
+    viewport.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    queueGalleryMotionUpdate();
+
+    return () => {
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+      viewport.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      resizeObserver.disconnect();
+      visualMotionValuesRef.current = [];
+    };
+  }, [filteredMedia, project.slug, reducedMotion]);
+
+  useLayoutEffect(() => {
+    const viewport = galleryViewportRef.current;
+    const track = galleryTrackRef.current;
+    if (!viewport || !track) return;
+
+    const card = mediaCardRefs.current[mediaFilter === 'all' ? initialMediaIndex : 0];
+    if (card) {
+      const cards = mediaCardRefs.current
+        .slice(0, filteredMedia.length)
+        .filter((item): item is HTMLButtonElement => Boolean(item));
+      const target = getHorizontalSnapTarget(viewport, track, card, cards);
+      if (target !== null) viewport.scrollTo({ left: target, behavior: 'instant' });
+    }
+  }, [initialMediaIndex, mediaFilter, filteredMedia.length, project.slug]);
+
+  const galleryEntrance = useProjectGalleryEntrance(
+    galleryViewportRef,
+    mediaCardRefs,
+    transitionPhase,
+    reducedMotion,
+    mediaFilter,
+    transitionPhase === 'project',
+    enteredThroughRotation,
+  );
 
   const scrollByCard = useCallback((direction: 'next' | 'previous') => {
     const viewport = galleryViewportRef.current;
@@ -179,6 +519,24 @@ export function SingleProjectView({
       viewport.releasePointerCapture(event.pointerId);
   };
 
+  useEffect(() => {
+    const cancelPointerDrag = () => {
+      const viewport = galleryViewportRef.current;
+      const pointerId = activePointerIdRef.current;
+      if (pointerId !== null && viewport?.hasPointerCapture(pointerId)) {
+        viewport.releasePointerCapture(pointerId);
+      }
+      activePointerIdRef.current = null;
+      isDraggingRef.current = false;
+      hasDraggedRef.current = false;
+      suppressClickRef.current = false;
+      setIsDragging(false);
+    };
+
+    window.addEventListener('blur', cancelPointerDrag);
+    return () => window.removeEventListener('blur', cancelPointerDrag);
+  }, []);
+
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     const viewport = galleryViewportRef.current;
     if (!viewport) return;
@@ -191,36 +549,10 @@ export function SingleProjectView({
     viewport.scrollBy({ left: delta, behavior: 'auto' });
   };
 
-  useEffect(() => {
-    if (!lightboxOpen) return;
-    const previousFocus =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    lightboxCloseRef.current?.focus();
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setLightboxOpen(false);
-      if (event.key === 'ArrowLeft' && filteredMedia.length > 1) {
-        event.preventDefault();
-        setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : filteredMedia.length - 1));
-      }
-      if (event.key === 'ArrowRight' && filteredMedia.length > 1) {
-        event.preventDefault();
-        setCurrentImageIndex((prev) => (prev < filteredMedia.length - 1 ? prev + 1 : 0));
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      if (previousFocus?.isConnected) previousFocus.focus();
-    };
-  }, [filteredMedia.length, lightboxOpen]);
-
-  const handleLightboxClose = () => {
-    setLightboxOpen(false);
-  };
-
   const handleMediaFilterChange = (nextFilter: MediaFilter) => {
     galleryViewportRef.current?.scrollTo({ left: 0, behavior: 'auto' });
     mediaCardRefs.current = [];
+    mediaInnerRefs.current = [];
     setCurrentImageIndex(0);
     setLightboxOpen(false);
     setMediaFilter(nextFilter);
@@ -245,14 +577,19 @@ export function SingleProjectView({
       <div
         className={`single-project-view${interactive ? ' is-project-ready' : ' is-transitioning'}`}
         data-project-transition-shell
+        data-project-transition-phase={transitionPhase}
+        data-gallery-entrance={galleryEntrance}
+        data-entered-through-rotation={enteredThroughRotation}
         data-project-content-visible={interactive}
         data-motion-project-surface
       >
         <div className="single-project-content">
           <div className="project-media-gallery" data-project-transition-target={project.slug}>
-            <div className="project-media-gallery-header" data-motion-text data-motion-order="8">
+            <div className="project-media-gallery-header">
               <nav
                 className="filter-bar project-media-filter"
+                data-motion-text
+                data-motion-order="-1"
                 aria-label={locale === 'IT' ? 'Filtra media progetto' : 'Filter project media'}
               >
                 <div className="filter-bar-summary">
@@ -310,12 +647,14 @@ export function SingleProjectView({
                 <button
                   type="button"
                   className="project-media-scroll-hint"
+                  data-motion-text
+                  data-motion-order="8"
                   onClick={handleGalleryBack}
                 >
                   {locale === 'IT' ? 'Indietro ←' : 'Back ←'}
                 </button>
               ) : (
-                <span className="project-media-scroll-hint">
+                <span className="project-media-scroll-hint" data-motion-text data-motion-order="8">
                   {locale === 'IT' ? 'Scorri per esplorare →' : 'Scroll to explore →'}
                 </span>
               )}
@@ -348,16 +687,12 @@ export function SingleProjectView({
             >
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
+                  ref={galleryTrackRef}
                   key={mediaFilter}
                   className="project-media-gallery-track"
-                  initial={
-                    reducedMotion
-                      ? { opacity: 1 }
-                      : { opacity: 0.72, y: 14, clipPath: 'inset(0 0 100% 0)' }
-                  }
+                  initial={false}
                   animate={{
                     opacity: 1,
-                    y: 0,
                     clipPath: 'inset(0 0 0% 0)',
                     pointerEvents: 'auto',
                   }}
@@ -366,16 +701,18 @@ export function SingleProjectView({
                       ? { opacity: 1, pointerEvents: 'none' }
                       : {
                           opacity: 0.72,
-                          y: -10,
                           clipPath: 'inset(0 0 100% 0)',
                           pointerEvents: 'none',
                         }
                   }
                   transition={{ duration: reducedMotion ? 0 : 0.55, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ transformOrigin: 'left top' }}
                 >
                   {filteredMedia.map((media, index) => {
                     const isVideo = media.type === 'vimeo';
+                    const isTransitionMedia =
+                      enteredThroughRotation &&
+                      index >= transitionMediaStart &&
+                      index < transitionMediaEnd;
                     const previewSrc = isVideo
                       ? media.thumbnailSrc || getVimeoThumbnailUrl(media.src)
                       : media.src;
@@ -390,7 +727,7 @@ export function SingleProjectView({
                         : '61 / 40';
 
                     return (
-                      <motion.button
+                      <button
                         type="button"
                         key={media.key}
                         ref={(element) => {
@@ -408,42 +745,47 @@ export function SingleProjectView({
                           }
                           handleMediaClick(index);
                         }}
-                        initial={reducedMotion ? false : { opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: reducedMotion ? 0 : 0.44,
-                          delay: reducedMotion ? 0 : Math.min(index, 8) * 0.035,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
                       >
-                        <span
-                          className="project-media-card-frame"
-                          style={{ aspectRatio: mediaAspectRatio }}
-                        >
-                          {previewSrc ? (
-                            <img
-                              src={previewSrc}
-                              {...(!isVideo
-                                ? getSanityImageSources(previewSrc, dimensions?.width)
-                                : {})}
-                              alt={media.alt}
-                              className="project-media-card-image"
-                              draggable={false}
-                              width={dimensions?.width ?? (isVideo ? 1280 : undefined)}
-                              height={dimensions?.height ?? (isVideo ? 720 : undefined)}
-                              loading={index === 0 ? 'eager' : 'lazy'}
-                              decoding="async"
-                              fetchPriority={index === 0 ? 'high' : 'auto'}
-                              onDragStart={(event) => event.preventDefault()}
-                            />
-                          ) : (
-                            <span className="project-media-card-fallback">
-                              Video preview unavailable
+                        <span className="project-media-card-depth">
+                          <span
+                            ref={(element) => {
+                              mediaInnerRefs.current[index] = element;
+                            }}
+                            className="project-media-card-inner"
+                          >
+                            <span
+                              className="project-media-card-frame"
+                              style={{ aspectRatio: mediaAspectRatio }}
+                            >
+                              {previewSrc ? (
+                                <img
+                                  src={previewSrc}
+                                  {...getSanityImageSources(previewSrc, dimensions?.width)}
+                                  alt={media.alt}
+                                  className="project-media-card-image"
+                                  draggable={false}
+                                  width={dimensions?.width ?? (isVideo ? 1280 : undefined)}
+                                  height={dimensions?.height ?? (isVideo ? 720 : undefined)}
+                                  data-transition-media={isTransitionMedia ? '' : undefined}
+                                  loading={
+                                    isTransitionMedia || index === initialMediaIndex
+                                      ? 'eager'
+                                      : 'lazy'
+                                  }
+                                  decoding="async"
+                                  fetchPriority={index === transitionMediaIndex ? 'high' : 'auto'}
+                                  onDragStart={(event) => event.preventDefault()}
+                                />
+                              ) : (
+                                <span className="project-media-card-fallback">
+                                  Video preview unavailable
+                                </span>
+                              )}
                             </span>
-                          )}
+                            <span className="project-media-card-name">[{getImageName(media)}]</span>
+                          </span>
                         </span>
-                        <span className="project-media-card-name">[{getImageName(media)}]</span>
-                      </motion.button>
+                      </button>
                     );
                   })}
                 </motion.div>
@@ -457,64 +799,20 @@ export function SingleProjectView({
       {lightboxOpen &&
         interactive &&
         createPortal(
-          // The dialog backdrop click is supplementary to its native close button and Escape handler.
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
-          <div
-            className="lightbox"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${project.title} media viewer`}
-            onClick={(event) => {
-              if (event.target === event.currentTarget) handleLightboxClose();
-            }}
-          >
-            <button
-              ref={lightboxCloseRef}
-              className="lightbox-close"
-              aria-label="Close lightbox"
-              onClick={(event) => {
-                event.stopPropagation();
-                handleLightboxClose();
-              }}
-            >
-              [close x]
-            </button>
-            <button
-              className="lightbox-prev"
-              aria-label="Previous image"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : filteredMedia.length - 1));
-              }}
-            >
-              &lt;
-            </button>
-            <button
-              className="lightbox-next"
-              aria-label="Next image"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentImageIndex((prev) => (prev < filteredMedia.length - 1 ? prev + 1 : 0));
-              }}
-            >
-              &gt;
-            </button>
-            <div className="lightbox-content" key={currentMedia.key}>
-              {currentMedia.type === 'vimeo' ? (
-                <iframe
-                  src={getVimeoEmbedUrl(currentMedia.src)}
-                  title="Vimeo video"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  frameBorder="0"
-                  className="lightbox-video"
-                />
-              ) : (
-                <img src={currentMedia.src} alt={currentMedia.alt} className="lightbox-image" />
-              )}
-              <div className="lightbox-name">[{getImageName(currentMedia)}]</div>
-            </div>
-          </div>,
+          <ProjectMediaLightbox
+            media={currentMedia}
+            label={getImageName(currentMedia)}
+            title={project.title}
+            source={mediaCardRefs.current[safeCurrentImageIndex]?.querySelector('img') ?? null}
+            reducedMotion={reducedMotion}
+            onClose={() => setLightboxOpen(false)}
+            onPrevious={() =>
+              setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : filteredMedia.length - 1))
+            }
+            onNext={() =>
+              setCurrentImageIndex((prev) => (prev < filteredMedia.length - 1 ? prev + 1 : 0))
+            }
+          />,
           document.body,
         )}
     </>

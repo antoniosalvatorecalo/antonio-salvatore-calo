@@ -1,6 +1,14 @@
 .portfolio-scene {
   --scene-depth: 50vw;
   --scene-angle: 0deg;
+  /* One shared progress signal drives both the 3D turn and the route curtain.
+     On entry the photos uncover from top to bottom during the final 45%
+     of the turn. On exit they cover bottom-to-top during roughly the first
+     34% of the reverse turn, matching the previous 620ms feel. */
+  --project-route-reveal: clamp(0, calc((var(--scene-progress, 0) - 0.55) * 2.222222), 1);
+  --project-route-open-covered: calc((1 - var(--project-route-reveal)) * 100%);
+  --project-route-close-progress: clamp(0, calc((1 - var(--scene-progress, 1)) * 2.903226), 1);
+  --project-route-close-covered: calc(var(--project-route-close-progress) * 100%);
   position: fixed;
   inset: 0;
   overflow: clip;

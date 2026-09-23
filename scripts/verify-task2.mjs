@@ -192,7 +192,7 @@ try {
     (await page.locator('[data-project-id="newsquest"]').count()) === 6,
     'Expected 6 Sanity Newsquest media in the grid.',
   );
-  await page.locator('a[href^="mailto:"]').first().waitFor();
+  await page.getByRole('button', { name: 'Copy email address' }).waitFor();
   assert(
     (await page.title()).includes('Antonio Salvatore Calò'),
     'Global CMS SEO title was not applied.',
@@ -458,6 +458,121 @@ try {
   );
   await motionPage.goto(baseURL);
   await motionPage.locator('.gallery-grid').waitFor();
+  const readGalleryRevealState = () =>
+    motionPage.evaluate(() => {
+      const item = document.querySelector('.gallery-grid-item');
+      const reveal = document.querySelector('.gallery-media-reveal');
+      if (!item || !reveal) throw new Error('Gallery reveal wrapper is missing.');
+      const style = getComputedStyle(reveal);
+      const itemRect = item.getBoundingClientRect();
+      const clipValues = style.clipPath.match(/-?\d*\.?\d+/g)?.map(Number) ?? [];
+      const isFullyOpen =
+        clipValues.length > 0 && clipValues.every((value) => Math.abs(value) < 0.01);
+      return {
+        animationName: style.animationName,
+        animationDelay: style.animationDelay,
+        clipPath: style.clipPath,
+        isFullyOpen,
+        opacity: style.opacity,
+        transform: style.transform,
+        itemRect: {
+          x: itemRect.x,
+          y: itemRect.y,
+          width: itemRect.width,
+          height: itemRect.height,
+        },
+        pseudoContent: getComputedStyle(item, '::after').content,
+      };
+    });
+  const initialRevealState = await readGalleryRevealState();
+  assert(
+    !initialRevealState.isFullyOpen,
+    'Gallery media was fully visible before intro completion.',
+  );
+  assert(
+    initialRevealState.pseudoContent === 'none',
+    'The legacy per-card gallery curtain is still present.',
+  );
+  const initialItemRects = await motionPage.locator('.gallery-grid-item').evaluateAll((items) =>
+    items.slice(0, 5).map((item) => {
+      const rect = item.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    }),
+  );
+  await motionPage.evaluate(() => {
+    document.documentElement.dataset.introComplete = 'true';
+  });
+  const delayedRevealState = await motionPage
+    .locator('.gallery-media-reveal')
+    .nth(1)
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      const clipValues = style.clipPath.match(/-?\d*\.?\d+/g)?.map(Number) ?? [];
+      return {
+        animationDelay: style.animationDelay,
+        clipPath: style.clipPath,
+        isFullyOpen: clipValues.length > 0 && clipValues.every((value) => Math.abs(value) < 0.01),
+      };
+    });
+  const delayMs = Number.parseFloat(delayedRevealState.animationDelay) * 1000;
+  assert(delayMs > 0, 'Gallery reveal delay is not applied to staggered media.');
+  assert(!delayedRevealState.isFullyOpen, 'Gallery media opened prematurely at animation start.');
+  await motionPage.waitForTimeout(Math.max(1, Math.min(delayMs / 2, 40)));
+  const duringDelayState = await motionPage
+    .locator('.gallery-media-reveal')
+    .nth(1)
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      const clipValues = style.clipPath.match(/-?\d*\.?\d+/g)?.map(Number) ?? [];
+      return {
+        clipPath: style.clipPath,
+        isFullyOpen: clipValues.length > 0 && clipValues.every((value) => Math.abs(value) < 0.01),
+      };
+    });
+  assert(!duringDelayState.isFullyOpen, 'Gallery media opened during animation delay.');
+  await motionPage.waitForTimeout(delayMs + 700);
+  const finalRevealState = await readGalleryRevealState();
+  assert(finalRevealState.isFullyOpen, 'Gallery media did not reach the fully open clip state.');
+  const finalItemRects = await motionPage.locator('.gallery-grid-item').evaluateAll((items) =>
+    items.slice(0, 5).map((item) => {
+      const rect = item.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    }),
+  );
+  initialItemRects.forEach((initialRect, index) => {
+    const finalRect = finalItemRects[index];
+    assert(finalRect, `Missing final gallery rect at index ${index}.`);
+    for (const key of ['x', 'y', 'width', 'height']) {
+      assert(
+        Math.abs(initialRect[key] - finalRect[key]) <= 1,
+        `Gallery card geometry shifted beyond 1px for ${key} at index ${index}.`,
+      );
+    }
+  });
+  for (const viewport of [
+    { width: 268, height: 582 },
+    { width: 375, height: 812 },
+    { width: 390, height: 844 },
+    { width: 1440, height: 900 },
+  ]) {
+    await motionPage.setViewportSize(viewport);
+    await motionPage.goto(baseURL);
+    await motionPage.locator('.gallery-grid').waitFor();
+    const breakpointInitial = await readGalleryRevealState();
+    assert(
+      !breakpointInitial.isFullyOpen,
+      `Media was open before intro at ${viewport.width}x${viewport.height}.`,
+    );
+    await motionPage.evaluate(() => {
+      document.documentElement.dataset.introComplete = 'true';
+    });
+    await motionPage.waitForTimeout(1400);
+    const breakpointFinal = await readGalleryRevealState();
+    assert(
+      breakpointFinal.isFullyOpen,
+      `Media did not reach the open clip state at ${viewport.width}x${viewport.height}.`,
+    );
+  }
   assert(
     (await motionPage.locator('iframe[src*="player.vimeo.com"]').count()) === 0,
     'Vimeo iframe mounted before user intent.',
@@ -482,6 +597,55 @@ try {
     await videoPreview.hover();
     await motionPage.locator('iframe[src*="player.vimeo.com"]').first().waitFor();
   }
+  const reducedContext = await browser.newContext({ reducedMotion: 'reduce' });
+  const reducedPage = await reducedContext.newPage();
+  await reducedPage.route('**/data/query/production?**', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ result: sanityResultFor(route.request().url()), ms: 1 }),
+    }),
+  );
+  await reducedPage.route('https://cdn.sanity.io/images/**', (route) =>
+    route.fulfill({
+      contentType: 'image/png',
+      body: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        'base64',
+      ),
+    }),
+  );
+  await reducedPage.goto(baseURL);
+  await reducedPage.locator('.gallery-grid').waitFor();
+  await reducedPage.evaluate(() => {
+    document.documentElement.dataset.introComplete = 'true';
+  });
+  await reducedPage.waitForTimeout(100);
+  const reducedRevealState = await reducedPage
+    .locator('.gallery-media-reveal')
+    .first()
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      const clipValues = style.clipPath.match(/-?\d*\.?\d+/g)?.map(Number) ?? [];
+      return {
+        animationName: style.animationName,
+        clipPath: style.clipPath,
+        isFullyOpen: clipValues.length > 0 && clipValues.every((value) => Math.abs(value) < 0.01),
+        opacity: style.opacity,
+        transform: style.transform,
+      };
+    });
+  assert(
+    reducedRevealState.animationName === 'none',
+    'Reduced motion did not disable gallery animation.',
+  );
+  assert(reducedRevealState.isFullyOpen, 'Reduced motion did not open gallery media immediately.');
+  assert(reducedRevealState.opacity === '1', 'Reduced motion changed gallery media opacity.');
+  assert(
+    reducedRevealState.transform === 'none',
+    'Reduced motion left a gallery media transform active.',
+  );
+  await reducedContext.close();
   await motionPage.locator('[data-project-id="bugonia"]').first().click();
   await motionPage.waitForURL('**/projects/bugonia');
   assert(

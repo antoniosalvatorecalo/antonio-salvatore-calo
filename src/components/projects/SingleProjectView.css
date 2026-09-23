@@ -12,8 +12,14 @@
   overscroll-behavior-y: contain;
 }
 
+/* The project controls must not appear alone on the rotating, incoming plane.
+   At the endpoint the shared text timeline reveals them alongside the photos. */
+html:not([data-intro-complete='true']) .project-media-gallery-header,
+.portfolio-scene[data-transition-phase='opening'] .project-media-gallery-header {
+  visibility: hidden;
+}
+
 .single-project-content {
-  --project-layout-header-height: var(--site-header-height, var(--header-height));
   --project-header-separation: var(--space-2);
   --project-carousel-top-gap: 0px;
   width: 100%;
@@ -23,7 +29,8 @@
   align-items: flex-start;
   justify-content: center;
   padding: calc(
-      var(--project-layout-header-height) + var(--space-6) + clamp(0.75rem, 2vh, 1.5rem) +
+      var(--project-layout-header-height, var(--site-header-height, var(--header-height))) +
+        var(--space-6) + clamp(0.75rem, 2vh, 1.5rem) +
         var(--project-carousel-top-gap)
     )
     var(--space-4) var(--space-8);
@@ -60,8 +67,10 @@
 @media (min-width: 1024px) {
   .single-project-content {
     /* Follow the measured header when credits or links expand. */
-    --project-layout-header-height: var(--site-header-height, var(--header-height));
-    padding-top: calc(var(--project-layout-header-height) + var(--project-header-separation));
+    padding-top: calc(
+      var(--project-layout-header-height, var(--site-header-height, var(--header-height))) +
+        var(--project-header-separation)
+    );
     padding-right: var(--space-6);
     padding-left: var(--space-6);
   }
@@ -104,7 +113,8 @@
   max-height: max(
     12rem,
     calc(
-      100svh - var(--project-layout-header-height) - var(--project-carousel-top-gap) -
+      100svh - var(--project-layout-header-height, var(--site-header-height, var(--header-height))) -
+        var(--project-carousel-top-gap) -
         var(--space-8) - var(--space-8) - 24px
     )
   );
@@ -289,7 +299,8 @@
   .single-project-content {
     --project-mobile-details-reserve: clamp(1rem, 3vh, 2rem);
     padding: calc(
-        var(--site-header-height, 320px) + var(--project-mobile-details-reserve) + var(--space-4) +
+        var(--project-layout-header-height, var(--site-header-height, 320px)) +
+        var(--project-mobile-details-reserve) + var(--space-4) +
           clamp(0.5rem, 1.25vh, 0.75rem)
       )
       var(--space-3) clamp(1rem, 3vh, 1.5rem);
@@ -319,7 +330,10 @@
     width: 100%;
     flex: 1 1 auto;
     min-height: 0;
-    max-height: calc(100dvh - var(--site-header-height, 320px) - var(--space-8));
+    max-height: calc(
+      100dvh - var(--project-layout-header-height, var(--site-header-height, 320px)) -
+        var(--space-8)
+    );
     overflow: hidden;
   }
 
@@ -507,6 +521,7 @@
 
 .project-media-gallery-viewport.is-dragging {
   cursor: grabbing;
+  scroll-behavior: auto;
   scroll-snap-type: none;
   user-select: none;
   -webkit-user-select: none;
@@ -522,11 +537,11 @@
 }
 
 .project-media-gallery-track {
+  position: relative;
   display: flex;
   gap: var(--project-gallery-gap);
   width: max-content;
   padding: 0 var(--project-gallery-padding) 1.25rem;
-  will-change: opacity, transform;
 }
 
 .project-media-card {
@@ -551,12 +566,211 @@
   width: auto;
   height: min(
     clamp(300px, 44vh, 560px),
-    calc(100dvh - var(--project-layout-header-height) - var(--project-carousel-top-gap) - 3rem)
+    calc(
+      100dvh - var(--project-layout-header-height, var(--site-header-height, var(--header-height))) -
+        var(--project-carousel-top-gap) - 3rem
+    )
   );
   min-width: 0;
   max-width: calc(100vw - (2 * var(--project-gallery-padding)));
   overflow: hidden;
   background: var(--bg-primary);
+}
+
+.project-media-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transform-origin: center bottom;
+  transform: translateX(var(--media-motion-x, 0px)) scale(var(--media-motion-scale, 1));
+  opacity: var(--media-motion-opacity, 1);
+}
+
+.project-media-card-depth {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transform-origin: center center;
+}
+
+.single-project-view {
+  --project-reveal-duration: 850ms;
+  --project-settle-duration: 1100ms;
+  --project-settle-scale: 1.045;
+  --project-settle-y: -12px;
+  --project-depth-y: 4deg;
+  --project-depth-x: 1.5deg;
+  --project-depth-z: -12px;
+  --project-reveal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --project-gallery-arrival: clamp(0, calc((var(--scene-progress, 1) - 0.55) * 2.222222), 1);
+  --project-reveal-covered: 100%;
+}
+
+.project-media-card-frame {
+  clip-path: inset(0);
+}
+
+/* Keep every photo fully covered until the scene is front-on. */
+.single-project-view[data-gallery-entrance='pending'] .project-media-card-frame {
+  clip-path: inset(0 0 var(--project-reveal-covered) 0);
+}
+
+.single-project-view[data-gallery-entrance='pending'] .project-media-card-name {
+  opacity: 0;
+}
+
+/* Route entry is not a second CSS animation anymore. The same --scene-progress
+   that rotates the two planes opens the curtain from top to bottom, so the
+   project never closes again at the handoff. Direct project loads still use
+   the standalone keyframe entrance below. */
+.single-project-view[data-entered-through-rotation='true'][data-project-transition-phase='opening']
+  .project-media-card-frame {
+  animation: none;
+  clip-path: inset(0 0 var(--project-route-open-covered) 0);
+  transition: none;
+  will-change: clip-path;
+}
+
+.single-project-view[data-gallery-entrance='playing']
+  :where(.project-media-card[data-entrance-visible='true'])
+  .project-media-card-frame {
+  animation: project-media-reveal var(--project-reveal-duration) var(--project-reveal-ease)
+    var(--project-reveal-delay, 0ms) both;
+}
+
+.single-project-view[data-gallery-entrance='playing']
+  :where(.project-media-card[data-entrance-visible='true'])
+  .project-media-card-image {
+  transform-origin: center top;
+  animation: project-media-settle var(--project-settle-duration) var(--project-reveal-ease)
+    var(--project-reveal-delay, 0ms) both;
+}
+
+.single-project-view[data-gallery-entrance='playing']
+  :where(.project-media-card[data-entrance-visible='true'])
+  .project-media-card-name {
+  animation: project-media-label-in 320ms ease-out calc(var(--project-reveal-delay, 0ms) + 300ms)
+    both;
+}
+
+@keyframes project-media-reveal {
+  from {
+    clip-path: inset(0 0 var(--project-reveal-covered) 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+.single-project-view[data-gallery-entrance='playing']
+  :where(.project-media-card[data-entrance-visible='true'])
+  .project-media-card-depth {
+  animation: project-media-depth var(--project-settle-duration) var(--project-reveal-ease)
+    var(--project-reveal-delay, 0ms) both;
+}
+
+@keyframes project-media-depth {
+  from {
+    transform: perspective(1600px) translateZ(var(--project-depth-z))
+      rotateY(var(--project-depth-y)) rotateX(var(--project-depth-x));
+  }
+  to {
+    transform: perspective(1600px) translateZ(0) rotateY(0) rotateX(0);
+  }
+}
+
+@keyframes project-media-settle {
+  from {
+    transform: translateY(var(--project-settle-y)) scale(var(--project-settle-scale));
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes project-media-label-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The composition expands with the 3D turn, then reveals front-on. */
+.single-project-view[data-entered-through-rotation='true'][data-project-transition-phase='opening']
+  .project-media-gallery-track {
+  transform-origin: var(--project-gallery-origin, 0px) center;
+  transform: scale(
+    calc(
+      var(--project-gallery-fit, 1) + (1 - var(--project-gallery-fit, 1)) *
+        var(--project-gallery-arrival)
+    )
+  );
+}
+
+.single-project-view[data-project-transition-phase='opening'] .project-media-gallery-viewport {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+
+.single-project-view[data-entered-through-rotation='true'][data-project-transition-phase='opening']
+  .project-media-card-depth {
+  animation: none;
+  transform: perspective(1600px)
+    translateZ(calc(var(--project-depth-z) * (1 - var(--project-gallery-arrival))))
+    rotateY(calc(var(--project-depth-y) * (1 - var(--project-gallery-arrival))))
+    rotateX(calc(var(--project-depth-x) * (1 - var(--project-gallery-arrival))));
+}
+
+.single-project-view[data-entered-through-rotation='true'][data-project-transition-phase='opening']
+  .project-media-card-image {
+  animation: none;
+  transform-origin: center top;
+  transform: translateY(calc(var(--project-settle-y) * (1 - var(--project-gallery-arrival))))
+    scale(calc(1 + (var(--project-settle-scale) - 1) * (1 - var(--project-gallery-arrival))));
+}
+
+.single-project-view[data-entered-through-rotation='true'][data-project-transition-phase='opening']
+  .project-media-card-name {
+  animation: none;
+  opacity: var(--project-route-reveal);
+}
+
+/* Reverse curtain: keep the existing bottom-to-top direction, but bind its
+   progress to the reverse 3D turn instead of a separate 620ms CSS clock.
+   This also makes interrupted Back/Forward navigation continuous. */
+.single-project-view[data-project-transition-phase='closing'] .project-media-card-frame {
+  animation: none;
+  clip-path: inset(0 0 var(--project-route-close-covered) 0);
+  transition: none;
+  will-change: clip-path;
+}
+
+.single-project-view[data-project-transition-phase='closing'] .project-media-card-name {
+  animation: none;
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+
+html[data-motion='reduced'] .single-project-view .project-media-card-frame {
+  animation: none;
+  clip-path: inset(0);
+  transition: none;
+}
+
+html[data-motion='reduced'] .single-project-view .project-media-card-image,
+html[data-motion='reduced'] .single-project-view .project-media-card-depth {
+  animation: none;
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+html[data-motion='reduced'] .single-project-view .project-media-card-name {
+  animation: none;
+  opacity: 1;
+  transition: none;
 }
 
 .project-media-card-image {
@@ -591,32 +805,22 @@
   overflow-wrap: anywhere;
 }
 
-.project-media-card:hover .project-media-card-image,
-.project-media-card:focus-visible .project-media-card-image {
-  transform: scale(1.015);
-}
-
-.project-media-card-image {
-  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 .project-media-card:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 5px;
 }
 
-@keyframes project-media-card-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (max-width: 767px) {
+  .single-project-view {
+    --project-reveal-duration: 700ms;
+    --project-settle-duration: 850ms;
+    --project-settle-scale: 1.025;
+    --project-settle-y: -6px;
+    --project-depth-y: 2deg;
+    --project-depth-x: 0.75deg;
+    --project-depth-z: -6px;
+  }
+
   .project-media-gallery-header {
     align-items: baseline;
     gap: 0.75rem;
@@ -693,7 +897,8 @@
     height: auto;
     min-width: min(78vw, 22rem);
     max-height: calc(
-      100dvh - var(--site-header-height, 320px) - var(--project-mobile-details-reserve) -
+      100dvh - var(--project-layout-header-height, var(--site-header-height, 320px)) -
+        var(--project-mobile-details-reserve) -
         var(--space-8)
     );
     aspect-ratio: 61 / 40 !important;
@@ -705,14 +910,20 @@
   .project-media-card:nth-child(3n + 2) .project-media-card-frame {
     height: min(
       clamp(260px, 37vh, 470px),
-      calc(100dvh - var(--project-layout-header-height) - var(--project-carousel-top-gap) - 3rem)
+      calc(
+        100dvh - var(--project-layout-header-height, var(--site-header-height, var(--header-height))) -
+          var(--project-carousel-top-gap) - 3rem
+      )
     );
   }
 
   .project-media-card:nth-child(3n) .project-media-card-frame {
     height: min(
       clamp(340px, 50vh, 620px),
-      calc(100dvh - var(--project-layout-header-height) - var(--project-carousel-top-gap) - 3rem)
+      calc(
+        100dvh - var(--project-layout-header-height, var(--site-header-height, var(--header-height))) -
+          var(--project-carousel-top-gap) - 3rem
+      )
     );
   }
 }
@@ -722,127 +933,130 @@
     scroll-behavior: auto;
   }
 
-  .project-media-card,
-  .project-media-card-image,
-  .project-media-gallery-viewport {
+  .single-project-view[data-gallery-entrance] .project-media-card-image,
+  .single-project-view[data-gallery-entrance] .project-media-card-depth {
     animation: none;
+    transform: none;
+  }
+
+  html[data-intro-complete]
+    .single-project-view[data-project-content-visible]
+    .project-media-card-frame {
+    animation: none;
+    clip-path: inset(0);
     transition: none;
+  }
+  html[data-intro-complete]
+    .single-project-view[data-project-content-visible]
+    .project-media-card-name {
+    animation: none;
+    opacity: 1;
+    transition: none;
+  }
+
+  .project-media-card-inner,
+  .project-media-gallery-viewport {
+    transition: none;
+  }
+
+  .project-media-card-inner {
+    --media-motion-x: 0px;
+    --media-motion-scale: 1;
+    --media-motion-opacity: 1;
   }
 }
 
-/* Lightbox */
+/* The viewer grows from the selected thumbnail without changing its aspect ratio. */
 .lightbox {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(56px, 8vh, 96px) clamp(56px, 8vw, 128px) clamp(32px, 6vh, 72px);
-  box-sizing: border-box;
-  cursor: pointer;
+  isolation: isolate;
+  cursor: zoom-out;
 }
-
-.lightbox-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: max-content;
-  max-width: 100%;
-  max-height: 100%;
-  animation: lightbox-content-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes lightbox-content-in {
-  from {
-    opacity: 0;
-    transform: translateY(28px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.lightbox-close {
+.lightbox-backdrop {
   position: absolute;
-  top: 24px;
-  right: 24px;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
-  z-index: 201;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg-primary) 94%, transparent);
+  pointer-events: none;
 }
-
+.lightbox-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: default;
+}
+.lightbox-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.lightbox-preview,
+.lightbox-image,
+.lightbox-video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: 0;
+}
+.lightbox-image,
+.lightbox-video {
+  transition: opacity 120ms ease-out;
+}
+.lightbox-close,
 .lightbox-prev,
 .lightbox-next {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-  z-index: 201;
-  padding: 16px;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.lightbox-prev {
-  left: 16px;
-}
-
-.lightbox-next {
-  right: 16px;
-}
-
-.lightbox-prev:hover,
-.lightbox-next:hover {
-  opacity: 1;
-}
-
-.lightbox-image {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: calc(100dvh - 7rem);
-  object-fit: contain;
-  align-self: flex-start;
-  cursor: default;
-}
-
-.lightbox-video {
-  display: block;
-  width: min(90vw, 96rem);
-  max-width: 100%;
-  height: min(80dvh, 50.625vw);
-  min-height: 180px;
-  aspect-ratio: 16 / 9;
   border: 0;
   background: transparent;
-  align-self: flex-start;
-  cursor: default;
+  color: var(--text-primary);
+  cursor: pointer;
+  z-index: 1;
+  min-width: 44px;
+  min-height: 44px;
 }
-
+.lightbox-close {
+  top: 16px;
+  right: 16px;
+  font-size: 14px;
+}
+.lightbox-prev,
+.lightbox-next {
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+}
+.lightbox-prev {
+  left: 0;
+}
+.lightbox-next {
+  right: 0;
+}
 .lightbox-name {
-  width: max-content;
-  max-width: 100%;
   margin-top: 8px;
-  color: white;
+  color: var(--text-primary);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.08em;
-  align-self: flex-start;
   text-align: left;
   text-transform: uppercase;
+}
+.lightbox-load-status {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+.lightbox-load-status a {
+  color: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {

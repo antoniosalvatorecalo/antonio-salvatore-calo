@@ -1,7 +1,16 @@
-/** Wait for the actual destination image (or video poster), not a second request. */
-export function waitForProjectMedia(plane: HTMLElement, signal: AbortSignal): Promise<boolean> {
-  const image = plane.querySelector<HTMLImageElement>('[data-transition-media]');
-  if (!image || signal.aborted) return Promise.resolve(false);
+/** Decode the destination cards that become visible during the shared 3D turn. */
+export async function waitForProjectMedia(
+  plane: HTMLElement,
+  signal: AbortSignal,
+): Promise<boolean> {
+  const images = Array.from(plane.querySelectorAll<HTMLImageElement>('[data-transition-media]'));
+  if (!images.length || signal.aborted) return false;
+  const ready = await Promise.all(images.map((image) => waitForImage(image, signal)));
+  return ready.every(Boolean);
+}
+
+function waitForImage(image: HTMLImageElement, signal: AbortSignal): Promise<boolean> {
+  if (signal.aborted) return Promise.resolve(false);
 
   return new Promise((resolve) => {
     let done = false;

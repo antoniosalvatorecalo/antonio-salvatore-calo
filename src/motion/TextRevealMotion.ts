@@ -13,12 +13,19 @@ export const TEXT_MOTION = {
 const TARGET_SELECTOR = '[data-motion-text]';
 
 export function getTextMotionTargets(...roots: Array<ParentNode | null | undefined>) {
+  const mobile =
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+  const getOrder = (target: HTMLElement) =>
+    Number(
+      (mobile ? target.dataset.motionOrderMobile : undefined) ?? target.dataset.motionOrder ?? 0,
+    );
+
   return roots
     .flatMap((root) =>
       root ? Array.from(root.querySelectorAll<HTMLElement>(TARGET_SELECTOR)) : [],
     )
     .filter((target, index, targets) => targets.indexOf(target) === index)
-    .sort((a, b) => Number(a.dataset.motionOrder ?? 0) - Number(b.dataset.motionOrder ?? 0));
+    .sort((a, b) => getOrder(a) - getOrder(b));
 }
 
 export function setTextMotionVisible(targets: HTMLElement[]) {
@@ -41,7 +48,12 @@ export function setTextMotionHidden(targets: HTMLElement[], mobile: boolean) {
 
 export function createTextEnterTimeline(
   targets: HTMLElement[],
-  { delay = 0, mobile = false, reducedMotion = false } = {},
+  {
+    delay = 0,
+    mobile = false,
+    reducedMotion = false,
+    duration = TEXT_MOTION.enterDuration as number,
+  } = {},
 ) {
   const timeline = gsap.timeline({ delay });
   if (!targets.length || reducedMotion) {
@@ -54,7 +66,7 @@ export function createTextEnterTimeline(
     clipPath: 'inset(0 0 0% 0)',
     y: 0,
     opacity: 1,
-    duration: TEXT_MOTION.enterDuration,
+    duration,
     ease: TEXT_MOTION.enterEase,
     stagger: mobile ? TEXT_MOTION.stagger * 0.8 : TEXT_MOTION.stagger,
     clearProps: 'willChange',

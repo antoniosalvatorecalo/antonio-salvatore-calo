@@ -201,34 +201,36 @@ export function GalleryGrid({
                     } as CSSProperties
                   }
                 >
-                  {item.type === 'vimeo' || isVimeoUrl(item.src) ? (
-                    <GalleryVideo
-                      media={item}
-                      active={mediaActive && interactive}
-                      playbackRequested={activeVideoKey === item.key}
-                      reducedMotion={reducedMotion}
-                    />
-                  ) : (
-                    <img
-                      src={item.src}
-                      {...getSanityImageSources(
-                        item.src,
-                        item.width,
-                        '(max-width: 1023px) 10vw, 6.25vw',
-                      )}
-                      alt={item.alt}
-                      width={item.width}
-                      height={item.height}
-                      loading={mediaActive && i === 0 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      fetchPriority={mediaActive && i === 0 ? 'high' : 'auto'}
-                      style={
-                        item.lqip
-                          ? { backgroundImage: `url(${item.lqip})`, backgroundSize: 'cover' }
-                          : undefined
-                      }
-                    />
-                  )}
+                  <div className="gallery-media-reveal">
+                    {item.type === 'vimeo' || isVimeoUrl(item.src) ? (
+                      <GalleryVideo
+                        media={item}
+                        active={mediaActive && interactive}
+                        playbackRequested={activeVideoKey === item.key}
+                        reducedMotion={reducedMotion}
+                      />
+                    ) : (
+                      <img
+                        src={item.src}
+                        {...getSanityImageSources(
+                          item.src,
+                          item.width,
+                          '(max-width: 1023px) 10vw, 6.25vw',
+                        )}
+                        alt={item.alt}
+                        width={item.width}
+                        height={item.height}
+                        loading={mediaActive && i === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                        fetchPriority={mediaActive && i === 0 ? 'high' : 'auto'}
+                        style={
+                          item.lqip
+                            ? { backgroundImage: `url(${item.lqip})`, backgroundSize: 'cover' }
+                            : undefined
+                        }
+                      />
+                    )}
+                  </div>
                 </MotionLink>
               ))}
             </motion.div>

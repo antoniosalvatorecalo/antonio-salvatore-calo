@@ -28,7 +28,6 @@ export const PortfolioLayout = ({ deferInitialEffects = false }: PortfolioLayout
         transitionPhase={phase}
         projectActive={
           Boolean(visibleProject) &&
-          phase !== 'opening' &&
           !(phase === 'closing' && homeRevealReady)
         }
         projectInfo={
@@ -39,7 +38,7 @@ export const PortfolioLayout = ({ deferInitialEffects = false }: PortfolioLayout
               }
             : undefined
         }
-        onBackToGallery={visibleProject && phase !== 'opening' ? returnToGallery : undefined}
+        onBackToGallery={visibleProject ? returnToGallery : undefined}
       />
       <PortfolioScene />
     </FilterProvider>
