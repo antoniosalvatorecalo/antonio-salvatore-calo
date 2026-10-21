@@ -12,24 +12,6 @@
   overscroll-behavior-y: contain;
 }
 
-/* The project surface lives inside the fixed portfolio scene. On touch
-   layouts it must own the vertical scroll so content can grow beyond the
-   viewport without breaking the scene transition geometry. */
-@media (max-width: 1023px) {
-  .single-project-view.is-project-ready {
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .single-project-content {
-    height: auto;
-    min-height: 100%;
-    padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
-  }
-}
-
 /* The project controls must not appear alone on the rotating, incoming plane.
    At the endpoint the shared text timeline reveals them alongside the photos. */
 html:not([data-intro-complete='true']) .project-media-gallery-header,
@@ -306,10 +288,18 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
 
 /* Mobile styles */
 @media (max-width: 1023px) {
-  .single-project-view,
-  .single-project-view.is-project-ready {
+  .single-project-view {
     height: 100dvh;
     overflow: hidden;
+  }
+
+  /* Keep the transition shell fixed to the scene, and let only the settled
+     project surface scroll when its content is taller than the viewport. */
+  .single-project-view.is-project-ready {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .single-project-content {
@@ -318,10 +308,11 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
       clamp(34rem, 72dvh, 41rem)
     );
     padding: var(--project-gallery-mobile-top-offset) var(--space-3) clamp(1rem, 3vh, 1.5rem);
-    height: 100dvh;
-    min-height: 0;
-    overflow: hidden;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
     align-items: stretch;
+    padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
   }
 
   .single-project-carousel {
@@ -535,18 +526,23 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
           0px,
           calc(
             100dvh -
-              var(--project-gallery-header-height, var(--site-header-height, var(--header-height))) -
+              var(
+                --project-gallery-header-height,
+                var(--site-header-height, var(--header-height))
+              ) -
               var(--project-carousel-top-gap) - 3rem
           )
         )
-      ) + 3rem
+      ) +
+      3rem
   );
   overflow-x: auto;
   overflow-y: hidden;
   background: var(--bg-primary);
   scroll-padding-inline-start: var(--project-gallery-inline-inset, var(--project-gallery-padding));
-  overscroll-behavior: none;
-  touch-action: pan-x;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
+  touch-action: pan-x pan-y;
   scroll-behavior: smooth;
   scroll-snap-type: x proximity;
   scrollbar-width: none;

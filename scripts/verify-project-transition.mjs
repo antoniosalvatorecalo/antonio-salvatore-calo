@@ -43,6 +43,7 @@ const browser = await chromium.launch(launchOptions);
 const report = {
   baseUrl,
   transitions: [],
+  mobileScrolling: [],
   routeAndHistory: [],
   reducedMotion: [],
   consoleErrors: [],
@@ -55,7 +56,11 @@ function closeEnoughDelta(before, after, field, limit, label) {
 }
 
 async function makePage(viewport, reducedMotion = 'no-preference') {
-  const page = await browser.newPage({ viewport, reducedMotion });
+  const page = await browser.newPage({
+    viewport,
+    reducedMotion,
+    ...(viewport.name === 'mobile' ? { isMobile: true, hasTouch: true } : {}),
+  });
   page.on('pageerror', (error) => report.consoleErrors.push(`${page.url()} :: ${error.message}`));
   page.on('console', (message) => {
     if (message.type() === 'error') report.consoleErrors.push(`${page.url()} :: ${message.text()}`);
@@ -128,6 +133,97 @@ async function waitForPhase(page, phase, timeout = 12000) {
     phase,
     { timeout },
   );
+}
+
+async function readBioVisibility(page) {
+  return page.locator('.site-header-bio').evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const range = element.ownerDocument.createRange();
+    range.selectNodeContents(element);
+    const textRects = [...range.getClientRects()];
+    const hasVisibleText = textRects.some((textRect) => {
+      const target = element.ownerDocument.elementFromPoint(
+        textRect.left + Math.min(4, textRect.width / 2),
+        textRect.top + textRect.height / 2,
+      );
+      return target === element || element.contains(target);
+    });
+    return rect.width > 0 && rect.height > 0 && hasVisibleText;
+  });
+}
+
+async function verifyMobileProjectScroll(page, name) {
+  const gallery = page.locator('.project-media-gallery-viewport');
+  const firstCard = page.locator('.project-media-card').first();
+  const lastCard = page.locator('.project-media-card').last();
+  let galleryBox = await gallery.boundingBox();
+  assert.ok(galleryBox, `${name}: project gallery was not visible`);
+
+  for (
+    let attempt = 0;
+    attempt < 10 && galleryBox.y > page.viewportSize().height * 0.65;
+    attempt += 1
+  ) {
+    await page.mouse.move(10, page.viewportSize().height * 0.25);
+    await page.mouse.wheel(0, 500);
+    await page.waitForTimeout(50);
+    galleryBox = await gallery.boundingBox();
+  }
+  assert(
+    galleryBox.y < page.viewportSize().height,
+    `${name}: vertical scrolling must bring the project gallery into view`,
+  );
+
+  const firstPosition = await firstCard.boundingBox();
+  assert.ok(firstPosition, `${name}: first project photo was not visible`);
+  const client = await page.context().newCDPSession(page);
+  const touch = async (startX, startY, endX, endY) => {
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ id: 1, x: Math.round(startX), y: Math.round(startY) }],
+    });
+    for (let step = 1; step <= 8; step += 1) {
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [
+          {
+            id: 1,
+            x: Math.round(startX + ((endX - startX) * step) / 8),
+            y: Math.round(startY + ((endY - startY) * step) / 8),
+          },
+        ],
+      });
+    }
+    await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  };
+  const swipeStartX = galleryBox.x + galleryBox.width * 0.75;
+  const swipeY = galleryBox.y + galleryBox.height / 2;
+  await touch(swipeStartX, swipeY, swipeStartX - 350, swipeY);
+  await page.waitForTimeout(300);
+  const swipedPosition = await firstCard.boundingBox();
+  assert.ok(swipedPosition, `${name}: first project photo disappeared after a gallery swipe`);
+  assert.notEqual(
+    Math.round(swipedPosition.x),
+    Math.round(firstPosition.x),
+    `${name}: horizontal swipe must move through the project photos`,
+  );
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const box = await gallery.boundingBox();
+    if (!box) break;
+    const startX = box.x + box.width / 2;
+    const startY = Math.min(box.y + box.height / 2, page.viewportSize().height - 20);
+    await touch(startX, startY, startX, startY - 400);
+    await page.waitForTimeout(50);
+  }
+  await client.detach();
+  const lastPosition = await lastCard.boundingBox();
+  assert.ok(lastPosition, `${name}: last project photo was not rendered`);
+  assert(
+    lastPosition.y < page.viewportSize().height && lastPosition.y + lastPosition.height > 0,
+    `${name}: scrolling from the gallery must bring the last project photo into view`,
+  );
+  report.mobileScrolling.push({ name, firstPhotoMovedAfterSwipe: true, lastPhotoReached: true });
 }
 
 async function runTransition(viewport, slug) {
@@ -227,6 +323,7 @@ async function runTransition(viewport, slug) {
   await page.screenshot({ path: path.join(screenshotDir, 'project-settled.png') });
   assert.equal(settled.phase, 'project', `${name}: project did not settle`);
   assert.equal(settled.projectHeaderTextExposed, true, `${name}: project header did not enter`);
+  if (viewport.name === 'mobile') await verifyMobileProjectScroll(page, name);
   const projectFrames = frames.filter((frame) => frame.phase === 'project');
   let revealStarted = false;
   let revealFinished = false;
@@ -278,15 +375,38 @@ async function runRouteAndHistory(viewport, slug) {
 
   const page = await makePage(viewport);
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.introComplete === 'true');
+  await page.waitForTimeout(850);
+  assert.equal(
+    await readBioVisibility(page),
+    true,
+    `${viewport.name}: home bio did not become visible`,
+  );
   await page.locator(`[data-project-id="${slug}"]`).first().click();
   await waitForPhase(page, 'project');
+  await page.waitForTimeout(850);
+  const projectFrame = await page.screenshot();
   const back = page
     .locator(
       '.site-header-project-back--desktop:visible, .site-header-project-back--mobile:visible',
     )
     .first();
   await back.click();
+  await waitForPhase(page, 'closing');
+  await page.waitForTimeout(250);
+  const closingFrame = await page.screenshot();
   await waitForPhase(page, 'idle');
+  await page.waitForTimeout(850);
+  const homeFrame = await page.screenshot();
+  assert(
+    !closingFrame.equals(projectFrame) && !closingFrame.equals(homeFrame),
+    `${viewport.name}: return transition must render a frame distinct from both endpoints`,
+  );
+  assert.equal(
+    await readBioVisibility(page),
+    true,
+    `${viewport.name}: home bio did not become visible after returning from a project`,
+  );
   await page.goForward();
   await waitForPhase(page, 'project');
   await page.goBack();
