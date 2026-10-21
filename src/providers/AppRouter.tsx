@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { PortfolioLayout } from '../layouts/PortfolioLayout';
 import { LanguageProvider } from './LanguageProvider';
 import { ProjectTransitionProvider } from './ProjectTransitionProvider';
+import { FilterProvider } from './FilterContext';
 import { ProjectCatalogGate, ProjectCatalogProvider } from '@/cms/ProjectCatalogProvider';
 import { SeoManager } from '@/cms/SeoManager';
 import type { SiteSnapshot } from '@/cms/snapshot';
@@ -10,9 +11,11 @@ import type { SiteSnapshot } from '@/cms/snapshot';
 const FALLBACK = <div style={{ padding: 40, color: 'var(--text-primary)' }}>Loading…</div>;
 
 const PortfolioRouteLayout = () => (
-  <ProjectTransitionProvider>
-    <PortfolioLayout />
-  </ProjectTransitionProvider>
+  <FilterProvider>
+    <ProjectTransitionProvider>
+      <PortfolioLayout />
+    </ProjectTransitionProvider>
+  </FilterProvider>
 );
 
 export interface AppRoutesProps {

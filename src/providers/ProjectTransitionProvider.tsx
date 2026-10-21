@@ -22,6 +22,7 @@ import {
   type ScenePlanes,
 } from '@/motion/ProjectTransitionMotion';
 import { useTransitionInputLock } from '@/hooks/useTransitionInputLock';
+import { useFilter } from './FilterContext';
 
 type ProjectTransitionPhase = 'idle' | 'opening' | 'project' | 'closing';
 
@@ -86,6 +87,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
   const navigate = useNavigate();
   const location = useLocation();
   const reducedMotion = useReducedMotionPreference();
+  const { resetHomeFilter } = useFilter();
   const { getProject } = useProjectCatalog();
   const getRouteSlug = useCallback(
     (pathname: string) => {
@@ -194,10 +196,11 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
 
   const returnToGallery = useCallback(() => {
     if (stateRef.current.phase !== 'project') return;
+    resetHomeFilter();
     closeSourceRef.current = 'ui';
     setHomeRevealReady(false);
     commit({ ...stateRef.current, phase: 'closing' });
-  }, [commit]);
+  }, [commit, resetHomeFilter]);
 
   // Browser navigation is authoritative, including Forward during a closing tween.
   // Internal navigation only changes the URL after the visual endpoint is reached.
@@ -220,6 +223,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     } else if (current.phase === 'project' || current.phase === 'closing') {
       closeSourceRef.current = 'pop';
       if (current.phase !== 'closing') {
+        resetHomeFilter();
         setHomeRevealReady(false);
         commit({ ...current, phase: 'closing' });
       }
@@ -227,7 +231,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
       commit(HOME);
       restoreGallery();
     }
-  }, [commit, getRouteSlug, location, restoreGallery]);
+  }, [commit, getRouteSlug, location, resetHomeFilter, restoreGallery]);
 
   useLayoutEffect(() => {
     if (!planes) return;

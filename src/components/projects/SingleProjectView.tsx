@@ -17,6 +17,12 @@ import {
 } from './projectMediaMotion';
 import { ProjectMediaLightbox } from './ProjectMediaLightbox';
 import { useProjectGalleryEntrance } from './useProjectGalleryEntrance';
+import {
+  GALLERY_FILTER_PRESENCE_MODE,
+  getGalleryFilterMotion,
+} from '@/components/galleryFilterMotion';
+import { GalleryMediaReveal } from '@/components/GalleryMediaReveal';
+import { FilterDisclosureOptions } from '@/components/FilterDisclosureOptions';
 import './SingleProjectView.css';
 import '../home/FilterBar.css';
 
@@ -139,6 +145,7 @@ export function SingleProjectView({
   const allMedia = useMemo(() => project.media, [project.media]);
   const { locale } = useLanguage();
   const reducedMotion = useReducedMotionPreference();
+  const filterMotion = getGalleryFilterMotion(reducedMotion);
   const [enteredThroughRotation] = useState(() => transitionPhase === 'opening');
   const initialMediaIndex = initialMediaKey
     ? Math.max(
@@ -148,6 +155,11 @@ export function SingleProjectView({
     : 0;
   const [currentImageIndex, setCurrentImageIndex] = useState(initialMediaIndex);
   const [mediaFilter, setMediaFilter] = useState<MediaFilter>('all');
+  const mediaFilterRef = useRef<MediaFilter>(mediaFilter);
+  mediaFilterRef.current = mediaFilter;
+  const hasExplicitMediaFilterRef = useRef(false);
+  const [galleryResultsRevision, setGalleryResultsRevision] = useState(0);
+  const [filterRevealSlug, setFilterRevealSlug] = useState('');
   const [isMediaFilterOpen, setIsMediaFilterOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isAtGalleryEnd, setIsAtGalleryEnd] = useState(false);
@@ -186,10 +198,13 @@ export function SingleProjectView({
     mediaFilterOptions.find((option) => option.value === mediaFilter)?.label ??
     mediaFilterOptions[0]?.label ??
     '';
-  const activeMediaFilterCount =
-    mediaFilter === 'all'
-      ? allMedia.length
-      : allMedia.filter((media) => media.type === mediaFilter).length;
+  const mediaFilterDisclosureOptions = mediaFilterOptions.map((option) => {
+    const count =
+      option.value === 'all'
+        ? allMedia.length
+        : allMedia.filter((media) => media.type === option.value).length;
+    return { ...option, count, disabled: count === 0 };
+  });
 
   useEffect(() => {
     setCurrentImageIndex(initialMediaIndex);
@@ -435,12 +450,22 @@ export function SingleProjectView({
       resizeObserver.disconnect();
       visualMotionValuesRef.current = [];
     };
-  }, [filteredMedia, project.slug, reducedMotion]);
+  }, [filteredMedia, project.slug, reducedMotion, galleryResultsRevision]);
+
+  useLayoutEffect(() => {
+    hasExplicitMediaFilterRef.current = false;
+    setFilterRevealSlug('');
+  }, [project.slug]);
 
   useLayoutEffect(() => {
     const viewport = galleryViewportRef.current;
     const track = galleryTrackRef.current;
     if (!viewport || !track) return;
+
+    if (hasExplicitMediaFilterRef.current) {
+      viewport.scrollTo({ left: 0, behavior: 'instant' });
+      return;
+    }
 
     const card = mediaCardRefs.current[mediaFilter === 'all' ? initialMediaIndex : 0];
     if (card) {
@@ -450,7 +475,7 @@ export function SingleProjectView({
       const target = getHorizontalSnapTarget(viewport, track, card, cards);
       if (target !== null) viewport.scrollTo({ left: target, behavior: 'instant' });
     }
-  }, [initialMediaIndex, mediaFilter, filteredMedia.length, project.slug]);
+  }, [initialMediaIndex, mediaFilter, filteredMedia.length, project.slug, galleryResultsRevision]);
 
   const galleryEntrance = useProjectGalleryEntrance(
     galleryViewportRef,
@@ -550,13 +575,16 @@ export function SingleProjectView({
   };
 
   const handleMediaFilterChange = (nextFilter: MediaFilter) => {
-    galleryViewportRef.current?.scrollTo({ left: 0, behavior: 'auto' });
+    if (nextFilter === mediaFilter) return;
+    galleryViewportRef.current?.scrollTo({ left: 0, behavior: 'instant' });
+    mediaFilterRef.current = nextFilter;
+    hasExplicitMediaFilterRef.current = true;
+    setFilterRevealSlug(project.slug);
     mediaCardRefs.current = [];
     mediaInnerRefs.current = [];
     setCurrentImageIndex(0);
     setLightboxOpen(false);
     setMediaFilter(nextFilter);
-    setIsMediaFilterOpen(false);
     setIsAtGalleryEnd(false);
   };
 
@@ -608,40 +636,23 @@ export function SingleProjectView({
                   {!isMediaFilterOpen && (
                     <span className="filter-bar-current" aria-live="polite">
                       {activeMediaFilterLabel}{' '}
-                      <span className="filter-bar-count">[{activeMediaFilterCount}]</span>
+                      <span className="filter-bar-count">
+                        [
+                        {mediaFilterDisclosureOptions.find(({ value }) => value === mediaFilter)
+                          ?.count ?? 0}
+                        ]
+                      </span>
                     </span>
                   )}
                 </div>
-                {isMediaFilterOpen && (
-                  <div id="project-media-filter-options" className="filter-bar-panel">
-                    <div
-                      className="filter-bar-options"
-                      role="group"
-                      aria-label={locale === 'IT' ? 'Filtra per tipo' : 'Filter by type'}
-                    >
-                      {mediaFilterOptions.map((option) => {
-                        const count =
-                          option.value === 'all'
-                            ? allMedia.length
-                            : allMedia.filter((media) => media.type === option.value).length;
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className={`filter-bar-item${mediaFilter === option.value ? ' is-active' : ''}`}
-                            aria-pressed={mediaFilter === option.value}
-                            disabled={count === 0}
-                            onClick={() => {
-                              handleMediaFilterChange(option.value);
-                            }}
-                          >
-                            {option.label} <span className="filter-bar-count">[{count}]</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                <FilterDisclosureOptions
+                  open={isMediaFilterOpen}
+                  panelId="project-media-filter-options"
+                  groupLabel={locale === 'IT' ? 'Filtra per tipo' : 'Filter by type'}
+                  options={mediaFilterDisclosureOptions}
+                  activeValue={mediaFilter}
+                  onSelect={(value) => handleMediaFilterChange(value as MediaFilter)}
+                />
               </nav>
               {isAtGalleryEnd ? (
                 <button
@@ -685,27 +696,14 @@ export function SingleProjectView({
                 }
               }}
             >
-              <AnimatePresence mode="popLayout" initial={false}>
+              <AnimatePresence mode={GALLERY_FILTER_PRESENCE_MODE} initial={false}>
                 <motion.div
                   ref={galleryTrackRef}
                   key={mediaFilter}
                   className="project-media-gallery-track"
-                  initial={false}
-                  animate={{
-                    opacity: 1,
-                    clipPath: 'inset(0 0 0% 0)',
-                    pointerEvents: 'auto',
-                  }}
-                  exit={
-                    reducedMotion
-                      ? { opacity: 1, pointerEvents: 'none' }
-                      : {
-                          opacity: 0.72,
-                          clipPath: 'inset(0 0 100% 0)',
-                          pointerEvents: 'none',
-                        }
-                  }
-                  transition={{ duration: reducedMotion ? 0 : 0.55, ease: [0.16, 1, 0.3, 1] }}
+                  {...filterMotion}
+                  exit={{ ...filterMotion.exit, pointerEvents: 'none' }}
+                  onAnimationComplete={() => setGalleryResultsRevision((revision) => revision + 1)}
                 >
                   {filteredMedia.map((media, index) => {
                     const isVideo = media.type === 'vimeo';
@@ -731,6 +729,7 @@ export function SingleProjectView({
                         type="button"
                         key={media.key}
                         ref={(element) => {
+                          if (mediaFilterRef.current !== mediaFilter) return;
                           mediaCardRefs.current[index] = element;
                         }}
                         className="project-media-card"
@@ -749,6 +748,7 @@ export function SingleProjectView({
                         <span className="project-media-card-depth">
                           <span
                             ref={(element) => {
+                              if (mediaFilterRef.current !== mediaFilter) return;
                               mediaInnerRefs.current[index] = element;
                             }}
                             className="project-media-card-inner"
@@ -757,30 +757,36 @@ export function SingleProjectView({
                               className="project-media-card-frame"
                               style={{ aspectRatio: mediaAspectRatio }}
                             >
-                              {previewSrc ? (
-                                <img
-                                  src={previewSrc}
-                                  {...getSanityImageSources(previewSrc, dimensions?.width)}
-                                  alt={media.alt}
-                                  className="project-media-card-image"
-                                  draggable={false}
-                                  width={dimensions?.width ?? (isVideo ? 1280 : undefined)}
-                                  height={dimensions?.height ?? (isVideo ? 720 : undefined)}
-                                  data-transition-media={isTransitionMedia ? '' : undefined}
-                                  loading={
-                                    isTransitionMedia || index === initialMediaIndex
-                                      ? 'eager'
-                                      : 'lazy'
-                                  }
-                                  decoding="async"
-                                  fetchPriority={index === transitionMediaIndex ? 'high' : 'auto'}
-                                  onDragStart={(event) => event.preventDefault()}
-                                />
-                              ) : (
-                                <span className="project-media-card-fallback">
-                                  Video preview unavailable
-                                </span>
-                              )}
+                              <GalleryMediaReveal
+                                index={index}
+                                revealOnMount={filterRevealSlug === project.slug}
+                                className="project-media-card-filter-reveal"
+                              >
+                                {previewSrc ? (
+                                  <img
+                                    src={previewSrc}
+                                    {...getSanityImageSources(previewSrc, dimensions?.width)}
+                                    alt={media.alt}
+                                    className="project-media-card-image"
+                                    draggable={false}
+                                    width={dimensions?.width ?? (isVideo ? 1280 : undefined)}
+                                    height={dimensions?.height ?? (isVideo ? 720 : undefined)}
+                                    data-transition-media={isTransitionMedia ? '' : undefined}
+                                    loading={
+                                      isTransitionMedia || index === initialMediaIndex
+                                        ? 'eager'
+                                        : 'lazy'
+                                    }
+                                    decoding="async"
+                                    fetchPriority={index === transitionMediaIndex ? 'high' : 'auto'}
+                                    onDragStart={(event) => event.preventDefault()}
+                                  />
+                                ) : (
+                                  <span className="project-media-card-fallback">
+                                    Video preview unavailable
+                                  </span>
+                                )}
+                              </GalleryMediaReveal>
                             </span>
                             <span className="project-media-card-name">[{getImageName(media)}]</span>
                           </span>

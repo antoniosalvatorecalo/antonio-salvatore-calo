@@ -35,6 +35,18 @@
   background: var(--bg-primary);
 }
 
+/* Keep destination geometry in flow during the turn without exposing its text. */
+.site-header[data-project-header-visible='false'] .site-header-col--project {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.site-header[data-project-header-visible='false']
+  :is(.site-header-project-back--desktop, .site-header-project-back--mobile) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* An expanded project accordion must not paint a full-width band over the gallery. */
 .site-header.is-project {
   background: transparent;
@@ -1263,7 +1275,8 @@
     width: 100%;
     max-width: none;
     max-height: calc(
-      100dvh - var(--contact-panel-top, var(--site-header-height, 320px)) - var(--space-2) - var(--space-4)
+      100dvh - var(--contact-panel-top, var(--site-header-height, 320px)) - var(--space-2) -
+        var(--space-4)
     );
     margin-top: var(--space-2);
     background: var(--bg-primary);

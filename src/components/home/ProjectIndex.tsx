@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useLayoutEffect } from 'react';
 import { GalleryGrid } from './ProjectGrid';
 import { FilterBar } from './FilterBar';
 import { ProjectPreview } from '@/components/projects/ProjectPreview';
@@ -8,6 +8,7 @@ import type { ProjectDomain, ProjectMedia } from '@/cms/domain';
 import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 import { useProjectTransition } from '@/providers/ProjectTransitionProvider';
 import { useFilter } from '@/providers/FilterContext';
+import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
 import './ProjectIndex.css';
 
 function filterProjectsByService(
@@ -30,8 +31,24 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({
   const { active: activeFilter } = useFilter();
   const [hoveredMedia, setHoveredMedia] = useState<ProjectMedia | null>(null);
   const { navProjectMedia } = useNavHover();
-  const { startProjectTransition } = useProjectTransition();
+  const { startProjectTransition, phase, homeRevealReady } = useProjectTransition();
+  const reducedMotion = useReducedMotionPreference();
+  const [homeFilterEntranceReady, setHomeFilterEntranceReady] = useState(reducedMotion);
   const { projects } = useProjectCatalog();
+
+  useLayoutEffect(() => {
+    if (reducedMotion) {
+      setHomeFilterEntranceReady(true);
+    } else if (phase === 'opening' || phase === 'closing') {
+      setHomeFilterEntranceReady(false);
+    }
+  }, [phase, reducedMotion]);
+
+  const handleFirstMediaRevealPresence = useCallback(() => {
+    if (phase === 'idle' || (phase === 'closing' && homeRevealReady)) {
+      setHomeFilterEntranceReady(true);
+    }
+  }, [homeRevealReady, phase]);
 
   const filteredProjects = filterProjectsByService(
     projects,
@@ -64,11 +81,12 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({
       <section id="visual-index" className="project-index">
         <GalleryGrid
           projects={filteredProjects}
-          filters={<FilterBar />}
+          filters={<FilterBar entranceReady={homeFilterEntranceReady} />}
           filterKey={activeFilter}
           interactive={interactive}
           mediaActive={mediaActive}
           onProjectClick={handleProjectClick}
+          onFirstMediaRevealPresence={handleFirstMediaRevealPresence}
           onProjectHover={{ onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave }}
         />
       </section>

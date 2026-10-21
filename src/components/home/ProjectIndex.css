@@ -58,47 +58,19 @@
   text-align: left;
 }
 
-.gallery-media-reveal {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  clip-path: inset(0 0 100% 0);
-}
-
-.gallery-grid {
-  --gallery-reveal-duration: 620ms;
-  --gallery-reveal-ease: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-html:not([data-intro-complete='true']) .gallery-media-reveal {
+html:not([data-intro-complete='true']) .gallery-grid .gallery-media-reveal {
   clip-path: inset(0 0 100% 0);
   animation: none;
-}
-
-html[data-intro-complete='true'] .gallery-media-reveal {
-  animation: gallery-media-reveal var(--gallery-reveal-duration) var(--gallery-reveal-ease)
-    var(--gallery-reveal-delay, 0s) both;
 }
 
 /* Reset while the index is parked. Restore the same animation on every return,
    without remounting the grid or losing its scroll/filter state. */
 html[data-intro-complete='true']
   .portfolio-scene[data-home-gallery-reveal='false']
+  .gallery-grid
   .gallery-media-reveal {
   animation: none;
   clip-path: inset(0 0 100% 0);
-}
-
-@keyframes gallery-media-reveal {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    clip-path: inset(0);
-  }
 }
 
 .gallery-grid-video-placeholder {
@@ -161,10 +133,11 @@ html[data-intro-complete='true']
     transition: none;
   }
 
-  html[data-intro-complete='true'] .gallery-media-reveal,
-  html:not([data-intro-complete='true']) .gallery-media-reveal,
+  html[data-intro-complete='true'] .gallery-grid .gallery-media-reveal,
+  html:not([data-intro-complete='true']) .gallery-grid .gallery-media-reveal,
   html[data-intro-complete='true']
     .portfolio-scene[data-home-gallery-reveal='false']
+    .gallery-grid
     .gallery-media-reveal {
     clip-path: inset(0);
     opacity: 1;
@@ -177,9 +150,10 @@ html[data-motion='reduced'] .project-index {
   transition: none;
 }
 
-html[data-motion='reduced'] .gallery-media-reveal,
+html[data-motion='reduced'] .gallery-grid .gallery-media-reveal,
 html[data-motion='reduced']
   .portfolio-scene[data-home-gallery-reveal='false']
+  .gallery-grid
   .gallery-media-reveal {
   clip-path: inset(0);
   opacity: 1;

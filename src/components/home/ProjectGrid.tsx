@@ -3,10 +3,15 @@ import type { ProjectMedia } from '@/cms/domain';
 import { getVimeoEmbedUrl, getVimeoThumbnailUrl, isVimeoUrl } from '@/lib/vimeo';
 import { AnimatePresence, motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getSanityImageSources } from '@/cms/image';
 import { shouldEnhanceNavigation } from '@/lib/navigation';
 import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
+import {
+  GALLERY_FILTER_PRESENCE_MODE,
+  getGalleryFilterMotion,
+} from '@/components/galleryFilterMotion';
+import { GalleryMediaReveal } from '@/components/GalleryMediaReveal';
 
 interface GalleryGridHoverHandlers {
   onMouseEnter?: (projectId: string, media: ProjectMedia) => void;
@@ -26,6 +31,7 @@ interface GalleryGridProps {
     sourceElement: HTMLElement,
   ) => void;
   onProjectHover?: GalleryGridHoverHandlers;
+  onFirstMediaRevealPresence?: () => void;
 }
 
 interface GalleryVideoProps {
@@ -110,8 +116,10 @@ export function GalleryGrid({
   mediaActive = true,
   onProjectClick,
   onProjectHover,
+  onFirstMediaRevealPresence,
 }: GalleryGridProps) {
   const reducedMotion = useReducedMotionPreference();
+  const filterMotion = getGalleryFilterMotion(reducedMotion);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeVideoKey, setActiveVideoKey] = useState<string | null>(null);
 
@@ -172,15 +180,8 @@ export function GalleryGrid({
       <div className="gallery-grid-stage">
         {filters}
         <div className="gallery-grid-animation-slot">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={filterKey}
-              className="gallery-grid"
-              initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
-              transition={{ duration: reducedMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
-            >
+          <AnimatePresence mode={GALLERY_FILTER_PRESENCE_MODE} initial={false}>
+            <motion.div key={filterKey} className="gallery-grid" {...filterMotion}>
               {items.slice(0, 64).map((item, i) => (
                 <MotionLink
                   key={`${item.projectId}-${item.key}`}
@@ -195,13 +196,11 @@ export function GalleryGrid({
                   data-project-id={item.projectId}
                   data-project-transition-key={`${item.projectId}-${item.key}`}
                   initial={false}
-                  style={
-                    {
-                      '--gallery-reveal-delay': `${Math.min(i, 12) * 0.055 + Math.max(i - 12, 0) * 0.012}s`,
-                    } as CSSProperties
-                  }
                 >
-                  <div className="gallery-media-reveal">
+                  <GalleryMediaReveal
+                    index={i}
+                    onRevealPresence={i === 0 ? onFirstMediaRevealPresence : undefined}
+                  >
                     {item.type === 'vimeo' || isVimeoUrl(item.src) ? (
                       <GalleryVideo
                         media={item}
@@ -230,7 +229,7 @@ export function GalleryGrid({
                         }
                       />
                     )}
-                  </div>
+                  </GalleryMediaReveal>
                 </MotionLink>
               ))}
             </motion.div>

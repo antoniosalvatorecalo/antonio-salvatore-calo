@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { useFilter } from '@/providers/FilterContext';
 import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { TEXT_MOTION } from '@/motion/TextRevealMotion';
+import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
+import { FilterDisclosureOptions } from '@/components/FilterDisclosureOptions';
 import './FilterBar.css';
 
 const FILTER_LABELS: Record<string, { EN: string; IT: string }> = {
@@ -13,11 +15,11 @@ const FILTER_LABELS: Record<string, { EN: string; IT: string }> = {
   'ux design': { EN: 'UX Design', IT: 'UX Design' },
 };
 
-export function FilterBar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const { active, setActive } = useFilter();
+export function FilterBar({ entranceReady }: { entranceReady: boolean }) {
+  const { active, setActive, isOpen, setIsOpen } = useFilter();
   const { projects } = useProjectCatalog();
   const { locale } = useLanguage();
+  const reducedMotion = useReducedMotionPreference();
 
   const servicesWithCounts = projects.reduce<Array<{ name: string; count: number }>>(
     (services, project) => {
@@ -45,6 +47,13 @@ export function FilterBar() {
       : getLabel(activeService?.name ?? active);
   const activeCount = active === 'all' ? projects.length : (activeService?.count ?? 0);
   const panelId = 'project-filter-options';
+  const options = [
+    { value: 'all', label: locale === 'IT' ? 'Tutti' : 'All', count: projects.length },
+    ...servicesWithCounts.map(({ name, count }) => ({ value: name, label: getLabel(name), count })),
+  ];
+  const mobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+  const hiddenY = mobile ? 10 : 18;
+  const isEntranceVisible = entranceReady || reducedMotion;
 
   return (
     <nav
@@ -52,13 +61,21 @@ export function FilterBar() {
       data-motion-home-surface
       aria-label={locale === 'IT' ? 'Filtri progetti' : 'Project filters'}
     >
-      <div className="filter-bar-summary" data-motion-text data-motion-order="7">
+      <motion.div
+        className="filter-bar-summary"
+        initial={reducedMotion ? false : { opacity: 0, y: hiddenY }}
+        animate={isEntranceVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: hiddenY }}
+        transition={{
+          duration: reducedMotion ? 0 : TEXT_MOTION.enterDuration,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+      >
         <button
           type="button"
           className="filter-bar-toggle"
           aria-expanded={isOpen}
           aria-controls={panelId}
-          onClick={() => setIsOpen((open) => !open)}
+          onClick={() => setIsOpen(!isOpen)}
         >
           <span>{locale === 'IT' ? 'Filtri' : 'Filter'}</span>
           <span className="filter-bar-symbol" aria-hidden="true">
@@ -70,47 +87,15 @@ export function FilterBar() {
             {activeLabel} <span className="filter-bar-count">[{activeCount}]</span>
           </span>
         )}
-      </div>
-
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            id={panelId}
-            className="filter-bar-panel"
-            initial={{ width: 0, opacity: 0, x: -8 }}
-            animate={{ width: 'auto', opacity: 1, x: 0 }}
-            exit={{ width: 0, opacity: 0, x: -8 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div
-              className="filter-bar-options"
-              role="group"
-              aria-label={locale === 'IT' ? 'Filtra per servizio' : 'Filter projects by service'}
-            >
-              <button
-                type="button"
-                className={`filter-bar-item${active === 'all' ? ' is-active' : ''}`}
-                onClick={() => setActive('all')}
-                aria-pressed={active === 'all'}
-              >
-                {locale === 'IT' ? 'Tutti' : 'All'}{' '}
-                <span className="filter-bar-count">[{projects.length}]</span>
-              </button>
-              {servicesWithCounts.map(({ name, count }) => (
-                <button
-                  key={name}
-                  type="button"
-                  className={`filter-bar-item${active === name ? ' is-active' : ''}`}
-                  onClick={() => setActive(name)}
-                  aria-pressed={active === name}
-                >
-                  {getLabel(name)} <span className="filter-bar-count">[{count}]</span>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </motion.div>
+      <FilterDisclosureOptions
+        open={isOpen}
+        panelId={panelId}
+        groupLabel={locale === 'IT' ? 'Filtra per servizio' : 'Filter projects by service'}
+        options={options}
+        activeValue={active}
+        onSelect={setActive}
+      />
     </nav>
   );
 }

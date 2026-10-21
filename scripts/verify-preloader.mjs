@@ -10,6 +10,8 @@ const sizes = [
   { width: 1471, height: 645 },
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
+  { width: 393, height: 852 },
+  { width: 375, height: 812 },
 ];
 const screenshotDir = path.join(os.tmpdir(), 'antonio-portfolio-preloader');
 await fs.mkdir(screenshotDir, { recursive: true });
@@ -181,6 +183,17 @@ try {
         1000,
       introRemoved: !document.querySelector('.entrance-intro'),
       overflow: document.documentElement.scrollWidth > window.innerWidth,
+      header: (() => {
+        const bio = document.querySelector('.site-header-bio');
+        const ctas = document.querySelector('.site-header-ctas');
+        if (!bio || !ctas) return null;
+        const bioStyle = getComputedStyle(bio);
+        const ctaStyle = getComputedStyle(ctas);
+        return {
+          bioVisible: bioStyle.opacity === '1' && !bioStyle.clipPath.includes('100%'),
+          ctasVisible: ctaStyle.opacity === '1' && !ctaStyle.clipPath.includes('100%'),
+        };
+      })(),
       galleryScrollbar: getComputedStyle(document.querySelector('.gallery-grid-wrap'))
         .scrollbarWidth,
       galleryScrollbarDisplay: getComputedStyle(
@@ -204,6 +217,8 @@ try {
     assert.equal(finalState.events, 1, 'intro completion event must fire exactly once');
     assert.equal(finalState.introRemoved, true);
     assert.equal(finalState.overflow, false);
+    assert.ok(finalState.header?.bioVisible, 'header bio must be visible after intro');
+    assert.ok(finalState.header?.ctasVisible, 'header CTAs must be visible after intro');
     if (size.width <= 767) {
       assert.equal(finalState.galleryScrollbar, 'none');
       assert.equal(finalState.galleryScrollbarDisplay, 'none');

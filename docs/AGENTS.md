@@ -5,3 +5,17 @@
 - Keep GROQ/schema/TypeGen aligned. Never hand-edit generated types or run import/reset commands as validation.
 - Do not introduce project-specific frontend conditions. Catalog ordering, visibility, filters, and routes derive from CMS fields.
 - Do not delete assets until source, CMS, metadata, download, and runtime references have been checked. Do not deploy without explicit authorization.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specifications for this repository live in GitHub Issues. Use the `gh` CLI; see `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the repository's canonical triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`; see `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repository. Read the root glossary when present and relevant ADRs under `docs/adr/`; see `docs/agents/domain.md`.

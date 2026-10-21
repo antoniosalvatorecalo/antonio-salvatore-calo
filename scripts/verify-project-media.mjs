@@ -114,7 +114,26 @@ try {
     Math.round(entryTiming.media - entryTiming.controls),
     'ms',
   );
-  assert((await counts()).project > 0, 'Project images must reveal individually');
+  assert.equal(
+    await page.locator('.single-project-view').getAttribute('data-gallery-entrance'),
+    'settled',
+    'The route rotation owns the initial Project gallery entrance.',
+  );
+  const galleryRevealsBeforeFilter = (await counts()).home;
+  await page.locator('.project-media-filter .filter-bar-toggle').click();
+  await page.locator('.project-media-filter .filter-bar-item').nth(1).click();
+  await page.waitForTimeout(900);
+  assert(
+    (await counts()).home > galleryRevealsBeforeFilter,
+    'Changing the Project media filter must reveal its gallery items.',
+  );
+  assert.equal(
+    await page.locator('.project-media-filter .filter-bar-toggle').getAttribute('aria-expanded'),
+    'true',
+    'Selecting a Project media filter must leave its panel open.',
+  );
+  await page.locator('.project-media-filter .filter-bar-item').first().click();
+  await page.waitForTimeout(900);
   assert.match(
     await page
       .locator('.project-media-card-frame')
@@ -269,7 +288,16 @@ try {
     await page.locator('[data-project-id="bugonia"]').first().click();
     await phase('project');
     await page.waitForTimeout(1500);
-    assert((await counts()).project > before.project, 'Project reveal must replay on re-entry');
+    assert.equal(
+      (await counts()).project,
+      before.project,
+      'The 3D Project route entrance must not replay the per-media reveal.',
+    );
+    assert.equal(
+      await page.locator('.single-project-view').getAttribute('data-gallery-entrance'),
+      'settled',
+      'The Project gallery must remain settled after route re-entry.',
+    );
   }
   console.log('PASS repeated Home/Project reveals and browser Back, persistent grid');
 

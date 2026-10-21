@@ -12,6 +12,24 @@
   overscroll-behavior-y: contain;
 }
 
+/* The project surface lives inside the fixed portfolio scene. On touch
+   layouts it must own the vertical scroll so content can grow beyond the
+   viewport without breaking the scene transition geometry. */
+@media (max-width: 1023px) {
+  .single-project-view.is-project-ready {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .single-project-content {
+    height: auto;
+    min-height: 100%;
+    padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* The project controls must not appear alone on the rotating, incoming plane.
    At the endpoint the shared text timeline reveals them alongside the photos. */
 html:not([data-intro-complete='true']) .project-media-gallery-header,
@@ -24,14 +42,13 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
   --project-carousel-top-gap: 0px;
   width: 100%;
   min-height: 100%;
-  height: auto;
+  height: 100%;
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
   padding: calc(
-      var(--project-layout-header-height, var(--site-header-height, var(--header-height))) +
-        var(--space-6) + clamp(0.75rem, 2vh, 1.5rem) +
-        var(--project-carousel-top-gap)
+      var(--project-gallery-header-height, var(--site-header-height, var(--header-height))) +
+        var(--space-6) + clamp(0.75rem, 2vh, 1.5rem) + var(--project-carousel-top-gap)
     )
     var(--space-4) var(--space-8);
   box-sizing: border-box;
@@ -66,9 +83,8 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
 
 @media (min-width: 1024px) {
   .single-project-content {
-    /* Follow the measured header when credits or links expand. */
     padding-top: calc(
-      var(--project-layout-header-height, var(--site-header-height, var(--header-height))) +
+      var(--project-gallery-header-height, var(--site-header-height, var(--header-height))) +
         var(--project-header-separation)
     );
     padding-right: var(--space-6);
@@ -113,9 +129,9 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
   max-height: max(
     12rem,
     calc(
-      100svh - var(--project-layout-header-height, var(--site-header-height, var(--header-height))) -
-        var(--project-carousel-top-gap) -
-        var(--space-8) - var(--space-8) - 24px
+      100svh -
+        var(--project-gallery-header-height, var(--site-header-height, var(--header-height))) -
+        var(--project-carousel-top-gap) - var(--space-8) - var(--space-8) - 24px
     )
   );
   background: transparent;
@@ -297,17 +313,15 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
   }
 
   .single-project-content {
-    --project-mobile-details-reserve: clamp(1rem, 3vh, 2rem);
-    padding: calc(
-        var(--project-layout-header-height, var(--site-header-height, 320px)) +
-        var(--project-mobile-details-reserve) + var(--space-4) +
-          clamp(0.5rem, 1.25vh, 0.75rem)
-      )
-      var(--space-3) clamp(1rem, 3vh, 1.5rem);
+    --project-gallery-mobile-top-offset: max(
+      var(--project-gallery-header-height, var(--site-header-height, 320px)),
+      clamp(34rem, 72dvh, 41rem)
+    );
+    padding: var(--project-gallery-mobile-top-offset) var(--space-3) clamp(1rem, 3vh, 1.5rem);
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
   .single-project-carousel {
@@ -331,7 +345,7 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
     flex: 1 1 auto;
     min-height: 0;
     max-height: calc(
-      100dvh - var(--project-layout-header-height, var(--site-header-height, 320px)) -
+      100dvh - var(--project-gallery-header-height, var(--site-header-height, 320px)) -
         var(--space-8)
     );
     overflow: hidden;
@@ -359,6 +373,16 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
   position: relative;
   width: 100%;
   min-width: 0;
+  margin-block-start: auto;
+}
+
+@media (min-width: 1024px) {
+  /* The project content already owns the desktop gutter. Keeping an inner
+     gallery inset here would shift the filter and first card away from the
+     bio/header alignment line. */
+  .project-media-gallery {
+    --project-gallery-padding: 0px;
+  }
 }
 
 .project-media-gallery-header {
@@ -369,7 +393,7 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
   justify-content: space-between;
   gap: var(--space-4);
   margin-bottom: 0.75rem;
-  padding-inline: 0;
+  padding-inline: var(--project-gallery-padding);
 }
 
 .project-media-gallery-header .filter-bar {
@@ -504,8 +528,23 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
 .project-media-gallery-viewport {
   position: relative;
   width: 100%;
+  min-height: calc(
+    min(
+        clamp(340px, 50vh, 620px),
+        max(
+          0px,
+          calc(
+            100dvh -
+              var(--project-gallery-header-height, var(--site-header-height, var(--header-height))) -
+              var(--project-carousel-top-gap) - 3rem
+          )
+        )
+      ) + 3rem
+  );
   overflow-x: auto;
   overflow-y: hidden;
+  background: var(--bg-primary);
+  scroll-padding-inline-start: var(--project-gallery-inline-inset, var(--project-gallery-padding));
   overscroll-behavior: none;
   touch-action: pan-x;
   scroll-behavior: smooth;
@@ -567,7 +606,8 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
   height: min(
     clamp(300px, 44vh, 560px),
     calc(
-      100dvh - var(--project-layout-header-height, var(--site-header-height, var(--header-height))) -
+      100dvh -
+        var(--project-gallery-header-height, var(--site-header-height, var(--header-height))) -
         var(--project-carousel-top-gap) - 3rem
     )
   );
@@ -575,6 +615,17 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
   max-width: calc(100vw - (2 * var(--project-gallery-padding)));
   overflow: hidden;
   background: var(--bg-primary);
+}
+
+.project-media-card-filter-reveal {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+.project-media-card-filter-reveal > .project-media-card-image {
+  width: 100%;
+  height: 100%;
 }
 
 .project-media-card-inner {
@@ -812,6 +863,9 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
 
 @media (max-width: 767px) {
   .single-project-view {
+    --project-gallery-inline-inset: clamp(1rem, 4vw, 1.25rem);
+    --project-gallery-bottom-reserve: max(2.5rem, env(safe-area-inset-bottom, 0px));
+    --project-gallery-label-reserve: 1.5rem;
     --project-reveal-duration: 700ms;
     --project-settle-duration: 850ms;
     --project-settle-scale: 1.025;
@@ -821,11 +875,15 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
     --project-depth-z: -6px;
   }
 
+  .project-media-gallery {
+    margin-block-start: 0;
+  }
+
   .project-media-gallery-header {
     align-items: baseline;
     gap: 0.75rem;
     margin-bottom: 0.35rem;
-    padding-inline: 0;
+    padding-inline: var(--project-gallery-inline-inset);
   }
 
   .project-media-filter {
@@ -871,8 +929,8 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
 
   .project-media-gallery-track {
     background-color: var(--bg-primary);
-    padding-inline: var(--space-3);
-    padding-bottom: 0;
+    padding-inline: var(--project-gallery-inline-inset);
+    padding-block: 0.375rem;
   }
 
   .project-media-card {
@@ -881,6 +939,7 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
   }
 
   .project-media-gallery-viewport {
+    min-height: calc(min(14.426rem, 51.15vw) + 2.5rem);
     background-color: var(--bg-primary);
     scroll-behavior: auto;
     scroll-snap-type: x mandatory;
@@ -896,13 +955,8 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
     width: min(78vw, 22rem);
     height: auto;
     min-width: min(78vw, 22rem);
-    max-height: calc(
-      100dvh - var(--project-layout-header-height, var(--site-header-height, 320px)) -
-        var(--project-mobile-details-reserve) -
-        var(--space-8)
-    );
-    aspect-ratio: 61 / 40 !important;
-    max-width: calc(100vw - (2 * var(--project-gallery-padding)));
+    max-height: none;
+    max-width: calc(100vw - (2 * var(--project-gallery-inline-inset)));
   }
 }
 
@@ -911,7 +965,8 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
     height: min(
       clamp(260px, 37vh, 470px),
       calc(
-        100dvh - var(--project-layout-header-height, var(--site-header-height, var(--header-height))) -
+        100dvh -
+          var(--project-gallery-header-height, var(--site-header-height, var(--header-height))) -
           var(--project-carousel-top-gap) - 3rem
       )
     );
@@ -921,7 +976,8 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
     height: min(
       clamp(340px, 50vh, 620px),
       calc(
-        100dvh - var(--project-layout-header-height, var(--site-header-height, var(--header-height))) -
+        100dvh -
+          var(--project-gallery-header-height, var(--site-header-height, var(--header-height))) -
           var(--project-carousel-top-gap) - 3rem
       )
     );

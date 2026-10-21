@@ -32,6 +32,7 @@ const ContactFormExperience = lazy(() =>
 interface SiteHeaderProps {
   transitionPhase?: 'idle' | 'opening' | 'project' | 'closing';
   projectActive?: boolean;
+  projectHeaderVisible?: boolean;
   projectInfo?: {
     name: string;
     details: ProjectDetailColumn[];
@@ -41,6 +42,7 @@ interface SiteHeaderProps {
 
 export const SiteHeader: React.FC<SiteHeaderProps> = ({
   projectActive,
+  projectHeaderVisible,
   projectInfo,
   onBackToGallery,
   transitionPhase,
@@ -57,8 +59,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const siteSettings = useSiteSettings();
 
   const [contactOpen, setContactOpen] = useState(false);
-  const [introComplete, setIntroComplete] = useState(false);
+  const [introComplete, setIntroComplete] = useState(() =>
+    typeof document !== 'undefined' && document.documentElement.dataset.introComplete === 'true',
+  );
   const [emailCopied, setEmailCopied] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches,
+  );
 
   const handleCopyEmail = async () => {
     try {
@@ -80,10 +87,43 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   };
 
   useEffect(() => {
-    if (document.documentElement.dataset.introComplete === 'true') setIntroComplete(true);
+    const root = document.documentElement;
+    const completeIntro = () => {
+      if (root.dataset.introComplete === 'true') {
+        setIntroComplete(true);
+        return;
+      }
+      root.dataset.introComplete = 'true';
+      setIntroComplete(true);
+      window.dispatchEvent(new CustomEvent('portfolio:intro-complete'));
+    };
+    const syncIntroState = () => {
+      if (root.dataset.introComplete === 'true') setIntroComplete(true);
+    };
+    syncIntroState();
     const handleIntroComplete = () => setIntroComplete(true);
     window.addEventListener('portfolio:intro-complete', handleIntroComplete);
-    return () => window.removeEventListener('portfolio:intro-complete', handleIntroComplete);
+    // Protect against a missed intro event on mobile Safari. The fallback only
+    // runs once and updates the same global state used by the gallery CSS.
+    const fallback = window.setTimeout(() => {
+      if (root.dataset.introComplete !== 'true') completeIntro();
+    }, 3000);
+    return () => {
+      window.clearTimeout(fallback);
+      window.removeEventListener('portfolio:intro-complete', handleIntroComplete);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const query = window.matchMedia('(max-width: 767px)');
+    const syncViewport = () => setIsMobileViewport(query.matches);
+    syncViewport();
+    query.addEventListener('change', syncViewport);
+    window.addEventListener('resize', syncViewport);
+    return () => {
+      query.removeEventListener('change', syncViewport);
+      window.removeEventListener('resize', syncViewport);
+    };
   }, []);
 
   const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
@@ -165,11 +205,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   useLayoutEffect(() => {
     const header = headerRef.current;
     if (!header) return;
+    const isOpening = transitionPhase === 'opening';
     const supplementalSurface = document.querySelector<HTMLElement>(
-      isProjectPage ? '[data-motion-project-surface]' : '[data-motion-home-surface]',
+      isProjectPage && !isOpening ? '[data-motion-project-surface]' : '[data-motion-home-surface]',
     );
-    const targets = getTextMotionTargets(header, supplementalSurface);
-    const mobile = window.matchMedia('(max-width: 767px)').matches;
+    const targets = getTextMotionTargets(header, supplementalSurface).filter(
+      (target) => !isOpening || !target.closest('.site-header-col--project'),
+    );
+    const mobile = isMobileViewport;
     motionTimelineRef.current?.kill();
 
     if (!introComplete) {
@@ -192,29 +235,42 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       motionTimelineRef.current = null;
       context.revert();
     };
-  }, [introComplete, isProjectPage, prefersReducedMotion, projectInfo?.name, transitionPhase]);
+  }, [introComplete, isMobileViewport, isProjectPage, prefersReducedMotion, projectInfo?.name, transitionPhase]);
 
   useLayoutEffect(() => {
     const header = headerRef.current;
     if (!header) return;
     const inner = header.querySelector<HTMLElement>('.site-header-inner');
     const update = () => {
-      const mobileContactOpen =
-        contactOpen && window.matchMedia('(max-width: 767px)').matches;
+      const mobileContactOpen = contactOpen && window.matchMedia('(max-width: 767px)').matches;
       const panel = mobileContactOpen
         ? header.querySelector<HTMLElement>('.contact-panel-wrapper')
         : null;
       const previousDisplay = panel?.style.display;
 
-      // Measure the structural header while the mobile form is temporarily
-      // removed from layout; the expanded form must not move the gallery.
-      if (panel) panel.style.display = 'none';
-      const height = Math.max(
-        header.getBoundingClientRect().height,
-        header.scrollHeight,
-        inner?.getBoundingClientRect().height ?? 0,
-        inner?.scrollHeight ?? 0,
+      const measureHeight = () =>
+        Math.max(
+          header.getBoundingClientRect().height,
+          header.scrollHeight,
+          inner?.getBoundingClientRect().height ?? 0,
+          inner?.scrollHeight ?? 0,
+        );
+      const height = measureHeight();
+
+      // Measure the gallery baseline with expandable details out of layout.
+      // Keep one measurement source here so CSS consumers cannot drift apart.
+      const accordionContents = Array.from(
+        header.querySelectorAll<HTMLElement>('.project-details-meta-content'),
       );
+      const previousDisplays = accordionContents.map((content) => content.style.display);
+      if (panel) panel.style.display = 'none';
+      accordionContents.forEach((content) => {
+        content.style.display = 'none';
+      });
+      const galleryHeaderHeight = measureHeight();
+      accordionContents.forEach((content, index) => {
+        content.style.display = previousDisplays[index] ?? '';
+      });
       if (panel && previousDisplay !== undefined) panel.style.display = previousDisplay;
 
       const rootStyle = document.documentElement.style;
@@ -229,15 +285,21 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       }
       if (isProjectPage) {
         rootStyle.setProperty('--project-layout-header-height', `${height}px`);
+        rootStyle.setProperty('--project-gallery-header-height', `${galleryHeaderHeight}px`);
       } else {
         rootStyle.removeProperty('--project-layout-header-height');
+        rootStyle.removeProperty('--project-gallery-header-height');
       }
     };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(header);
     if (inner) observer.observe(inner);
-    return () => observer.disconnect();
+    window.addEventListener('resize', update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+    };
   }, [contactOpen, isProjectPage, projectInfo?.name]);
 
   const handleGoHome = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -278,6 +340,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       ref={headerRef}
       className={`site-header${isProjectPage ? ' is-project' : ''}`}
       data-transition-phase={transitionPhase}
+      data-project-header-visible={(projectHeaderVisible ?? isProjectPage) ? 'true' : 'false'}
       data-contact-open={contactOpen ? 'true' : undefined}
     >
       <div className={`site-header-inner${isProjectPage ? ' is-project' : ''}`}>
@@ -341,7 +404,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         </div>
 
         {isProjectPage && projectInfo && (
-          <div className="site-header-col site-header-col--project" data-transition-control>
+          <div
+            className="site-header-col site-header-col--project"
+            data-transition-control
+            aria-hidden={!(projectHeaderVisible ?? isProjectPage)}
+          >
             {onBackToGallery && (
               <button
                 onClick={onBackToGallery}
