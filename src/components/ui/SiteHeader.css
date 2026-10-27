@@ -1165,6 +1165,21 @@
     pointer-events: auto;
   }
 
+  /* Project page: the gallery is anchored to the bottom of the screen and the
+     project text scrolls in the space above it. */
+  .site-header.is-project {
+    max-height: calc(var(--project-gallery-top, 60dvh) - var(--space-3));
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    pointer-events: auto;
+  }
+
+  .site-header.is-project::-webkit-scrollbar {
+    display: none;
+  }
+
   .site-header-inner {
     grid-template-areas: 'info' 'nav';
     grid-template-columns: minmax(0, 1fr);
@@ -1176,8 +1191,8 @@
   .site-header-col--nav {
     grid-area: nav;
     width: 100%;
-    position: sticky;
-    bottom: 0;
+    /* Not sticky: html/body clip overflow, so Safari resolves bottom: 0 against the
+       zero-height body and lifts this opaque column over the bio. */
     background: var(--bg-primary);
     padding-top: clamp(2.25rem, 5vh, 3.5rem);
     overflow: visible;

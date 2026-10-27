@@ -155,23 +155,36 @@ async function readBioVisibility(page) {
 async function verifyMobileProjectScroll(page, name) {
   const gallery = page.locator('.project-media-gallery-viewport');
   const firstCard = page.locator('.project-media-card').first();
-  const lastCard = page.locator('.project-media-card').last();
-  let galleryBox = await gallery.boundingBox();
+  const header = page.locator('.site-header');
+  const galleryBox = await gallery.boundingBox();
   assert.ok(galleryBox, `${name}: project gallery was not visible`);
+  assert(
+    galleryBox.y + galleryBox.height <= page.viewportSize().height + 1,
+    `${name}: the project gallery must be anchored inside the bottom of the viewport`,
+  );
+  const textLeft = (await page.locator('.site-header-project-heading').boundingBox())?.x;
+  const firstCardLeft = (await firstCard.boundingBox())?.x;
+  assert(
+    Math.abs(textLeft - firstCardLeft) <= 1,
+    `${name}: first photo (${firstCardLeft}px) must align with the project text (${textLeft}px)`,
+  );
 
-  for (
-    let attempt = 0;
-    attempt < 10 && galleryBox.y > page.viewportSize().height * 0.65;
-    attempt += 1
-  ) {
+  // Vertical scrolling moves the project text above the gallery, never the gallery.
+  const headerScrollable = await header.evaluate((el) => el.scrollHeight > el.clientHeight);
+  if (headerScrollable) {
     await page.mouse.move(10, page.viewportSize().height * 0.25);
     await page.mouse.wheel(0, 500);
-    await page.waitForTimeout(50);
-    galleryBox = await gallery.boundingBox();
+    await page.waitForTimeout(150);
+    assert.ok(
+      (await header.evaluate((el) => el.scrollTop)) > 0,
+      `${name}: vertical scrolling must scroll the project text`,
+    );
   }
-  assert(
-    galleryBox.y < page.viewportSize().height,
-    `${name}: vertical scrolling must bring the project gallery into view`,
+  const galleryAfterScroll = await gallery.boundingBox();
+  assert.equal(
+    Math.round(galleryAfterScroll.y),
+    Math.round(galleryBox.y),
+    `${name}: the project gallery must stay fixed while the page scrolls`,
   );
 
   const firstPosition = await firstCard.boundingBox();
@@ -208,22 +221,14 @@ async function verifyMobileProjectScroll(page, name) {
     `${name}: horizontal swipe must move through the project photos`,
   );
 
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    const box = await gallery.boundingBox();
-    if (!box) break;
-    const startX = box.x + box.width / 2;
-    const startY = Math.min(box.y + box.height / 2, page.viewportSize().height - 20);
-    await touch(startX, startY, startX, startY - 400);
-    await page.waitForTimeout(50);
-  }
   await client.detach();
-  const lastPosition = await lastCard.boundingBox();
-  assert.ok(lastPosition, `${name}: last project photo was not rendered`);
-  assert(
-    lastPosition.y < page.viewportSize().height && lastPosition.y + lastPosition.height > 0,
-    `${name}: scrolling from the gallery must bring the last project photo into view`,
-  );
-  report.mobileScrolling.push({ name, firstPhotoMovedAfterSwipe: true, lastPhotoReached: true });
+  report.mobileScrolling.push({
+    name,
+    galleryAnchored: true,
+    alignedWithText: true,
+    textScrolled: headerScrollable,
+    firstPhotoMovedAfterSwipe: true,
+  });
 }
 
 async function runTransition(viewport, slug) {

@@ -89,9 +89,7 @@ function getHorizontalSnapTarget(
   };
   const gap = length(trackStyle.columnGap);
   let cardBorderStart =
-    trackLeft +
-    length(trackStyle.borderInlineStartWidth) +
-    length(trackStyle.paddingInlineStart);
+    trackLeft + length(trackStyle.borderInlineStartWidth) + length(trackStyle.paddingInlineStart);
 
   for (const precedingCard of cards.slice(0, cardIndex)) {
     const precedingStyle = getComputedStyle(precedingCard);
@@ -213,6 +211,25 @@ export function SingleProjectView({
     setLightboxOpen(false);
     setIsAtGalleryEnd(false);
   }, [initialMediaIndex, project.slug]);
+
+  // Publish the space above the bottom-anchored mobile gallery. The fixed header
+  // uses it as its scrollable height, so project text never runs under the strip.
+  useLayoutEffect(() => {
+    const gallery = galleryViewportRef.current?.closest<HTMLElement>('.project-media-gallery');
+    if (!gallery) return;
+    const rootStyle = document.documentElement.style;
+    const update = () => {
+      rootStyle.setProperty('--project-gallery-top', `${gallery.offsetTop}px`);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(gallery);
+    if (gallery.offsetParent) observer.observe(gallery.offsetParent);
+    return () => {
+      observer.disconnect();
+      rootStyle.removeProperty('--project-gallery-top');
+    };
+  }, [project.slug]);
 
   useEffect(() => {
     const viewport = galleryViewportRef.current;

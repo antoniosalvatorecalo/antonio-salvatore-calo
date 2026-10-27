@@ -16,6 +16,12 @@ gsap.registerPlugin(CustomEase);
 // Keep both axes on this same curve so the two pages remain rigidly connected.
 export const PROJECT_TRANSITION_EASE = CustomEase.create('project-turn', '0.65,0,0.2,1');
 
+// The 3D turn is the mobile page transition itself, so on touch layouts it (and the
+// header text handoff that goes with it) plays even with Reduce Motion on.
+// Larger screens still settle instantly.
+export const playsPageTurn = (reducedMotion: boolean) =>
+  !reducedMotion || window.matchMedia('(max-width: 1023px)').matches;
+
 export function updateSceneGeometry({ scene }: ScenePlanes) {
   scene.style.setProperty('--scene-depth', `${scene.clientWidth / 2}px`);
 }

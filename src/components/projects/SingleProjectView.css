@@ -288,31 +288,23 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
 
 /* Mobile styles */
 @media (max-width: 1023px) {
-  .single-project-view {
+  /* The gallery stays anchored to the bottom of the screen. The project text in
+     the fixed header scrolls above it (see SiteHeader.css), so this surface never
+     scrolls vertically. */
+  .single-project-view,
+  .single-project-view.is-project-ready {
     height: 100dvh;
     overflow: hidden;
   }
 
-  /* Keep the transition shell fixed to the scene, and let only the settled
-     project surface scroll when its content is taller than the viewport. */
-  .single-project-view.is-project-ready {
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
   .single-project-content {
-    --project-gallery-mobile-top-offset: max(
-      var(--project-gallery-header-height, var(--site-header-height, 320px)),
-      clamp(34rem, 72dvh, 41rem)
-    );
-    padding: var(--project-gallery-mobile-top-offset) var(--space-3) clamp(1rem, 3vh, 1.5rem);
-    height: auto;
-    min-height: 100%;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+    min-height: 0;
+    padding: 0 var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
     overflow: visible;
     align-items: stretch;
-    padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
   }
 
   .single-project-carousel {
@@ -800,7 +792,12 @@ html:not([data-intro-complete='true']) .project-media-gallery-header,
   transition: opacity 160ms ease-out;
 }
 
-html[data-motion='reduced'] .single-project-view .project-media-card-frame {
+html[data-motion='reduced']
+  .single-project-view:not(
+    [data-project-transition-phase='opening'],
+    [data-project-transition-phase='closing']
+  )
+  .project-media-card-frame {
   animation: none;
   clip-path: inset(0);
   transition: none;
@@ -814,7 +811,12 @@ html[data-motion='reduced'] .single-project-view .project-media-card-depth {
   filter: none;
 }
 
-html[data-motion='reduced'] .single-project-view .project-media-card-name {
+html[data-motion='reduced']
+  .single-project-view:not(
+    [data-project-transition-phase='opening'],
+    [data-project-transition-phase='closing']
+  )
+  .project-media-card-name {
   animation: none;
   opacity: 1;
   transition: none;
@@ -855,6 +857,51 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
 .project-media-card:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 5px;
+}
+
+@media (max-width: 1023px) {
+  /* Share the header's 12px gutter: filter row and first card start on the same
+     line as the project text. The strip itself bleeds to the screen edges. */
+  .project-media-gallery {
+    flex: 0 0 auto;
+    margin-block-start: 0;
+  }
+
+  .single-project-view .project-media-gallery-header {
+    padding-inline: 0;
+  }
+
+  .single-project-view .project-media-gallery-viewport {
+    width: auto;
+    min-height: 0;
+    margin-inline: calc(-1 * var(--space-3));
+    scroll-padding-inline-start: var(--space-3);
+    touch-action: pan-x;
+  }
+
+  .single-project-view .project-media-gallery-track {
+    align-items: flex-start;
+    padding-inline: var(--space-3);
+  }
+
+  /* One shared height keeps the anchored strip compact: a portrait image can no
+     longer stretch the whole gallery. Width follows each media's aspect ratio. */
+  .single-project-view .project-media-card .project-media-card-frame {
+    width: auto;
+    min-width: 0;
+    height: var(--project-mobile-frame-height);
+    max-width: calc(100vw - (2 * var(--space-3)));
+  }
+
+  .single-project-view {
+    --project-mobile-frame-height: clamp(220px, 34dvh, 360px);
+  }
+}
+
+@media (max-width: 767px) {
+  .single-project-view {
+    --project-mobile-frame-height: clamp(10.5rem, 26dvh, 14rem);
+  }
 }
 
 @media (max-width: 767px) {
@@ -992,14 +1039,20 @@ html[data-motion='reduced'] .single-project-view .project-media-card-name {
   }
 
   html[data-intro-complete]
-    .single-project-view[data-project-content-visible]
+    .single-project-view[data-project-content-visible]:not(
+      [data-project-transition-phase='opening'],
+      [data-project-transition-phase='closing']
+    )
     .project-media-card-frame {
     animation: none;
     clip-path: inset(0);
     transition: none;
   }
   html[data-intro-complete]
-    .single-project-view[data-project-content-visible]
+    .single-project-view[data-project-content-visible]:not(
+      [data-project-transition-phase='opening'],
+      [data-project-transition-phase='closing']
+    )
     .project-media-card-name {
     animation: none;
     opacity: 1;

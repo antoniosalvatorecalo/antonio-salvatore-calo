@@ -16,6 +16,7 @@ import {
   setTextMotionHidden,
   setTextMotionVisible,
 } from '@/motion/TextRevealMotion';
+import { playsPageTurn } from '@/motion/ProjectTransitionMotion';
 
 import { ProjectDetailsGrid, type ProjectDetailColumn } from '../projects/ProjectDetailsGrid';
 import { AnimatedContactPanel } from './AnimatedContactPanel';
@@ -59,8 +60,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const siteSettings = useSiteSettings();
 
   const [contactOpen, setContactOpen] = useState(false);
-  const [introComplete, setIntroComplete] = useState(() =>
-    typeof document !== 'undefined' && document.documentElement.dataset.introComplete === 'true',
+  const [introComplete, setIntroComplete] = useState(
+    () =>
+      typeof document !== 'undefined' && document.documentElement.dataset.introComplete === 'true',
   );
   const [emailCopied, setEmailCopied] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(
@@ -130,6 +132,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   useEffect(() => {
     setContactOpen(false);
   }, [isProjectPage]);
+
+  // On mobile the project text scrolls inside the header; every project starts at the top.
+  useLayoutEffect(() => {
+    if (headerRef.current) headerRef.current.scrollTop = 0;
+  }, [isProjectPage, projectInfo?.name]);
 
   // Escape key handler to close contact panel
   const handleKeyDown = useCallback(
@@ -219,7 +226,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       setTextMotionHidden(targets, mobile);
       return;
     }
-    if (prefersReducedMotion) {
+    // When the page turn still plays (touch layouts), its text must exit with it;
+    // otherwise the outgoing page lingers on screen for the whole turn.
+    const pageTurn = transitionPhase === 'opening' || transitionPhase === 'closing';
+    if (prefersReducedMotion && !(pageTurn && playsPageTurn(prefersReducedMotion))) {
       setTextMotionVisible(targets);
       return;
     }
@@ -235,7 +245,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       motionTimelineRef.current = null;
       context.revert();
     };
-  }, [introComplete, isMobileViewport, isProjectPage, prefersReducedMotion, projectInfo?.name, transitionPhase]);
+  }, [
+    introComplete,
+    isMobileViewport,
+    isProjectPage,
+    prefersReducedMotion,
+    projectInfo?.name,
+    transitionPhase,
+  ]);
 
   useLayoutEffect(() => {
     const header = headerRef.current;

@@ -16,6 +16,7 @@ import { useReducedMotionPreference } from './MotionPreferenceProvider';
 import {
   createCloseTimeline,
   createOpenTimeline,
+  playsPageTurn,
   setHomePlaneState,
   setProjectPlaneState,
   updateSceneGeometry,
@@ -243,6 +244,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     let height = planes.scene.clientHeight;
     const isOpening = state.phase === 'opening';
     const isClosing = state.phase === 'closing';
+    const skipTurn = !playsPageTurn(reducedMotion);
     if (isClosing) restoreGallery();
 
     const settle = () => {
@@ -265,7 +267,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
         if (state.phase === 'project') setProjectPlaneState(planes);
         else setHomePlaneState(planes);
       });
-    } else if (reducedMotion) {
+    } else if (skipTurn) {
       settle();
     } else {
       const animate = () => {
