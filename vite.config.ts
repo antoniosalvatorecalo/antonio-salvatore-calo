@@ -12,9 +12,9 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       {
-          name: 'api-mock',
-          configureServer(server) {
-            server.middlewares.use('/api/contact', (req, res) => {
+        name: 'api-mock',
+        configureServer(server) {
+          server.middlewares.use('/api/contact', (req, res) => {
             if (req.method === 'POST') {
               let body = '';
               req.on('data', (chunk) => {
@@ -27,13 +27,17 @@ export default defineConfig(({ mode }) => {
                   res.setHeader('Content-Type', 'application/json');
 
                   if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) {
-                    const subject = encodeURIComponent(`New project: ${data.projectType || 'inquiry'}`);
+                    const subject = encodeURIComponent(
+                      `New project: ${data.projectType || 'inquiry'}`,
+                    );
                     const bodyEncoded = encodeURIComponent(text);
-                    res.end(JSON.stringify({
-                      success: true,
-                      fallback: 'mailto',
-                      mailtoHref: `mailto:${contactEmail}?subject=${subject}&body=${bodyEncoded}`,
-                    }));
+                    res.end(
+                      JSON.stringify({
+                        success: true,
+                        fallback: 'mailto',
+                        mailtoHref: `mailto:${contactEmail}?subject=${subject}&body=${bodyEncoded}`,
+                      }),
+                    );
                     return;
                   }
 
@@ -44,19 +48,24 @@ export default defineConfig(({ mode }) => {
                     auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
                   });
 
-                  void transporter.sendMail({
-                    from: env.SMTP_USER,
-                    to: contactEmail,
-                    replyTo: data.email,
-                    subject: `New project inquiry: ${data.projectType || 'inquiry'} from ${data.name || 'unknown'}`,
-                    text,
-                  }).then(() => {
-                    res.end(JSON.stringify({ success: true, message: 'Message sent successfully.' }));
-                  }).catch((error) => {
-                    console.error('Contact API error:', error);
-                    res.statusCode = 500;
-                    res.end(JSON.stringify({ success: false, error: 'Failed to send message.' }));
-                  });
+                  void transporter
+                    .sendMail({
+                      from: env.SMTP_USER,
+                      to: contactEmail,
+                      replyTo: data.email,
+                      subject: `New project inquiry: ${data.projectType || 'inquiry'} from ${data.name || 'unknown'}`,
+                      text,
+                    })
+                    .then(() => {
+                      res.end(
+                        JSON.stringify({ success: true, message: 'Message sent successfully.' }),
+                      );
+                    })
+                    .catch((error) => {
+                      console.error('Contact API error:', error);
+                      res.statusCode = 500;
+                      res.end(JSON.stringify({ success: false, error: 'Failed to send message.' }));
+                    });
                 } catch {
                   res.statusCode = 400;
                   res.end(JSON.stringify({ error: 'Invalid request body' }));

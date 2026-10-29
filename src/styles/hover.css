@@ -19,7 +19,7 @@
 }
 
 @media (hover: hover) {
-.hover-underline:hover::after {
+  .hover-underline:hover::after {
     transform-origin: left center;
     transform: scaleX(1);
   }

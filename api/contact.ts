@@ -145,11 +145,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const italian = (req.body as ContactBody | undefined)?.locale === 'IT';
   // Only accept POST
   if (req.method !== 'POST') {
-    res
-      .status(405)
-      .json({
-        error: italian ? 'Metodo non consentito. Usa POST.' : 'Method not allowed. Use POST.',
-      });
+    res.status(405).json({
+      error: italian ? 'Metodo non consentito. Usa POST.' : 'Method not allowed. Use POST.',
+    });
     return;
   }
 

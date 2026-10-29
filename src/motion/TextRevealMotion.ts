@@ -13,8 +13,7 @@ export const TEXT_MOTION = {
 const TARGET_SELECTOR = '[data-motion-text]';
 
 export function getTextMotionTargets(...roots: Array<ParentNode | null | undefined>) {
-  const mobile =
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+  const mobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
   const getOrder = (target: HTMLElement) =>
     Number(
       (mobile ? target.dataset.motionOrderMobile : undefined) ?? target.dataset.motionOrder ?? 0,
