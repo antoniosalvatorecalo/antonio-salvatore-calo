@@ -15,9 +15,6 @@ _(vuoto)_
 
 ### GitHub
 
-- **P1 [manuale]** PR Dependabot: unire #2, #3 (GitHub Actions) e #4 (14 aggiornamenti minori, verdi);
-  chiudere #5 (plugin-react 6, fallisce) e #6 (@types/node 26, non allineato a Node 24).
-- **P1 [manuale]** Fare il push dei commit locali su `main` (avvia anche il deploy Vercel).
 - **P3** README del profilo GitHub (repo `antoniosalvatorecalo/antoniosalvatorecalo`) con link al
   sito, servizi e città; impostare la location "Benevento, Italy" e "Available for hire".
 
@@ -44,6 +41,8 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-29 — PR Dependabot unite (#2, #3, #7: GitHub Actions v7 e 21 aggiornamenti minori);
+  #4–#6 chiuse da Dependabot dopo l'esclusione degli aggiornamenti major.
 - 2026-10-29 — Vercel Web Analytics e Speed Insights nel codice; Vercel CLI installata e collegata.
 - 2026-10-29 — GitHub: descrizione, homepage e topic del repo; Wiki e Projects disattivati;
   etichette di triage e `seo` create; issue #1 chiusa citando i commit di fix; GitHub CLI installata.
