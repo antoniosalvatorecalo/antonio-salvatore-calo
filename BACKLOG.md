@@ -20,8 +20,9 @@ _(vuoto)_
 
 ### SEO e visibilità
 
-- **P1 [manuale]** Google Search Console: verifica del dominio via DNS, invio di `sitemap.xml`,
-  richiesta di indicizzazione delle pagine. Anche Bing Webmaster Tools.
+- **P2** Tra una settimana (~2026-11-05): ricontrollare in Search Console indicizzazione (obiettivo 4/4
+  pagine), stato della sitemap e canonico scelto da Google (deve essere senza www).
+- **P3 [manuale]** Bing Webmaster Tools: importare la proprietà da Search Console.
 - **P1 [manuale]** Profilo dell'Attività su Google ("Web designer", area servita Benevento).
 - **P2** Versione italiana prerenderizzata (`/it/…`) con `hreflang` e `lang="it"`.
 - **P2** Pagine "Servizi" e "Chi sono" con testi orientati ai clienti.
@@ -39,6 +40,8 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-29 — Google Search Console: dominio verificato (TXT su Namecheap), sitemap inviata,
+  indicizzazione richiesta per Home, Contatti, Bugonia e Newsquest.
 - 2026-10-29 — Dominio: `antoniosalvatorecalo.com` è il principale, `www` reindirizza con 308
   (allineato a canonical e sitemap).
 - 2026-10-29 — PR Dependabot unite (#2, #3, #7: GitHub Actions v7 e 21 aggiornamenti minori);
