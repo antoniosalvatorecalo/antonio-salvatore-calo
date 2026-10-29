@@ -46,3 +46,7 @@ BACKLOG.md      attività da fare, in corso e completate
 | [docs/git-e-commit.md](docs/git-e-commit.md)             | Regole commit e come annullare modifiche    |
 
 Lo Studio Sanity (schemi e TypeGen) è nel repository gemello `../studio-antonio-salvatore-calo/`.
+
+## Licenza
+
+Tutti i diritti riservati: il codice è pubblico solo da consultare. Vedi [LICENSE](LICENSE).
