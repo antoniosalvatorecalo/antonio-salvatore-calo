@@ -1,0 +1,35 @@
+name: Bug
+description: Qualcosa sul sito non funziona come dovrebbe
+labels: [bug, needs-triage]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Cosa succede
+      description: Descrivi il problema e cosa ti aspettavi invece.
+    validations:
+      required: true
+  - type: textarea
+    id: passi
+    attributes:
+      label: Come riprodurlo
+      placeholder: |
+        1. Apri https://antoniosalvatorecalo.com/…
+        2. Clicca su …
+        3. Vedi …
+    validations:
+      required: true
+  - type: input
+    id: ambiente
+    attributes:
+      label: Dispositivo e browser
+      placeholder: es. iPhone 15, Safari 18 — oppure Windows 11, Chrome 130
+  - type: dropdown
+    id: lingua
+    attributes:
+      label: Lingua del sito
+      options: [EN, IT, Entrambe]
+  - type: textarea
+    id: allegati
+    attributes:
+      label: Screenshot o video

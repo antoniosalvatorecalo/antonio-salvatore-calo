@@ -51,6 +51,18 @@ Le verifiche che caricano la build in `preview` interrogano Sanity dal browser: 
 `http://localhost:4173` deve essere tra le CORS origins del progetto Sanity, altrimenti falliscono
 solo per gli errori CORS in console.
 
+## CI su GitHub
+
+`.github/workflows/ci.yml` gira su ogni push e pull request verso `main`:
+
+- **qualita** — `npm ci`, typecheck, lint, format:check, build, `verify:agentic`. Il budget
+  performance viene eseguito ma non blocca (è oltre soglia, vedi `BACKLOG.md`).
+- **commit** — applica le regole di `docs/git-e-commit.md` ai commit nuovi, anche a quelli fatti
+  dall'interfaccia web di GitHub (i bot come Dependabot sono esclusi).
+
+Le verifiche Playwright non girano in CI: richiedono il server e le CORS di Sanity.
+Dependabot (`.github/dependabot.yml`) apre al massimo una PR raggruppata al mese.
+
 ## Performance
 
 Obiettivi in produzione: LCP < 2,5 s, CLS < 0,1, INP < 200 ms (misurati sul sito pubblicato, non

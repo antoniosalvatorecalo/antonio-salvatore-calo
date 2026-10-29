@@ -24,6 +24,7 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Modificato
 
+- Il selettore lingua dell'header è un unico componente `LanguageSwitch` (prima tre copie).
 - Fine riga LF imposte da `.gitattributes`; Prettier applicato a tutto il repository.
 - Le verifiche Playwright usano un helper comune (`scripts/verify/lib/browser.mjs`) per avviare
   il browser e salvare gli output in `.artifacts/test-results/`.
@@ -31,6 +32,11 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
   `verify:cms`; aggiunto `verify:project-media`.
 - Hook git versionati in `.githooks/` e attivati da `npm install`.
 - Artefatti di test spostati da `stages/04_testing/` a `.artifacts/` (ignorata da git).
+
+### Aggiunto
+
+- CI GitHub Actions: typecheck, lint, formato, build e controllo dei messaggi di commit.
+- Template di issue (bug, attività) e di pull request in italiano; Dependabot mensile.
 
 ### Rimosso
 

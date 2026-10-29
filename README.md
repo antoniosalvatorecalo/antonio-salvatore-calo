@@ -1,5 +1,7 @@
 # Antonio Salvatore Calò — Portfolio
 
+[![CI](https://github.com/antoniosalvatorecalo/antonio-salvatore-calo/actions/workflows/ci.yml/badge.svg)](https://github.com/antoniosalvatorecalo/antonio-salvatore-calo/actions/workflows/ci.yml)
+
 Portfolio interattivo di un Digital Designer & Frontend Developer di Benevento.
 Sito: <https://antoniosalvatorecalo.com>
 
@@ -24,6 +26,7 @@ public/         file statici (font, favicon, CV e portfolio PDF)
 scripts/        prerender, verifiche (verify/), hook git (git-hooks/), utilità git (git/)
 docs/           documentazione tematica (sotto)
 .githooks/      hook git versionati (attivati da npm install)
+.github/        CI, template di issue e PR, Dependabot
 AGENTS.md       regole e mappa per agenti AI — utile anche a chi sviluppa
 CHANGELOG.md    cosa è cambiato, per data
 BACKLOG.md      attività da fare, in corso e completate

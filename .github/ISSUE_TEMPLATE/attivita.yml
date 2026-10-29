@@ -1,0 +1,31 @@
+name: Attività o miglioramento
+description: Nuova funzionalità, contenuto, SEO o miglioria tecnica
+labels: [enhancement, needs-triage]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [UI / design, Contenuti, SEO, Performance, Codice / manutenzione, Altro]
+    validations:
+      required: true
+  - type: textarea
+    id: obiettivo
+    attributes:
+      label: Obiettivo
+      description: Che problema risolve o che risultato porta?
+    validations:
+      required: true
+  - type: textarea
+    id: criteri
+    attributes:
+      label: Quando è finita
+      description: Criteri di accettazione verificabili.
+      placeholder: |
+        - [ ] …
+        - [ ] …
+  - type: dropdown
+    id: priorita
+    attributes:
+      label: Priorità
+      options: [P1 bloccante, P2 importante, P3 quando c'è tempo]

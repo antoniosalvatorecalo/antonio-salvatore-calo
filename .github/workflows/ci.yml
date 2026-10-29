@@ -1,0 +1,64 @@
+# Controlli automatici su ogni push e pull request verso main.
+# Cosa verifica e come leggerne l'esito: docs/sviluppo.md
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualita:
+    name: Typecheck, lint, formato e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm run verify:agentic
+      - name: Budget performance (informativo)
+        run: npm run budget:check
+        continue-on-error: true
+
+  commit:
+    name: Messaggi di commit in italiano
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verifica i commit nuovi
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            echo "Nessun commit di base: controllo saltato."; exit 0
+          fi
+          status=0
+          for sha in $(git rev-list --no-merges "$BASE..$HEAD"); do
+            case "$(git log -1 --format=%ae "$sha")" in *'[bot]'*) continue ;; esac
+            echo "▸ $(git log -1 --format='%h %s' "$sha")"
+            node scripts/git-hooks/commit-msg-check.mjs --message "$(git log -1 --format=%B "$sha")" || status=1
+          done
+          exit $status

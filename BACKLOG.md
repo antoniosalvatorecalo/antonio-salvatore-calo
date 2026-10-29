@@ -13,6 +13,18 @@ _(vuoto)_
 
 ## Da fare
 
+### GitHub
+
+- **P1 [manuale]** Fare il push dei commit locali su `main` (avvia anche il deploy Vercel).
+- **P2 [manuale]** Installare GitHub CLI (`winget install GitHub.cli`) e fare `gh auth login`.
+- **P2 [manuale]** Repo: aggiungere i topic (portfolio, react, vite, typescript, sanity,
+  web-design, benevento), disattivare Wiki e Projects se non usati, scegliere una licenza.
+- **P2 [manuale]** Chiudere la issue #1 (scroll mobile e gallery): risolta dai commit
+  `5a3fefb`, `efc492d`, `ff595a4`, dopo una verifica su un telefono reale.
+- **P2 [manuale]** Creare le etichette `needs-triage`, `needs-info`, `ready-for-human` usate dai template.
+- **P3** README del profilo GitHub (repo `antoniosalvatorecalo/antoniosalvatorecalo`) con link al
+  sito, servizi e città; impostare la location "Benevento, Italy" e "Available for hire".
+
 ### SEO e visibilità
 
 - **P1 [manuale]** Vercel → Domains: rendere `antoniosalvatorecalo.com` (senza www) il dominio
@@ -37,6 +49,8 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-29 — CI GitHub (qualità + messaggi di commit), template di issue/PR, Dependabot.
+- 2026-10-29 — Selettore lingua dell'header unificato in `LanguageSwitch`.
 - 2026-10-29 — Pulizia: artefatti, log Playwright, cache, worktree Kilo orfani; rimossi codice
   morto (`CountUp`, `ProjectTransitionPreview`, `api/sitemap.ts`) e verifica obsoleta.
 - 2026-10-29 — Verifiche unificate su `scripts/verify/lib/browser.mjs`.

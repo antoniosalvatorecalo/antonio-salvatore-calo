@@ -69,6 +69,8 @@ prima con `git diff <file>`).
 
 ## Hook installati
 
+Le stesse regole sui messaggi sono ricontrollate dalla CI su GitHub (job `commit`).
+
 | Hook         | Cosa fa                                                                            |
 | ------------ | ---------------------------------------------------------------------------------- |
 | `pre-commit` | Blocca build, `node_modules`, `.env`, log, file temporanei, artefatti AI e di test |

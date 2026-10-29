@@ -32,6 +32,7 @@ Lo Studio Sanity vive in un repo separato: `../studio-antonio-salvatore-calo/`.
 | `scripts/verify/`                  | Verifiche (Playwright, budget, prerender)                                     |
 | `scripts/git-hooks/`, `.githooks/` | Hook git: blocco file vietati + messaggi commit in italiano                   |
 | `scripts/git/annulla.mjs`          | Annulla commit in sicurezza (`npm run annulla`)                               |
+| `.github/`                         | CI (`workflows/ci.yml`), template issue/PR, Dependabot                        |
 
 ## Quale documento leggere (solo se serve)
 
