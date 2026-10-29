@@ -69,6 +69,14 @@ Obiettivi in produzione: LCP < 2,5 s, CLS < 0,1, INP < 200 ms (misurati sul sito
 in locale). Le immagini Sanity usano `auto=format`, larghezze responsive e placeholder LQIP; i
 media fuori schermo sono lazy; gli iframe Vimeo esistono solo per il media attivo, con poster.
 
+## Analytics e misure reali
+
+`src/main.tsx` carica, solo nella build di produzione, **Vercel Web Analytics** (visite, pagine,
+provenienza; senza cookie, quindi senza banner di consenso) e **Speed Insights** (LCP, CLS, INP
+misurati sugli utenti reali). Gli script arrivano da `/_vercel/*`, stesso dominio, quindi la CSP
+in `vercel.json` non va toccata. I dati si leggono nel pannello Vercel del progetto, sezioni
+Analytics e Speed Insights.
+
 ## Checklist di rilascio
 
 - [ ] `npm run check` verde (o eccezioni note scritte nel commit).

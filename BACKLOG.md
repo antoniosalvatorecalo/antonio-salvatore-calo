@@ -21,13 +21,12 @@ _(vuoto)_
 
 ### SEO e visibilità
 
-- **P1 [manuale]** Vercel → Domains: rendere `antoniosalvatorecalo.com` (senza www) il dominio
-  principale e reindirizzare `www`. Oggi è al contrario e contraddice canonical e sitemap.
+- **P1 [manuale]** Vercel → Domains: `www.antoniosalvatorecalo.com` → "Redirect to antoniosalvatorecalo.com" (308)
+  e togliere il redirect dal dominio senza www. Oggi è al contrario.
 - **P1 [manuale]** Google Search Console: verifica del dominio via DNS, invio di `sitemap.xml`,
   richiesta di indicizzazione delle pagine. Anche Bing Webmaster Tools.
 - **P1 [manuale]** Profilo dell'Attività su Google ("Web designer", area servita Benevento).
 - **P2** Versione italiana prerenderizzata (`/it/…`) con `hreflang` e `lang="it"`.
-- **P2** Analytics rispettosi della privacy (Vercel Analytics o Plausible) + aggiornare la CSP.
 - **P2** Pagine "Servizi" e "Chi sono" con testi orientati ai clienti.
 - **P2** Nuovi casi studio (obiettivo 5–6), con `seo.title`, `seo.description` e `alt` nel CMS.
 - **P3** Articoli per clienti locali (costi, tipologie di sito, come scegliere un designer).
@@ -43,6 +42,7 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-29 — Vercel Web Analytics e Speed Insights nel codice; Vercel CLI installata e collegata.
 - 2026-10-29 — GitHub: descrizione, homepage e topic del repo; Wiki e Projects disattivati;
   etichette di triage e `seo` create; issue #1 chiusa citando i commit di fix; GitHub CLI installata.
 - 2026-10-29 — Licenza "tutti i diritti riservati" (`LICENSE`, `UNLICENSED` in package.json).

@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { inject as injectAnalytics } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 import { AppShell } from './AppShell';
 import { AppRoutes } from './providers/AppRouter';
 import { Suspense, lazy } from 'react';
@@ -9,6 +11,12 @@ import type { SiteSnapshot } from './cms/snapshot';
 import './index.css';
 
 initGSAP();
+
+// Cookieless Vercel Web Analytics and Core Web Vitals; served from /_vercel/* (same origin, CSP-safe).
+if (import.meta.env.PROD) {
+  injectAnalytics();
+  injectSpeedInsights();
+}
 
 const ContactPage = lazy(() => import('./pages/contact/ContactPage'));
 const snapshotElement = document.getElementById('__SITE_SNAPSHOT__');

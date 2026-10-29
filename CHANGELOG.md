@@ -35,6 +35,7 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Aggiunto
 
+- Vercel Web Analytics (senza cookie) e Speed Insights per misurare visite e Core Web Vitals reali.
 - CI GitHub Actions: typecheck, lint, formato, build e controllo dei messaggi di commit.
 - Template di issue (bug, attività) e di pull request in italiano; Dependabot mensile.
 
