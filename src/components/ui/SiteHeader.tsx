@@ -52,7 +52,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const motionTimelineRef = useRef<gsap.core.Timeline | null>(null);
   const startProjectButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
-  const { locale, setLocale, t } = useLanguage();
+  const { locale, t } = useLanguage();
   const prefersReducedMotion = useReducedMotionPreference();
   const { setNavHoveredProject, setNavProjectMedia } = useNavHover();
   const transition = useOptionalProjectTransition();
@@ -409,18 +409,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 </button>
               )}
               <div className="site-header-mobile-switches">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setLocale(locale === 'EN' ? 'IT' : 'EN');
-                  }}
-                  aria-label={`Language: ${locale}`}
-                  aria-pressed={locale === 'IT'}
-                  className="site-header-switch-btn"
-                >
-                  [ {locale} ]
-                </button>
+                <LanguageSwitch />
               </div>
             </div>
           </div>
@@ -447,18 +436,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               <h1 className="site-header-project-title">{projectInfo.name}</h1>
               <div className="site-header-project-language">
                 <div className="site-header-switches">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setLocale(locale === 'EN' ? 'IT' : 'EN');
-                    }}
-                    aria-label={`Language: ${locale}`}
-                    aria-pressed={locale === 'IT'}
-                    className="site-header-switch-btn"
-                  >
-                    [ {locale} ]
-                  </button>
+                  <LanguageSwitch />
                 </div>
               </div>
             </div>
@@ -580,18 +558,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             data-motion-order="6"
           >
             <div className="site-header-switches">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setLocale(locale === 'EN' ? 'IT' : 'EN');
-                }}
-                aria-label={`Language: ${locale}`}
-                aria-pressed={locale === 'IT'}
-                className="site-header-switch-btn"
-              >
-                [ {locale} ]
-              </button>
+              <LanguageSwitch />
             </div>
           </div>
         )}
@@ -599,3 +566,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     </header>
   );
 };
+
+/** EN/IT toggle shown in the home, project and mobile header variants. */
+function LanguageSwitch() {
+  const { locale, toggleLocale } = useLanguage();
+  return (
+    <button
+      type="button"
+      onClick={toggleLocale}
+      aria-label={`Language: ${locale}`}
+      aria-pressed={locale === 'IT'}
+      className="site-header-switch-btn"
+    >
+      [ {locale} ]
+    </button>
+  );
+}
