@@ -20,8 +20,6 @@ _(vuoto)_
 
 ### SEO e visibilità
 
-- **P1 [manuale]** Vercel → Domains: `www.antoniosalvatorecalo.com` → "Redirect to antoniosalvatorecalo.com" (308)
-  e togliere il redirect dal dominio senza www. Oggi è al contrario.
 - **P1 [manuale]** Google Search Console: verifica del dominio via DNS, invio di `sitemap.xml`,
   richiesta di indicizzazione delle pagine. Anche Bing Webmaster Tools.
 - **P1 [manuale]** Profilo dell'Attività su Google ("Web designer", area servita Benevento).
@@ -41,6 +39,8 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-29 — Dominio: `antoniosalvatorecalo.com` è il principale, `www` reindirizza con 308
+  (allineato a canonical e sitemap).
 - 2026-10-29 — PR Dependabot unite (#2, #3, #7: GitHub Actions v7 e 21 aggiornamenti minori);
   #4–#6 chiuse da Dependabot dopo l'esclusione degli aggiornamenti major.
 - 2026-10-29 — Vercel Web Analytics e Speed Insights nel codice; Vercel CLI installata e collegata.
