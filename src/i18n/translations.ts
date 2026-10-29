@@ -161,6 +161,14 @@ const translations: TranslationMap = {
   // ── Header (labels hard-coded in SiteHeader) ────────────────
   'header.menu-cta.contact': { EN: 'Start a project', IT: 'Inizia un progetto' },
   'header.email-me': { EN: 'Email Me', IT: 'Email Me' },
+  'seo.h1.home': {
+    EN: 'Digital Designer & Frontend Developer in Benevento, Italy',
+    IT: 'Digital Designer e Frontend Developer a Benevento',
+  },
+  'seo.h1.contact': {
+    EN: 'Contact — Web Design & Frontend Projects',
+    IT: 'Contatti — Progetti di Web Design e Frontend',
+  },
   'header.email-copied': { EN: 'Copied!', IT: 'Copiato!' },
   'header.copy-email': { EN: 'Copy email address', IT: 'Copia indirizzo email' },
   'header.contact': { EN: 'Contact:', IT: 'Contatti:' },

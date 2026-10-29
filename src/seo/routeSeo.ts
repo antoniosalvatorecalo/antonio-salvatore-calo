@@ -13,6 +13,28 @@ export interface RouteSeo {
 
 const productionOrigin = 'https://antoniosalvatorecalo.com';
 
+const jobTitle = 'Digital Designer & Frontend Developer';
+const knowsAbout = [
+  'Web Design',
+  'UI Design',
+  'UX Design',
+  'Frontend Development',
+  'Art Direction',
+  'Editorial Design',
+  'Prototyping',
+];
+const address = {
+  '@type': 'PostalAddress',
+  addressLocality: 'Benevento',
+  addressRegion: 'Campania',
+  addressCountry: 'IT',
+};
+const areaServed = [
+  { '@type': 'City', name: 'Benevento' },
+  { '@type': 'AdministrativeArea', name: 'Campania' },
+  { '@type': 'Country', name: 'Italy' },
+];
+
 function routePath(pathname: string): string {
   const path = pathname.split('?')[0]?.split('#')[0] ?? '/';
   if (path === '/') return '/';
@@ -69,9 +91,11 @@ export function deriveRouteSeo(
   const isContact = path === '/contact';
   return {
     title: isContact
-      ? `${settings.displayName} — Contact`
+      ? `Contact — ${settings.displayName}, Designer in Benevento`
       : (settings.seo.title ?? settings.displayName),
-    description: isContact ? settings.bio : (settings.seo.description ?? settings.bio),
+    description: isContact
+      ? `Get in touch with ${settings.displayName}, ${jobTitle} based in Benevento, Italy. Available for web design, UI/UX and frontend projects in Campania, across Italy and remotely.`
+      : (settings.seo.description ?? settings.bio),
     canonical: absoluteUrl(isContact ? '/contact' : '/', origin),
     type: 'website',
     image: settings.seo.openGraphImage
@@ -87,15 +111,34 @@ export function routeStructuredData(
 ): Record<string, unknown>[] {
   const origin = getCanonicalOrigin(settings);
   const personId = `${origin}/#person`;
+  const email = settings.publicContacts.find((contact) => contact.kind === 'email')?.value;
   const person = {
     '@type': 'Person',
     '@id': personId,
     name: settings.displayName,
     url: `${origin}/`,
     description: settings.bio,
+    jobTitle,
+    knowsAbout,
+    address,
+    ...(email ? { email } : {}),
     sameAs: settings.socials.map((social) => social.href),
   };
   if (!seo.project) {
+    const service = {
+      '@context': 'https://schema.org',
+      '@type': 'ProfessionalService',
+      '@id': `${origin}/#service`,
+      name: `${settings.displayName} — ${jobTitle}`,
+      url: `${origin}/`,
+      description: settings.seo.description ?? settings.bio,
+      ...(seo.image ? { image: seo.image } : {}),
+      ...(email ? { email } : {}),
+      address,
+      areaServed,
+      founder: { '@id': personId },
+      knowsAbout,
+    };
     return [
       {
         '@context': 'https://schema.org',
@@ -107,6 +150,7 @@ export function routeStructuredData(
         publisher: { '@id': personId },
       },
       { '@context': 'https://schema.org', ...person },
+      service,
     ];
   }
   const projectId = `${seo.canonical}#creativework`;

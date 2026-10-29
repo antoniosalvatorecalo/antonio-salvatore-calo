@@ -360,6 +360,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       data-project-header-visible={(projectHeaderVisible ?? isProjectPage) ? 'true' : 'false'}
       data-contact-open={contactOpen ? 'true' : undefined}
     >
+      {!isProjectPage && (
+        <h1 className="sr-only">
+          {siteSettings.displayName} —{' '}
+          {t(location.pathname === '/contact' ? 'seo.h1.contact' : 'seo.h1.home')}
+        </h1>
+      )}
       <div className={`site-header-inner${isProjectPage ? ' is-project' : ''}`}>
         {/* LEFT: Bio */}
         <div className="site-header-col site-header-col--info">
