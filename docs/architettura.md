@@ -47,5 +47,6 @@ usando la stessa funzione del prerender (`src/seo/routeSeo.ts`). Dettagli: `docs
 ## Funzioni serverless (`api/`)
 
 - `api/contact.ts` — invia il form via SMTP; senza variabili SMTP restituisce un fallback `mailto:`.
-- `api/sitemap.ts` — sitemap dinamica su `/api/sitemap`. Quella pubblica (`/sitemap.xml`) è il
-  file statico del prerender. Vedi `BACKLOG.md` per la decisione su questo doppione.
+
+La sitemap pubblica (`/sitemap.xml`) è un file statico generato dal prerender: si aggiorna a ogni
+deploy.

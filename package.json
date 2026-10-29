@@ -26,7 +26,6 @@
     "verify:preloader": "node scripts/verify/preloader.mjs",
     "verify:project-transition": "node scripts/verify/project-transition.mjs",
     "verify:project-media": "node scripts/verify/project-media.mjs",
-    "verify:gallery-entrance": "node scripts/verify/gallery-entrance.mjs",
     "verify:cms": "node scripts/verify/cms-catalog.mjs",
     "prepare": "node scripts/git-hooks/install.mjs",
     "hooks:install": "node scripts/git-hooks/install.mjs",

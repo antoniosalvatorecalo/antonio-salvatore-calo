@@ -24,13 +24,18 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Modificato
 
+- Fine riga LF imposte da `.gitattributes`; Prettier applicato a tutto il repository.
+- Le verifiche Playwright usano un helper comune (`scripts/verify/lib/browser.mjs`) per avviare
+  il browser e salvare gli output in `.artifacts/test-results/`.
 - Script di verifica spostati in `scripts/verify/`; `verify:task2`/`verify:task3` diventano
-  `verify:cms`; aggiunti `verify:project-media` e `verify:gallery-entrance`.
+  `verify:cms`; aggiunto `verify:project-media`.
 - Hook git versionati in `.githooks/` e attivati da `npm install`.
 - Artefatti di test spostati da `stages/04_testing/` a `.artifacts/` (ignorata da git).
 
 ### Rimosso
 
+- Componenti mai utilizzati `CountUp` e `ProjectTransitionPreview`, la funzione duplicata
+  `api/sitemap.ts` e la verifica `gallery-entrance`, che controllava proprio quel componente.
 - Cartella locale `.kilo/`, `tasks/` (piano archiviato in `docs/archivio/`), installer hook
   duplicati (`install.sh`, `install.ps1`, `pre-commit` shell).
 

@@ -29,16 +29,18 @@ _(vuoto)_
 ### Tecnico
 
 - **P1 [manuale]** Verificare/acquistare la licenza di TT Interphases Pro (in uso la versione _Trial_).
-- **P2** Prettier segnala ~18 file già esistenti (probabili fine riga CRLF): normalizzare con
-  `.gitattributes` + `npm run format` in un commit `style` dedicato.
 - **P2** `npm run budget:check` risultava oltre soglia: misurare e aggiornare budget o bundle.
-- **P3** `api/sitemap.ts` duplica la sitemap statica del prerender: decidere se rimuoverlo.
 - **P3** `ContactFormExperience` importato sia staticamente sia dinamicamente (avviso di build).
 - **P3** Pulire regole duplicate e blocchi media vuoti in `src/index.css`.
-- **P3** Installare i browser Playwright in locale per eseguire `verify:prerender`.
+- **P2 [manuale]** Sanity → API → CORS origins: aggiungere `http://localhost:4173` e
+  `http://localhost:3000` per far passare `verify:prerender` e `verify:preloader`.
 
 ## Completato
 
+- 2026-10-29 — Pulizia: artefatti, log Playwright, cache, worktree Kilo orfani; rimossi codice
+  morto (`CountUp`, `ProjectTransitionPreview`, `api/sitemap.ts`) e verifica obsoleta.
+- 2026-10-29 — Verifiche unificate su `scripts/verify/lib/browser.mjs`.
+- 2026-10-29 — Fine riga LF e Prettier su tutto il repository.
 - 2026-10-29 — Riorganizzazione repository, documentazione in italiano, regole di commit e
   comando `annulla`.
 - 2026-10-29 — SEO on-page: H1, dati strutturati locali, meta della pagina Contatti.
