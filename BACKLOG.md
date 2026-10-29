@@ -22,7 +22,6 @@ _(vuoto)_
 
 - **P2** Tra una settimana (~2026-11-05): ricontrollare in Search Console indicizzazione (obiettivo 4/4
   pagine), stato della sitemap e canonico scelto da Google (deve essere senza www).
-- **P3 [manuale]** Bing Webmaster Tools: importare la proprietà da Search Console.
 - **P1 [manuale]** Profilo dell'Attività su Google: completare la **verifica** ("Esegui la verifica", di solito
   video dal telefono). Finché non è verificato non è visibile. Poi: orari, 3–5 recensioni.
 - **P2** Versione italiana prerenderizzata (`/it/…`) con `hreflang` e `lang="it"`.
@@ -41,6 +40,8 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-29 — Bing Webmaster Tools: sito importato da Search Console, sitemap inviata.
+- 2026-10-29 — SEO title/description di `siteSettings` aggiornati in Sanity (EN e IT) e online.
 - 2026-10-29 — Profilo dell'Attività su Google creato: Web designer, 5 aree servite (Benevento,
   provincia, Avellino, Caserta, Napoli), telefono, sito, 6 servizi, descrizione, foto. In attesa di verifica.
 - 2026-10-29 — Google Search Console: dominio verificato (TXT su Namecheap), sitemap inviata,
