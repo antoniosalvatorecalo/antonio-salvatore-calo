@@ -15,6 +15,8 @@ _(vuoto)_
 
 ### GitHub
 
+- **P1 [manuale]** PR Dependabot: unire #2, #3 (GitHub Actions) e #4 (14 aggiornamenti minori, verdi);
+  chiudere #5 (plugin-react 6, fallisce) e #6 (@types/node 26, non allineato a Node 24).
 - **P1 [manuale]** Fare il push dei commit locali su `main` (avvia anche il deploy Vercel).
 - **P3** README del profilo GitHub (repo `antoniosalvatorecalo/antoniosalvatorecalo`) con link al
   sito, servizi e città; impostare la location "Benevento, Italy" e "Available for hire".

@@ -12,6 +12,11 @@ updates:
     groups:
       minor-e-patch:
         update-types: [minor, patch]
+    # Major updates (e.g. Vite, plugin-react, @types/node) are done by hand:
+    # they often need code or runtime changes and fail as automatic PRs.
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     schedule:
