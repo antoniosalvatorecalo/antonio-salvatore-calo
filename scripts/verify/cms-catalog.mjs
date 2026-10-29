@@ -1,9 +1,6 @@
-import { chromium } from '@playwright/test';
 import { createClient } from '@sanity/client';
-import { existsSync, readdirSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { resolve } from 'node:path';
 import { PROJECTS_QUERY, SITE_SETTINGS_QUERY } from '../../src/cms/queries.ts';
+import { launchChromium } from './lib/browser.mjs';
 
 const baseURL = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
 const prerenderTest = process.env.PRERENDER_TEST === '1';
@@ -90,27 +87,10 @@ const sanityResultFor = (url) =>
     ? siteSettingsFixture
     : sanityFixture;
 
-const browserCache = resolve(
-  process.env.LOCALAPPDATA || resolve(homedir(), 'AppData', 'Local'),
-  'ms-playwright',
-);
-const installedChromium = readdirSync(browserCache)
-  .filter((name) => /^chromium-\d+$/.test(name))
-  .sort((a, b) => Number(b.split('-')[1]) - Number(a.split('-')[1]))
-  .map((name) => resolve(browserCache, name, 'chrome-win64', 'chrome.exe'))
-  .find(existsSync);
 const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
-const launchOptions = {
-  headless: true,
-  ...(installedChromium ? { executablePath: installedChromium } : {}),
-  ...(proxy ? { proxy: { server: proxy, bypass: 'localhost,127.0.0.1' } } : {}),
-};
-const browser = await chromium.launch({
-  ...launchOptions,
-  ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH
-    ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH }
-    : {}),
-});
+const browser = await launchChromium(
+  proxy ? { proxy: { server: proxy, bypass: 'localhost,127.0.0.1' } } : {},
+);
 const context = await browser.newContext({ reducedMotion: 'reduce' });
 await context.route('https://player.vimeo.com/**', (route) =>
   route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Vimeo fixture</title>' }),

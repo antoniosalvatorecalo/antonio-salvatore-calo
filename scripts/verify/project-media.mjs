@@ -1,21 +1,10 @@
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, mkdirSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { resolve } from 'node:path';
-import { chromium } from '@playwright/test';
+import path from 'node:path';
+import { artifactsDir, launchChromium } from './lib/browser.mjs';
 
 const baseURL = process.env.TEST_BASE_URL ?? 'http://localhost:3000';
-const cache = resolve(
-  process.env.LOCALAPPDATA || resolve(homedir(), 'AppData', 'Local'),
-  'ms-playwright',
-);
-const executablePath = readdirSync(cache)
-  .filter((n) => /^chromium-\d+$/.test(n))
-  .sort((a, b) => Number(b.split('-')[1]) - Number(a.split('-')[1]))
-  .map((n) => resolve(cache, n, 'chrome-win64', 'chrome.exe'))
-  .find(existsSync);
-const browser = await chromium.launch({ headless: true, executablePath });
-mkdirSync('.cache/project-media-checks', { recursive: true });
+const artifacts = artifactsDir('project-media');
+const browser = await launchChromium();
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errors = [];
@@ -196,7 +185,7 @@ try {
     (await sample()).every((s) => s.scale === 1 && s.x === 0),
     'Motion must restore exact neutral values',
   );
-  await page.screenshot({ path: '.cache/project-media-checks/scroll-rest.png' });
+  await page.screenshot({ path: path.join(artifacts, 'scroll-rest.png') });
   console.log('PASS gentle scroll, photo+filename grouping, drag, exact rest');
 
   await page.locator('.project-media-card').first().scrollIntoViewIfNeeded();
@@ -217,7 +206,7 @@ try {
   await page.waitForFunction(
     () => document.querySelector('.lightbox-media')?.getAttribute('aria-busy') === 'false',
   );
-  await page.screenshot({ path: '.cache/project-media-checks/lightbox.png' });
+  await page.screenshot({ path: path.join(artifacts, 'lightbox.png') });
   await page.locator('.lightbox-next').click();
   await page.waitForFunction(
     (key) =>
@@ -316,7 +305,7 @@ try {
   await page.waitForTimeout(450);
   const mobile = await page.locator('.lightbox-content').boundingBox();
   assert(mobile.x >= 0 && mobile.x + mobile.width <= 390, 'Mobile viewer must fit');
-  await page.screenshot({ path: '.cache/project-media-checks/mobile.png' });
+  await page.screenshot({ path: path.join(artifacts, 'mobile.png') });
   await page.keyboard.press('Escape');
   await page.locator('.lightbox').waitFor({ state: 'detached' });
   await page.emulateMedia({ reducedMotion: 'reduce' });

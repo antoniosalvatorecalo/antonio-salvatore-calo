@@ -1,45 +1,17 @@
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { chromium } from '@playwright/test';
+import { artifactsDir, launchChromium } from './lib/browser.mjs';
 
-const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
-const outputDir = path.resolve('.artifacts/test-results/project-transition');
+const baseUrl = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
+const outputDir = artifactsDir('project-transition');
 const viewports = [
   { name: 'desktop', width: 1440, height: 900, maxHandoffDelta: 2 },
   { name: 'mobile', width: 390, height: 844, maxHandoffDelta: 1 },
 ];
 const slugs = ['bugonia', 'newsquest'];
 
-await mkdir(outputDir, { recursive: true });
-const launchOptions = { headless: true };
-const browserCache =
-  process.env.LOCALAPPDATA && process.platform === 'win32'
-    ? path.resolve(process.env.LOCALAPPDATA, 'ms-playwright')
-    : path.resolve(homedir(), '.cache/ms-playwright');
-const installedChromium = existsSync(browserCache)
-  ? readdirSync(browserCache)
-      .filter((name) => /^chromium-\d+$/.test(name))
-      .sort((a, b) => Number(b.split('-')[1]) - Number(a.split('-')[1]))
-      .map((name) =>
-        path.resolve(
-          browserCache,
-          name,
-          process.platform === 'win32' ? 'chrome-win64/chrome.exe' : 'chrome-linux/chrome',
-        ),
-      )
-      .find(existsSync)
-  : undefined;
-const executablePath =
-  process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ??
-  process.env.PLAYWRIGHT_EXECUTABLE_PATH ??
-  installedChromium;
-if (executablePath) {
-  launchOptions.executablePath = executablePath;
-}
-const browser = await chromium.launch(launchOptions);
+const browser = await launchChromium();
 const report = {
   baseUrl,
   transitions: [],

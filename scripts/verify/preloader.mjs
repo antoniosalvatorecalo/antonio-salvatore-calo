@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 
-import { chromium } from 'playwright';
+import { artifactsDir, launchChromium } from './lib/browser.mjs';
 
-const baseURL = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:4173';
+const baseURL = process.env.TEST_BASE_URL ?? 'http://localhost:4173';
 const sizes = [
   { width: 1471, height: 645 },
   { width: 1440, height: 900 },
@@ -13,15 +11,9 @@ const sizes = [
   { width: 393, height: 852 },
   { width: 375, height: 812 },
 ];
-const screenshotDir = path.join(os.tmpdir(), 'antonio-portfolio-preloader');
-await fs.mkdir(screenshotDir, { recursive: true });
+const screenshotDir = artifactsDir('preloader');
 
-const browser = await chromium.launch({
-  headless: true,
-  ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH
-    ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH }
-    : {}),
-});
+const browser = await launchChromium();
 const summaries = [];
 
 async function installTrace(page) {

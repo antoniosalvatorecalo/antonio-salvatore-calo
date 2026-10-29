@@ -39,12 +39,17 @@ form (`CONTACT_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`). Senz
 | `npm run verify:preloader`          | Intro/preloader                                           | build + `preview` + Playwright |
 | `npm run verify:project-transition` | Transizione Home ↔ Progetto (screenshot in `.artifacts/`) | dev server + Playwright        |
 | `npm run verify:project-media`      | Gallery e filtri della pagina progetto                    | dev server + Playwright        |
-| `npm run verify:gallery-entrance`   | Entrata della gallery                                     | dev server + Playwright        |
 | `npm run verify:cms`                | Catalogo e label dei media da Sanity                      | dev server + rete              |
 
-`dev` = `npm run dev` (porta 3000), `preview` = `npm run preview` (porta 4173). Un altro indirizzo
+`dev` = `npm run dev` (porta 3000), `preview` = `npm run preview` (porta 4173, su `localhost`). Un altro indirizzo
 si passa con `TEST_BASE_URL`. Browser Playwright mancanti: `npx playwright install chromium`.
-Gli output (screenshot, report) vanno in `.artifacts/`, che è ignorata da git.
+Gli output (screenshot, report) vanno in `.artifacts/test-results/<verifica>/`, ignorata da git.
+Avvio del browser e cartelle di output sono centralizzati in `scripts/verify/lib/browser.mjs`:
+usa la variabile `PLAYWRIGHT_EXECUTABLE_PATH` per forzare un browser specifico.
+
+Le verifiche che caricano la build in `preview` interrogano Sanity dal browser: l'origine
+`http://localhost:4173` deve essere tra le CORS origins del progetto Sanity, altrimenti falliscono
+solo per gli errori CORS in console.
 
 ## Performance
 

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
-import { chromium } from 'playwright';
+import { launchChromium } from './lib/browser.mjs';
 
-const baseURL = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:4173';
+const baseURL = process.env.TEST_BASE_URL ?? 'http://localhost:4173';
 const homeHtml = await fs.readFile('dist/index.html', 'utf8');
 const snapshotMatch = homeHtml.match(
   /<script id="__SITE_SNAPSHOT__" type="application\/json">([\s\S]*?)<\/script>/,
@@ -55,12 +55,7 @@ if ((sitemap.match(/<loc>/g) ?? []).length !== routes.length)
 if (sitemap.includes('localhost') || sitemap.includes('/it/'))
   throw new Error('Invalid sitemap origin/routes.');
 
-const browser = await chromium.launch({
-  headless: true,
-  ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH
-    ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH }
-    : {}),
-});
+const browser = await launchChromium();
 const page = await browser.newPage();
 let cmsRequests = 0;
 const consoleErrors = [];
