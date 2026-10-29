@@ -1,124 +1,99 @@
-# Design System — Antonio Salvatore Calò Portfolio
+# Design system
 
-> Reverse-engineered from the active implementation. `src/` is the source of truth; this document does not define a redesign.
+> **Leggi quando:** tocchi stili, layout, componenti visivi o animazioni.
+> Descrive l'implementazione attuale: la fonte di verità è `src/` (soprattutto `src/index.css`).
 
-## 1. Visual direction
+## Direzione visiva
 
-Editorial, typography-led portfolio with a restrained monochrome palette, media-first project presentation, square geometry, dense utility labels, and cinematic transitions. The implementation uses a white primary surface and dark inverse surfaces; no separate CSS dark-theme selector is currently defined.
+Portfolio editoriale guidato dalla tipografia: palette monocromatica, media in primo piano,
+geometrie quadrate, etichette compatte, transizioni cinematografiche. Superficie primaria bianca
+con superfici inverse scure; **non esiste** un tema dark CSS separato.
 
-## 2. Foundations
+## Fondamenta
 
-### Color tokens
+### Colori (`src/index.css`)
 
-| Token                  | Value                   | Use                       |
-| ---------------------- | ----------------------- | ------------------------- |
-| `--bg-primary`         | `#FFFFFF`               | page surface              |
-| `--bg-secondary`       | `#F0F0F0`               | secondary/active surfaces |
-| `--bg-tertiary`        | `#E8E8E8`               | tertiary surface          |
-| `--bg-inverse`         | `#141414`               | inverse/dark surface      |
-| `--bg-inverse-subtle`  | `#1F1F1F`               | subtle inverse surface    |
-| `--text-primary`       | `#0A0A0A`               | primary text              |
-| `--text-secondary`     | `#3D3D3D`               | secondary text            |
-| `--text-muted`         | `#6B6B6B`               | labels/muted text         |
-| `--text-inverse`       | `#F5F5F5`               | text on inverse surfaces  |
-| `--text-inverse-muted` | `#A0A0A0`               | muted inverse text        |
-| `--cta-color`          | `#0A0A0A`               | CTA links                 |
-| `--border-subtle`      | `#E2E2E2`               | separators                |
-| `--border-default`     | `#C8C8C8`               | default borders           |
-| `--border-strong`      | `#0A0A0A`               | active/focus borders      |
-| `--border-inverse`     | `rgba(245,245,245,0.1)` | inverse separators        |
+| Token                  | Valore                  | Uso                         |
+| ---------------------- | ----------------------- | --------------------------- |
+| `--bg-primary`         | `#FFFFFF`               | superficie pagina           |
+| `--bg-secondary`       | `#F0F0F0`               | superfici secondarie/attive |
+| `--bg-tertiary`        | `#E8E8E8`               | superficie terziaria        |
+| `--bg-inverse`         | `#141414`               | superficie scura            |
+| `--bg-inverse-subtle`  | `#1F1F1F`               | superficie scura attenuata  |
+| `--text-primary`       | `#0A0A0A`               | testo principale            |
+| `--text-secondary`     | `#3D3D3D`               | testo secondario            |
+| `--text-muted`         | `#6B6B6B`               | etichette                   |
+| `--text-inverse`       | `#F5F5F5`               | testo su scuro              |
+| `--text-inverse-muted` | `#A0A0A0`               | testo attenuato su scuro    |
+| `--cta-color`          | `#0A0A0A`               | link CTA                    |
+| `--border-subtle`      | `#E2E2E2`               | separatori                  |
+| `--border-default`     | `#C8C8C8`               | bordi                       |
+| `--border-strong`      | `#0A0A0A`               | bordi attivi/focus          |
+| `--border-inverse`     | `rgba(245,245,245,0.1)` | separatori su scuro         |
 
-Additional implemented values: `.plain-overlay` uses `rgba(0,0,0,0.6)`; glass-nav defaults are transparent; focus outlines use `rgba(10,10,10,0.55)`.
+Altri valori: `.plain-overlay` `rgba(0,0,0,0.6)`; outline di focus `rgba(10,10,10,0.55)`.
 
-### Typography
+### Tipografia
 
-- Primary family: `TT Interphases Pro`, local WOFF2 files, weights `300`, `400`, `500`, `600`, `700`, `900`; fallback `ui-sans-serif, system-ui, sans-serif` in the Tailwind theme and `sans-serif` on `body`.
-- Fluid display scale: `--text-display-xl` `clamp(3rem, 6vw + .5rem, 5rem)`, `--text-display` `clamp(2.063rem, 4vw + .5rem, 3.625rem)`, `--text-h1` `clamp(1.75rem, 3.5vw + .25rem, 3rem)`, `--text-h2` `clamp(1.5rem, 2.8vw + .25rem, 2.5rem)`, `--text-h3` `clamp(1.25rem, 2.2vw + .2rem, 2.063rem)`, `--text-h4` `clamp(1.125rem, 1.8vw + .125rem, 1.75rem)`, `--text-h5` `clamp(1rem, 1.5vw + .1rem, 1.438rem)`, `--text-h6` `clamp(.875rem, 1.2vw + .1rem, 1.188rem)`.
-- Fixed text: base `1rem`, small `.813rem`, extra-small `.688rem`.
-- UI labels: `.7rem`, weight `500`, tracking `.12em`, line-height `1.2`, muted color.
-- UI body/value text: `.8125rem`, line-height `1.4`, primary color.
+- Famiglia: **TT Interphases Pro** (WOFF2 locali in `public/fonts/`, pesi 300–900), fallback
+  `ui-sans-serif, system-ui, sans-serif`. ⚠️ I file sono la versione _Trial_: verificare la licenza.
+- Scala fluida: `--text-display-xl`, `--text-display`, `--text-h1` … `--text-h6` (valori `clamp()`
+  in `index.css`). Testo fisso: base `1rem`, small `.813rem`, extra-small `.688rem`.
+- Etichette UI: `.7rem`, peso 500, tracking `.12em`, colore muted. Valori UI: `.8125rem`, line-height 1.4.
 
-### Spacing, shape, layering
+### Spaziature, forme, livelli
 
-- Base spacing: `4, 8, 12, 16, 24, 32, 48, 64, 96, 128px` (`--space-1` through `--space-32`).
-- Fluid sections: `--section-xs` `clamp(2rem,4vw,3rem)`, `--section-sm` `clamp(3rem,6vw,4rem)`, `--section-md` `clamp(4rem,8vw,6rem)`, `--section-lg` `clamp(6rem,10vw,8rem)`.
-- Page padding: top `clamp(1.5rem,3vw,2.5rem)`, lateral `clamp(1.25rem,3.5vw,3rem)`.
-- Radii: default square (`0px`), small `2px`, medium `4px`, pill `9999px`; circular controls use `50%` where explicitly implemented.
-- Z-index: dropdown `20`, project shell `60`, navigation `100`, skip link `999`.
+- Spaziatura base: `4, 8, 12, 16, 24, 32, 48, 64, 96, 128px` (`--space-1` … `--space-32`).
+- Sezioni fluide: `--section-xs` … `--section-lg`. Padding pagina con `clamp()`.
+- Raggi: quadrato di default (`0`), `2px`, `4px`, pill `9999px`; `50%` per controlli circolari.
+- z-index: dropdown 20, shell progetto 60, navigazione 100, skip link 999.
 
-## 3. Responsive behavior
+## Responsive
 
-- `<768px`: single-column layout, mobile/tab navigation, swipe-oriented interaction; display-xl is reduced to `clamp(1.75rem,7vw + .5rem,2.5rem)`; page/body overflow remains hidden.
-- `768–1023px`: tablet retains the single-column behavior; header and project controls use intermediate spacing.
-- `>=1024px`: desktop layout enables the dual-column/navigation arrangements and project presentation rules.
-- `>=1280px`: header height and content gap increase again.
-- Header heights: `96px` mobile, `110px` at `768px`, `130px` at `1024px`, `140px` at `1280px`.
-- Other active media queries include project-grid adjustments at `<768px`, `480–1023px`, and `768–1023px`, plus hover-capability and reduced-motion queries.
+| Breakpoint   | Comportamento                                                        |
+| ------------ | -------------------------------------------------------------------- |
+| `< 768px`    | Colonna singola, navigazione mobile, swipe; overflow pagina nascosto |
+| `768–1023px` | Tablet: resta a colonna singola, spaziature intermedie               |
+| `≥ 1024px`   | Layout desktop a due colonne                                         |
+| `≥ 1280px`   | Header e gap più ampi                                                |
 
-## 4. Layout and components
+Altezza header: 96px mobile, 110px a 768, 130px a 1024, 140px a 1280.
+Gallery: griglia a 16 colonne desktop, 10 su tablet/mobile; gap 8px desktop, 4px mobile.
+Dettagli progetto: orizzontali su desktop, accordion verticale a `≤ 767px`.
 
-### Global shell and navigation
+## Componenti principali
 
-`PortfolioLayout`, `SiteHeader`, and `AppRouter` provide the persistent shell. The header has informational, project, navigation, language, CTA, contact, and mobile variants. It uses transparent backgrounds, text/border state changes, minimum 44px interactive chips, visible focus outlines, and transition-phase attributes (`idle`, `opening`, `closing`, `project`).
+- **Guscio:** `PortfolioLayout`, `SiteHeader`, `AppRouter`. Header con varianti info, progetto,
+  navigazione, lingua, CTA, contatti, mobile; chip interattivi min 44px; focus visibile.
+- **Home:** `ProjectIndex`, `ProjectGrid`, `FilterBar`, `PortfolioScene` (variabili
+  `--scene-angle`, `--scene-depth`). Immagini Sanity e video Vimeo.
+- **Progetto:** `SingleProjectView`, `ProjectPreviewCarousel`, `ProjectDetailsGrid`, `ProjectAbout`,
+  `PreviewMediaAsset`, lightbox. I video hanno sempre un poster di fallback.
+- **Contatti:** `ContactPage`, `ContactFormExperience`, `AnimatedContactPanel`: form a frase
+  progressiva con contatore di step.
+- **Interazioni:** sottolineature, opacità, rotazione frecce, piccole traslazioni; niente ombre o
+  effetti decorativi pesanti. Focus: outline 2px con offset 2px.
 
-### Home / project index
+## Motion
 
-`ProjectIndex`, `ProjectGrid`, `FilterBar`, and `PortfolioScene` compose the archive. The gallery is media-dominant and supports Sanity images and Vimeo video embeds. The scene uses nested planes and CSS variables `--scene-angle` and `--scene-depth`; the index and project views are mutually inert during transitions.
+- GSAP registra `ScrollTrigger` una sola volta (`src/lib/gsap-setup.ts`).
+- La scena ruota da `0deg` (Home) a `-90deg` (Progetto), `power2.inOut`, 1,8 s per 90°.
+- GSAP per la geometria della scena; `motion/react` per la presenza dei componenti; CSS per
+  micro-animazioni (blink cursore 1 s, reveal gallery 620 ms con stagger).
+- `prefers-reduced-motion` e `html[data-motion="reduced"]` riducono le animazioni a `0.01ms`:
+  route, focus e stato finale devono restare identici.
 
-### Project detail
+## Da fare / da evitare
 
-`SingleProjectView`, `ProjectPreviewCarousel`, `ProjectPreview`, `ProjectDetailsGrid`, `ProjectAbout`, and `PreviewMediaAsset` provide project title, media, details, about content, carousel/lightbox states, and Vimeo playback. Media keeps poster fallbacks and explicit video handling.
+**Sì:** riusa le variabili CSS e i breakpoint esistenti; mantieni geometria dell'header e angolo
+della scena; media protagonisti, controlli minimali; focus e reduced motion sempre funzionanti.
 
-### Contact
+**No:** colori, font, ombre, gradienti o raggi non presenti nei token; dare per scontato un dark
+mode; trasformare il tablet in layout desktop; togliere i poster Vimeo o il blocco input durante
+le transizioni; introdurre Lenis (non è usato).
 
-`ContactPage`, `ContactFormExperience`, and `AnimatedContactPanel` implement a progressive, sentence-style contact interaction with step counter, dropdown options, keyboard/focus states, disabled controls, cursor blink, CTA underline, and arrow motion. On mobile the page reserves space using the measured header height.
+## Note di audit
 
-### Interaction rules
-
-- Links and buttons use underline, opacity, color, arrow rotation, or small translation rather than shadows or large decorative effects.
-- `.glass-chip` has `44px` minimum dimensions, `2px` radius, opacity hover, and `scale(1.03)` hover motion.
-- Service descriptions reveal on hover-capable devices and via `.is-active` on touch devices.
-- Focus-visible states generally use a `2px` outline with a `2px` offset.
-
-## 5. Motion system
-
-- GSAP registers `ScrollTrigger` once and refreshes after layout stabilization and window load.
-- Project navigation rotates one scene angle from `0deg` (home) to `-90deg` (project), using `power2.inOut`; default duration is `1.8s` for a 90-degree move and scales with remaining angle.
-- Motion is supplied by GSAP, `motion/react`, CSS transitions/keyframes, and the `MotionPreferenceProvider`.
-- CSS motion includes `breathe` (`4000ms` default), ambient rotation (`20s`), scroll pulse (`1.4s`), contact cursor blink (`1s`), reveal transforms, underline opacity, arrow rotation, and hover translations.
-- `prefers-reduced-motion` and `html[data-motion="reduced"]` collapse transitions/animations to `0.01ms`, disable smooth scrolling, and make project transitions instantaneous.
-- `Lenis` is not referenced in the active `src/` implementation.
-
-## 6. Data and media integration
-
-Sanity supplies projects, site settings, branding, SEO, images, and Vimeo media. Image URLs are normalized through `src/cms`; Vimeo embeds use autoplay, loop, muted, controls disabled, and `playsinline` parameters. CMS-provided `themeColor` is applied to the document metadata, but it does not create a CSS theme.
-
-## 7. Do / don't
-
-### Do
-
-- Reuse the existing CSS variables and exact responsive ranges.
-- Preserve the header geometry and project scene angle model.
-- Keep media primary and controls editorial/minimal.
-- Preserve visible keyboard focus and reduced-motion behavior.
-- Treat current inconsistencies as implementation facts until intentionally changed.
-
-### Don't
-
-- Add unverified colors, fonts, shadows, gradients, or radii.
-- Assume a dark-mode CSS theme exists; only inverse tokens and media-specific dark surfaces are defined.
-- Replace the single-column tablet behavior with desktop behavior.
-- Remove Vimeo poster fallbacks or transition input locking.
-- Add Lenis behavior without an active implementation reference.
-
-## 8. Audit notes
-
-- `src/index.css` contains duplicated/repeated compatibility rules and comments referring to historical fixes; this document records active behavior rather than treating comments as API.
-- Some comments describe “glass” navigation, but its active tokens are transparent and shadowless.
-- The source contains an empty tablet media block and an empty reduced-motion media block alongside active global reduced-motion rules.
-- No standalone `tailwind.config` file was found; Tailwind v4 tokens are declared through `@theme` and CSS variables.
-- No active Lenis import/reference was found.
-
-## 9. Audited sources
-
-`src/index.css`, `src/styles/hover.css`, all component/page CSS files, `src/components/`, `src/pages/`, `src/layouts/`, `src/providers/`, `src/hooks/`, `src/motion/`, `src/lib/`, `src/cms/`, `src/main.tsx`, `package.json`, and `vite.config.ts`.
+`src/index.css` contiene regole ripetute di compatibilità e blocchi media vuoti (tablet e reduced
+motion) accanto alle regole globali attive: vanno trattati come fatti di implementazione finché
+non vengono puliti di proposito (vedi `BACKLOG.md`).

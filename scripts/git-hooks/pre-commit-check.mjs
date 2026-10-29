@@ -11,8 +11,7 @@
 // =============================================================================
 
 import { execSync } from 'child_process';
-import { existsSync, statSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { existsSync, statSync } from 'fs';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const ALLOWED_VSCODE = new Set(['.vscode/extensions.json', '.vscode/settings.json']);
@@ -72,12 +71,7 @@ const BLOCKERS = [
     'Image outside public/ or src/assets/',
   ],
   // 16. Test run artifacts
-  [
-    (f) =>
-      f.startsWith('stages/04_testing/test-results/') ||
-      f.startsWith('stages/04_testing/playwright-report/'),
-    'Test run artifacts',
-  ],
+  [(f) => f.startsWith('.artifacts/'), 'Test run artifacts'],
 ];
 
 const WARNINGS = [
@@ -126,38 +120,6 @@ function getSizeMB(f) {
   }
 }
 
-// ── Hook Installation ───────────────────────────────────────────────────────
-function installHook() {
-  const isWin = process.platform === 'win32';
-
-  // Use POSIX shell script — works on macOS, Linux, and Git Bash for Windows
-  // Git for Windows bundles MSYS2 which executes #!/bin/sh scripts natively
-  const hookContent = `#!/bin/sh
-# pre-commit hook — delegates to the Node.js quality gate
-# Installed by: npm run hooks:install
-# Skip: git commit --no-verify
-
-node "$(dirname "$0")/../../scripts/git-hooks/pre-commit-check.mjs"
-if [ $? -ne 0 ]; then
-    exit 1
-fi
-exit 0
-`;
-
-  const hookPath = resolve('.git/hooks/pre-commit');
-  try {
-    writeFileSync(hookPath, hookContent, 'utf8');
-    if (!isWin) {
-      execSync(`chmod +x "${hookPath}"`, { stdio: 'ignore' });
-    }
-    console.log(`  ✓ Installed pre-commit hook to ${hookPath}`);
-    console.log('  To skip for a single commit: git commit --no-verify -m "message"');
-  } catch (err) {
-    console.error(`  ✗ Failed to install hook: ${err.message}`);
-    process.exit(1);
-  }
-}
-
 // ── Main ────────────────────────────────────────────────────────────────────
 function main() {
   const args = process.argv.slice(2);
@@ -168,16 +130,10 @@ function main() {
 
   Options:
     --check          Scan working tree (all untracked + tracked files)
-    --hook-install   Install the pre-commit hook into .git/hooks/
     --help           Show this help
 
   Default: scans staged changes (git diff --cached)
     `);
-    process.exit(0);
-  }
-
-  if (args.includes('--hook-install')) {
-    installHook();
     process.exit(0);
   }
 
@@ -268,7 +224,7 @@ function main() {
   if (blocked.length > 0) {
     console.log('');
     console.log(`  \x1b[33mTo skip the gate (emergency only): git commit --no-verify\x1b[0m`);
-    console.log(`  \x1b[36mSee: docs/repository/COMMIT_GUIDELINES.md\x1b[0m`);
+    console.log(`  \x1b[36mSee: docs/git-e-commit.md\x1b[0m`);
     process.exit(1);
   }
 

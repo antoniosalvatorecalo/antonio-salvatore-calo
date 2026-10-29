@@ -1,7 +1,7 @@
 import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const root = resolve(import.meta.dirname, '..');
+const root = resolve(import.meta.dirname, '../..');
 const budget = JSON.parse(readFileSync(resolve(root, 'performance-budget.json'), 'utf8'));
 const html = readFileSync(resolve(root, 'dist/index.html'), 'utf8');
 

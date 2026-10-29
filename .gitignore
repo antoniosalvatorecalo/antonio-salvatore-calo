@@ -22,10 +22,11 @@ tsconfig.tsbuildinfo
 coverage/
 
 # =============================================================================
-# Playwright artifacts
+# Test artifacts (screenshots, Playwright reports)
 # =============================================================================
-stages/04_testing/test-results/
-stages/04_testing/playwright-report/
+.artifacts/
+test-results/
+playwright-report/
 
 # Playwright MCP artifacts
 .playwright-mcp/
@@ -75,6 +76,9 @@ npm-debug.log*
 
 # Kilo planning artifacts
 .kilo/
+
+# Claude Code personal settings (shared rules live in .claude/settings.json)
+.claude/settings.local.json
 
 # MCP tooling config (local/dev)
 .mcp.json

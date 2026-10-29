@@ -1,0 +1,3 @@
+#!/bin/sh
+# Blocks build output, secrets and local artifacts. Rules: scripts/git-hooks/pre-commit-check.mjs
+exec node scripts/git-hooks/pre-commit-check.mjs

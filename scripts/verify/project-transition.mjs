@@ -6,7 +6,7 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
-const outputDir = path.resolve('stages/04_testing/test-results/project-transition');
+const outputDir = path.resolve('.artifacts/test-results/project-transition');
 const viewports = [
   { name: 'desktop', width: 1440, height: 900, maxHandoffDelta: 2 },
   { name: 'mobile', width: 390, height: 844, maxHandoffDelta: 1 },

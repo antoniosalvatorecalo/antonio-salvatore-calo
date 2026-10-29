@@ -3,7 +3,7 @@ import { createClient } from '@sanity/client';
 import { existsSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
-import { PROJECTS_QUERY, SITE_SETTINGS_QUERY } from '../src/cms/queries.ts';
+import { PROJECTS_QUERY, SITE_SETTINGS_QUERY } from '../../src/cms/queries.ts';
 
 const baseURL = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
 const prerenderTest = process.env.PRERENDER_TEST === '1';

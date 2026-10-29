@@ -1,3 +1,6 @@
+> **Archivio storico (ottobre 2026).** Analisi e verifiche già concluse: non serve leggerlo per
+> lavorare sul codice attuale. Utile solo per capire perché transizioni e filtri sono fatti così.
+
 # Piano operativo: eliminare il flash nell’apertura dei progetti
 
 ## Causa verificata prima della patch
@@ -27,13 +30,13 @@ La geometria destinazione è già stabile all’handoff: mantenere il progetto s
 ## File e verifiche
 
 - `src/layouts/PortfolioLayout.tsx`, `src/components/ui/SiteHeader.tsx`, `src/components/ui/SiteHeader.css`: separare layout destinazione e visibilità/testo; non includere target Project nell’exit Home.
-- `tasks/plan.md`: documentazione della causa e baseline, scritta prima delle modifiche applicative.
+- questo documento: documentazione della causa e baseline, scritta prima delle modifiche applicative.
 - `scripts/verify-project-transition.mjs`: test Playwright con screenshot opening early/middle/near-endpoint, primo frame Project e stato assestato; metriche frame-per-frame, apertura/chiusura, Back/Forward, route diretta, reduced motion; Bugonia/Newsquest su desktop e mobile.
 - Accettazione: zero testo Project esposto durante opening; singolo enter al handoff; delta geometrico coerente con la baseline (nessun salto aggiuntivo); console pulita; verifiche e build esistenti verdi.
 
 ## Esito dopo la patch
 
-La verifica Playwright dedicata è passata per entrambe le route e dimensioni. Durante `opening` header Project e controlli gallery sono risultati non esposti; al primo frame Project il testo dell’header era ancora clip-hidden e poi è entrato una volta. L’header ha mantenuto la stessa altezza al handoff. Scarto massimo registrato: 0,24px per top gallery/card su desktop e 0,10px su mobile. Sono state salvate 20 schermate, incluse le cinque fasi per ogni route/dimensione, in `stages/04_testing/test-results/project-transition/`.
+La verifica Playwright dedicata è passata per entrambe le route e dimensioni. Durante `opening` header Project e controlli gallery sono risultati non esposti; al primo frame Project il testo dell’header era ancora clip-hidden e poi è entrato una volta. L’header ha mantenuto la stessa altezza al handoff. Scarto massimo registrato: 0,24px per top gallery/card su desktop e 0,10px su mobile. Sono state salvate 20 schermate, incluse le cinque fasi per ogni route/dimensione, in `.artifacts/test-results/project-transition/`.
 
 Build e prerender hanno completato quattro route; typecheck, lint mirato, formattazione mirata, verifica choreography, preloader e agentic sono passati. Le verifiche repo-wide hanno limiti preesistenti: `npm run check` si ferma su ESLint dentro `.kilo/worktrees/north-scarecrow`; il controllo Prettier repo-wide segnala 17 file fuori da questa patch; il budget globale supera le soglie configurate. `verify:prerender` segnala errori CORS nelle query browser a Sanity e `verify:task2` non è completato perché l’ambiente non consente la connessione al CMS.
 

@@ -1,0 +1,2 @@
+# Hook git: sempre LF, altrimenti /bin/sh fallisce su Windows
+.githooks/* text eol=lf
