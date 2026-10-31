@@ -1,7 +1,8 @@
-import { useState, useCallback, useLayoutEffect } from 'react';
+import { useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import { GalleryGrid } from './ProjectGrid';
 import { FilterBar } from './FilterBar';
 import { ProjectPreview } from '@/components/projects/ProjectPreview';
+import { preloadPreviewBackdrops } from '@/components/projects/PreviewMediaAsset';
 import { ProjectPreviewCarousel } from '@/components/projects/ProjectPreviewCarousel';
 import { useNavHover } from '@/providers/NavHoverContext';
 import type { ProjectDomain, ProjectMedia } from '@/cms/domain';
@@ -35,6 +36,19 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({
   const reducedMotion = useReducedMotionPreference();
   const [homeFilterEntranceReady, setHomeFilterEntranceReady] = useState(reducedMotion);
   const { projects } = useProjectCatalog();
+
+  // Hover previews only exist on desktop; prepare their backdrops once the page is idle.
+  useEffect(() => {
+    if (!window.matchMedia('(min-width: 1024px) and (hover: hover)').matches) return undefined;
+    const media = projects.flatMap((project) => project.media);
+    const run = () => preloadPreviewBackdrops(media);
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(run, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(run, 500);
+    return () => clearTimeout(id);
+  }, [projects]);
 
   useLayoutEffect(() => {
     if (reducedMotion) {

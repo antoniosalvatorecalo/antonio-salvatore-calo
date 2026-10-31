@@ -14,6 +14,8 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
   bande vuote prendono i colori dei bordi della foto, senza stacco (prima Newsquest era tagliato).
 - Le foto delle anteprime non dipendono più dalle impostazioni CORS di Sanity: i colori dei bordi
   si leggono da una richiesta separata; se è bloccata le bande restano scure.
+- Lo sfondo delle anteprime compare subito all'hover: i colori dei bordi si calcolano appena la
+  home è pronta, scaricando dal CDN di Sanity solo le due colonne di bordo (1×32 px).
 - Anteprima in hover più larga (16:9, 320 px), il formato della maggior parte degli assets: le foto
   orizzontali non vengono più tagliate ai lati; quelle quadrate o verticali (es. Bugonia menu) si
   vedono intere e centrate su fondo scuro.

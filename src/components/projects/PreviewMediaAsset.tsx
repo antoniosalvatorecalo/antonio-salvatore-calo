@@ -15,25 +15,91 @@ export function getPreviewMediaName(media: ProjectMedia): string {
 /** Rows sampled along each side edge when building the backdrop. */
 const EDGE_SAMPLES = 32;
 
+/** Edge backdrops by image URL: null means the pixels could not be read. */
+const backdropCache = new Map<string, string | null>();
+const backdropRequests = new Map<string, Promise<string | null>>();
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+function getImageSize(media: ProjectMedia, src: string): [number, number] | null {
+  if (media.width && media.height && src === media.src) return [media.width, media.height];
+  const match = src.match(/-(\d+)x(\d+)\.[a-z]+(?:\?|$)/i);
+  return match ? [Number(match[1]), Number(match[2])] : null;
+}
+
 /**
- * Builds a 2px-wide image from the left and right edges of `img`. Stretched behind
- * the contained asset it continues the photo's own edge colours into the empty
- * bands, so there is no visible seam. Returns null if the pixels can't be read.
+ * Draws the photo's 1px left and right edge columns, scaled to EDGE_SAMPLES rows,
+ * side by side. On the Sanity CDN the columns are cropped server side (two tiny
+ * requests); elsewhere the full image is read.
  */
-function getEdgeBackdrop(img: HTMLImageElement): string | null {
-  const { naturalWidth: width, naturalHeight: height } = img;
-  if (!width || !height) return null;
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = 2;
-    canvas.height = EDGE_SAMPLES;
-    const context = canvas.getContext('2d');
-    if (!context) return null;
-    context.drawImage(img, 0, 0, 1, height, 0, 0, 1, EDGE_SAMPLES);
-    context.drawImage(img, width - 1, 0, 1, height, 1, 0, 1, EDGE_SAMPLES);
-    return `url(${canvas.toDataURL()})`;
-  } catch {
-    return null;
+async function drawEdgeColumns(
+  context: CanvasRenderingContext2D,
+  media: ProjectMedia,
+  src: string,
+): Promise<void> {
+  const size = getImageSize(media, src);
+  if (src.includes('cdn.sanity.io') && size) {
+    const [width, height] = size;
+    const crop = (x: number) =>
+      `${src}${src.includes('?') ? '&' : '?'}rect=${x},0,1,${height}&w=1&h=${EDGE_SAMPLES}&fit=scale&fm=png`;
+    const [left, right] = await Promise.all([loadImage(crop(0)), loadImage(crop(width - 1))]);
+    context.drawImage(left, 0, 0, 1, EDGE_SAMPLES);
+    context.drawImage(right, 1, 0, 1, EDGE_SAMPLES);
+    return;
+  }
+  const image = await loadImage(src);
+  const { naturalWidth: width, naturalHeight: height } = image;
+  context.drawImage(image, 0, 0, 1, height, 0, 0, 1, EDGE_SAMPLES);
+  context.drawImage(image, width - 1, 0, 1, height, 1, 0, 1, EDGE_SAMPLES);
+}
+
+/**
+ * Builds a 2px-wide image from the photo's left and right edges. Stretched behind
+ * the contained asset it continues the photo's own edge colours into the empty
+ * bands, so there is no visible seam. Resolves to null if the pixels can't be read
+ * (e.g. the CDN refuses CORS): the band then stays dark.
+ */
+function loadEdgeBackdrop(media: ProjectMedia, src: string): Promise<string | null> {
+  const pending = backdropRequests.get(src);
+  if (pending) return pending;
+  const request = (async () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 2;
+      canvas.height = EDGE_SAMPLES;
+      const context = canvas.getContext('2d');
+      if (!context) return null;
+      await drawEdgeColumns(context, media, src);
+      return `url(${canvas.toDataURL()})`;
+    } catch {
+      return null;
+    }
+  })().then((backdrop) => {
+    backdropCache.set(src, backdrop);
+    return backdrop;
+  });
+  backdropRequests.set(src, request);
+  return request;
+}
+
+function getBackdropSource(media: ProjectMedia): string {
+  const isVideo = media.type === 'vimeo' || isVimeoUrl(media.src);
+  return isVideo ? '' : media.src;
+}
+
+/** Computes the edge backdrops ahead of hover, so previews open with them already set. */
+export function preloadPreviewBackdrops(media: ProjectMedia[]) {
+  for (const item of media) {
+    const src = getBackdropSource(item);
+    if (src && !backdropCache.has(src)) void loadEdgeBackdrop(item, src);
   }
 }
 
@@ -47,29 +113,24 @@ export function PreviewMediaAsset({
   const isVideo = media.type === 'vimeo' || isVimeoUrl(media.src);
   const posterSrc = media.thumbnailSrc || (isVideo ? getVimeoThumbnailUrl(media.src) : '');
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [backdrop, setBackdrop] = useState<string | null>(null);
+  const [, setBackdropVersion] = useState(0);
   const imageSrc = isVideo ? posterSrc : media.src;
-  useEffect(() => {
-    setIsVideoLoaded(false);
-    setBackdrop(null);
-  }, [media.key, media.src]);
+  const backdropSrc = getBackdropSource(media);
+  const backdrop = backdropCache.get(backdropSrc) ?? null;
+  useEffect(() => setIsVideoLoaded(false), [media.key, media.src]);
 
-  // The edge colours are read from a separate CORS request, so the visible image
-  // never depends on the CDN's CORS settings: if it is refused, the band stays dark.
+  // Read from separate CORS requests, so the visible image never depends on the
+  // CDN's CORS settings. Usually already cached by preloadPreviewBackdrops.
   useEffect(() => {
-    if (isVideo || !imageSrc) return undefined;
+    if (!backdropSrc || backdropCache.has(backdropSrc)) return undefined;
     let cancelled = false;
-    const probe = new Image();
-    probe.crossOrigin = 'anonymous';
-    probe.onload = () => {
-      if (!cancelled) setBackdrop(getEdgeBackdrop(probe));
-    };
-    probe.src = imageSrc;
+    void loadEdgeBackdrop(media, backdropSrc).then(() => {
+      if (!cancelled) setBackdropVersion((version) => version + 1);
+    });
     return () => {
       cancelled = true;
-      probe.onload = null;
     };
-  }, [imageSrc, isVideo]);
+  }, [backdropSrc, media]);
 
   return (
     <div
