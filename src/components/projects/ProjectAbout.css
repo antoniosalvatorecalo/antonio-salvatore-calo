@@ -136,16 +136,23 @@
     font-size: 0.7rem;
   }
 
-  .project-about-credits,
-  .project-about-cta {
+  .project-about-credits {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-3);
+  }
+
+  /* Links stay on one line each; a link that doesn't fit moves whole to the next row. */
+  .project-about-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
   }
 
   .project-about-cta a {
     font-size: var(--mobile-cta-size, 0.8125rem);
     font-weight: 500;
     letter-spacing: 0.02em;
-    white-space: normal;
+    white-space: nowrap;
+    overflow-wrap: normal;
   }
 }

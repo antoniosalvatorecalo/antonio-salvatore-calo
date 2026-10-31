@@ -10,6 +10,8 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Corretto
 
+- Link dei progetti su mobile (es. "Discover the process"): ogni link resta su una riga; se non
+  c'è spazio scende intero alla riga successiva.
 - Anteprima in hover della gallery: tutte le foto e i video usano lo stesso riquadro delle
   miniature (61:40, 280 px), quindi le immagini verticali (es. Bugonia shop) non coprono più la
   gallery. Rimosse le eccezioni dedicate a singole immagini di Bugonia.

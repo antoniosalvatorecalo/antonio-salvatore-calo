@@ -40,6 +40,7 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-31 — Link dei progetti su mobile senza a capo (es. "Discover the process").
 - 2026-10-31 — Anteprime in hover della gallery uniformate (stesso riquadro per tutte le foto).
 - 2026-10-31 — Header mobile: switch lingua allineato; link d'azione mobile uniformati
   su tutte le pagine (home, contatti, Bugonia, Newsquest).
