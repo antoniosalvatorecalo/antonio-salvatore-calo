@@ -22,8 +22,8 @@ _(vuoto)_
 
 - **P2** Tra una settimana (~2026-11-05): ricontrollare in Search Console indicizzazione (obiettivo 4/4
   pagine), stato della sitemap e canonico scelto da Google (deve essere senza www).
-- **P1 [manuale]** Profilo dell'Attività su Google: completare la **verifica** ("Esegui la verifica", di solito
-  video dal telefono). Finché non è verificato non è visibile. Poi: orari, 3–5 recensioni.
+- **P1 [manuale]** Profilo dell'Attività su Google: video di verifica inviato il 2026-10-31, esito
+  atteso entro ~2026-11-05. Dopo la verifica: orari, 3–5 recensioni.
 - **P2** Versione italiana prerenderizzata (`/it/…`) con `hreflang` e `lang="it"`.
 - **P2** Pagine "Servizi" e "Chi sono" con testi orientati ai clienti.
 - **P2** Nuovi casi studio (obiettivo 5–6), con `seo.title`, `seo.description` e `alt` nel CMS.
@@ -38,6 +38,8 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-31 — Google Business: proprietà di "L' Essenza" (cliente) trasferita a Simona Neagu,
+  rimosso l'accesso dall'account personale.
 - 2026-10-31 — Sanity CORS: aggiunto `http://localhost:4173` (`localhost:3000` era già presente).
 - 2026-10-31 — GitHub: location del profilo impostata su "Benevento, Italy".
 - 2026-10-31 — Anteprime hover: assets interi e centrati, sfondo adattato ai bordi della foto.
