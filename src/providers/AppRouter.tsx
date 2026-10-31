@@ -29,13 +29,14 @@ export function AppRoutes({ initialSnapshot, contactElement }: AppRoutesProps) {
       <ProjectCatalogProvider initialSnapshot={initialSnapshot}>
         <ProjectCatalogGate>
           <SeoManager />
+          {/* `it?` keeps one route per page for both languages, so the layout stays mounted on switch. */}
           <Routes>
-            <Route element={<PortfolioRouteLayout />}>
+            <Route path="/it?" element={<PortfolioRouteLayout />}>
               <Route index element={null} />
               <Route path="projects/:slug" element={null} />
             </Route>
             <Route
-              path="/contact"
+              path="/it?/contact"
               element={<Suspense fallback={FALLBACK}>{contactElement}</Suspense>}
             />
           </Routes>

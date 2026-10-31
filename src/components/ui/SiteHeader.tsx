@@ -6,6 +6,7 @@ import { useProjectCatalog, useSiteSettings } from '@/cms/ProjectCatalogProvider
 import { shouldEnhanceNavigation } from '@/lib/navigation';
 import { gsap } from '@/lib/gsap-setup';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { stripLocale } from '@/i18n/localePath';
 import { useNavHover } from '@/providers/NavHoverContext';
 import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
 import { useOptionalProjectTransition } from '@/providers/ProjectTransitionProvider';
@@ -52,7 +53,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const motionTimelineRef = useRef<gsap.core.Timeline | null>(null);
   const startProjectButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
-  const { locale, t } = useLanguage();
+  const { locale, t, localize } = useLanguage();
+  const basePath = stripLocale(location.pathname);
   const prefersReducedMotion = useReducedMotionPreference();
   const { setNavHoveredProject, setNavProjectMedia } = useNavHover();
   const transition = useOptionalProjectTransition();
@@ -128,7 +130,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     };
   }, []);
 
-  const isProjectPage = projectActive ?? location.pathname.startsWith('/projects/');
+  const isProjectPage = projectActive ?? basePath.startsWith('/projects/');
   useEffect(() => {
     setContactOpen(false);
   }, [isProjectPage]);
@@ -363,7 +365,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       {!isProjectPage && (
         <h1 className="sr-only">
           {siteSettings.displayName} —{' '}
-          {t(location.pathname === '/contact' ? 'seo.h1.contact' : 'seo.h1.home')}
+          {t(basePath === '/contact' ? 'seo.h1.contact' : 'seo.h1.home')}
         </h1>
       )}
       <div className={`site-header-inner${isProjectPage ? ' is-project' : ''}`}>
@@ -372,7 +374,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           <div className="site-header-info-name">
             <p className="site-header-bio" data-motion-text data-motion-order="0">
               <AnimatedLink
-                to="/"
+                to={localize('/')}
                 onClick={handleGoHome}
                 className="site-header-name"
                 label={siteSettings.displayName}
@@ -459,7 +461,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     {projects.map((project) => (
                       <AnimatedLink
                         key={project.slug}
-                        to={`/projects/${project.slug}`}
+                        to={localize(`/projects/${project.slug}`)}
                         label={project.title}
                         aria-label={`${locale === 'IT' ? 'Apri il progetto' : 'Open'} ${project.title}`}
                         onClick={(event) => handleProjectClick(event, project.slug)}

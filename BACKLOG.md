@@ -24,7 +24,8 @@ _(vuoto)_
   pagine), stato della sitemap e canonico scelto da Google (deve essere senza www).
 - **P1 [manuale]** Profilo dell'Attività su Google: video di verifica inviato il 2026-10-31, esito
   atteso entro ~2026-11-05. Dopo la verifica: orari, 3–5 recensioni.
-- **P2** Versione italiana prerenderizzata (`/it/…`) con `hreflang` e `lang="it"`.
+- **P2** Dopo il deploy di `/it`: Search Console → Controllo URL su `/it` e `/it/contact`,
+  richiedere l'indicizzazione e verificare che la sitemap venga riletta con 8 URL.
 - **P2** Pagine "Servizi" e "Chi sono" con testi orientati ai clienti.
 - **P2** Nuovi casi studio (obiettivo 5–6), con `seo.title`, `seo.description` e `alt` nel CMS.
 - **P3** Articoli per clienti locali (costi, tipologie di sito, come scegliere un designer).
@@ -35,9 +36,13 @@ _(vuoto)_
 - **P2** `npm run budget:check` risultava oltre soglia: misurare e aggiornare budget o bundle.
 - **P3** `ContactFormExperience` importato sia staticamente sia dinamicamente (avviso di build).
 - **P3** Pulire regole duplicate e blocchi media vuoti in `src/index.css`.
+- **P3** `verify:cms` cerca su Bugonia un testo che nel CMS non c'è più ("Cinema ticketing is
+  often marginal…"): aggiornare l'asserzione al contenuto attuale.
 
 ## Completato
 
+- 2026-10-31 — Versione italiana prerenderizzata su `/it` con `hreflang`, `lang="it"` e sitemap
+  bilingue.
 - 2026-10-31 — Google Business: proprietà di "L' Essenza" (cliente) trasferita a Simona Neagu,
   rimosso l'accesso dall'account personale.
 - 2026-10-31 — Sanity CORS: aggiunto `http://localhost:4173` (`localhost:3000` era già presente).

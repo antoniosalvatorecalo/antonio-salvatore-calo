@@ -27,8 +27,13 @@
 - Title ≤ 60 caratteri circa, description 120–160. Ogni progetto deve avere `seo.title` e
   `seo.description` propri nel CMS, e un `alt` descrittivo per ogni immagine.
 - I file `.md` dei progetti sono per gli agenti/LLM e hanno `X-Robots-Tag: noindex` (`vercel.json`).
-- Lingua: oggi l'HTML prerenderizzato è solo in inglese (`lang="en"`); l'italiano è solo lato
-  client. La versione `/it/` con `hreflang` è in `BACKLOG.md`.
+- Lingue: inglese alla radice (`/`, `/contact`, `/projects/<slug>`), italiano sotto `/it`
+  (`/it`, `/it/contact`, `/it/projects/<slug>`). La lingua la decide l'URL
+  (`src/i18n/localePath.ts`); ogni pagina ha canonical su se stessa e `hreflang` en/it/x-default
+  (x-default = inglese), anche nella sitemap. Nessun redirect automatico in base al browser.
+- I link interni si costruiscono con `localize()` di `useLanguage()`, mai con `/projects/...`
+  scritto a mano; i controlli sul percorso usano `stripLocale()`.
+- `llms.txt` e i `.md` dei progetti restano in inglese.
 
 ## Verifica rapida dopo una modifica
 

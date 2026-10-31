@@ -1,4 +1,4 @@
-import type { ProjectDomain, SiteSettings } from './domain';
+import type { CmsLocale, ProjectDomain, SiteSettings } from './domain';
 import { sanityClient } from './client';
 import {
   normalizeProject,
@@ -26,13 +26,14 @@ export interface CmsSnapshotContent {
 export function normalizeSnapshot(
   content: CmsSnapshotContent,
   generatedAt = new Date().toISOString(),
+  locale: CmsLocale = 'EN',
 ): SiteSnapshot {
   if (!content.siteSettings) throw new Error('CMS siteSettings singleton is missing.');
   const projects: ProjectDomain[] = [];
   const seenSlugs = new Set<string>();
   for (const rawProject of content.projects) {
     try {
-      const project = normalizeProject(rawProject, 'EN');
+      const project = normalizeProject(rawProject, locale);
       if (seenSlugs.has(project.slug)) throw new Error(`Duplicate CMS slug: ${project.slug}`);
       seenSlugs.add(project.slug);
       projects.push(project);
@@ -44,7 +45,7 @@ export function normalizeSnapshot(
   }
   return {
     projects,
-    siteSettings: normalizeSiteSettings(content.siteSettings, 'EN'),
+    siteSettings: normalizeSiteSettings(content.siteSettings, locale),
     generatedAt,
     rawContent: { projects: content.projects, siteSettings: content.siteSettings },
   };

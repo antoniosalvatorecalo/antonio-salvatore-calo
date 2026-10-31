@@ -19,11 +19,15 @@
 (`src/providers/AppRouter.tsx`): `LanguageProvider` → `ProjectCatalogProvider` → `ProjectCatalogGate`
 → `SeoManager` + route.
 
-| Route             | Elemento                                                        |
-| ----------------- | --------------------------------------------------------------- |
-| `/`               | `PortfolioLayout` (header + scena) con piano Home               |
-| `/projects/:slug` | **stesso** `PortfolioLayout`: la scena ruota sul piano Progetto |
-| `/contact`        | `ContactPage` (lazy)                                            |
+| Route                 | Elemento                                                        |
+| --------------------- | --------------------------------------------------------------- |
+| `/it?`                | `PortfolioLayout` (header + scena) con piano Home               |
+| `/it?/projects/:slug` | **stesso** `PortfolioLayout`: la scena ruota sul piano Progetto |
+| `/it?/contact`        | `ContactPage` (lazy)                                            |
+
+Il segmento opzionale `it?` dà una sola route per pagina in entrambe le lingue: cambiando lingua il
+layout resta montato. `LanguageProvider` ricava la lingua dall'URL e lo switch fa `navigate` con
+`replace` verso la stessa pagina nell'altra lingua. Il prerender genera ogni route due volte.
 
 ## Transizioni (punto delicato)
 

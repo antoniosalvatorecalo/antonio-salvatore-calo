@@ -8,6 +8,18 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ## [Non rilasciato]
 
+### SEO
+
+- Versione italiana del sito su `/it` (`/it/contact`, `/it/projects/<slug>`): stesse pagine,
+  testi italiani dal CMS, prerenderizzate con `lang="it"`. Gli indirizzi inglesi non cambiano.
+- `hreflang` (en, it, x-default) in ogni pagina e nella sitemap, che ora elenca anche le pagine
+  italiane; `og:locale` e `inLanguage` nei dati strutturati.
+
+### Modificato
+
+- Lo switch `[ EN ]`/`[ IT ]` porta alla stessa pagina nell'altra lingua (la lingua la decide
+  l'indirizzo); header e scena restano montati, anche dentro un progetto aperto.
+
 ### Corretto
 
 - Anteprime in hover tutte uguali: ogni asset si vede intero e centrato nel riquadro 16:9 e le

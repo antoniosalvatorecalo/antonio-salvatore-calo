@@ -8,15 +8,20 @@ const snapshotMatch = homeHtml.match(
 );
 if (!snapshotMatch?.[1]) throw new Error('Embedded SiteSnapshot is missing.');
 const snapshot = JSON.parse(snapshotMatch[1]);
-const routes = [
-  '/',
-  '/contact',
-  ...snapshot.projects.map((project) => `/projects/${project.slug}`),
-];
+const pages = ['/', '/contact', ...snapshot.projects.map((project) => `/projects/${project.slug}`)];
+// English at the root, Italian under /it.
+const routes = [...pages, ...pages.map((page) => (page === '/' ? '/it' : `/it${page}`))];
+// `vite preview` serves folder pages only with a trailing slash; Vercel serves both.
+const pageUrl = (route) => `${baseURL}${route === '/' ? '/' : `${route}/`}`;
 
 for (const route of routes) {
   const file = route === '/' ? 'dist/index.html' : `dist${route}/index.html`;
   const html = await fs.readFile(file, 'utf8');
+  const lang = route === '/it' || route.startsWith('/it/') ? 'it' : 'en';
+  if (!html.includes(`<html lang="${lang}">`))
+    throw new Error(`Expected lang="${lang}" in ${file}`);
+  if ((html.match(/<link rel="alternate" hreflang="(en|it|x-default)"/g) ?? []).length !== 3)
+    throw new Error(`Expected en/it/x-default hreflang links in ${file}`);
   if (!html.includes('__SITE_SNAPSHOT__') || !html.includes('id="root"')) {
     throw new Error(`Missing snapshot/root in ${file}`);
   }
@@ -52,8 +57,9 @@ for (const route of routes) {
 const sitemap = await fs.readFile('dist/sitemap.xml', 'utf8');
 if ((sitemap.match(/<loc>/g) ?? []).length !== routes.length)
   throw new Error('Sitemap route count mismatch.');
-if (sitemap.includes('localhost') || sitemap.includes('/it/'))
-  throw new Error('Invalid sitemap origin/routes.');
+if (sitemap.includes('localhost')) throw new Error('Invalid sitemap origin.');
+if ((sitemap.match(/<xhtml:link rel="alternate"/g) ?? []).length !== routes.length * 3)
+  throw new Error('Sitemap hreflang alternates mismatch.');
 
 const browser = await launchChromium();
 const page = await browser.newPage();
@@ -63,10 +69,12 @@ page.on('request', (request) => {
   if (request.url().includes('sanity.io/data/query/')) cmsRequests += 1;
 });
 page.on('console', (message) => {
-  if (message.type() === 'error') consoleErrors.push(message.text());
+  // Vercel Analytics scripts (/_vercel/*) exist only on Vercel, not in `vite preview`.
+  if (message.type() === 'error' && !message.location().url.includes('/_vercel/'))
+    consoleErrors.push(message.text());
 });
 for (const route of routes) {
-  await page.goto(`${baseURL}${route}`, { waitUntil: 'networkidle' });
+  await page.goto(pageUrl(route), { waitUntil: 'networkidle' });
   if (!(await page.locator('#root').innerText()).trim())
     throw new Error(`Empty hydrated root: ${route}`);
 }

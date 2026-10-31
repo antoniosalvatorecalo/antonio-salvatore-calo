@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getSanityImageSources } from '@/cms/image';
 import { shouldEnhanceNavigation } from '@/lib/navigation';
 import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 import {
   GALLERY_FILTER_PRESENCE_MODE,
   getGalleryFilterMotion,
@@ -119,6 +120,7 @@ export function GalleryGrid({
   onFirstMediaRevealPresence,
 }: GalleryGridProps) {
   const reducedMotion = useReducedMotionPreference();
+  const { localize } = useLanguage();
   const filterMotion = getGalleryFilterMotion(reducedMotion);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeVideoKey, setActiveVideoKey] = useState<string | null>(null);
@@ -185,7 +187,7 @@ export function GalleryGrid({
               {items.slice(0, 64).map((item, i) => (
                 <MotionLink
                   key={`${item.projectId}-${item.key}`}
-                  to={`/projects/${item.projectId}`}
+                  to={localize(`/projects/${item.projectId}`)}
                   className="gallery-grid-item"
                   aria-label={`Open ${item.projectId}, image ${i + 1}`}
                   aria-disabled={!interactive}

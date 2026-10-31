@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { deriveRouteSeo, routeStructuredData, safeJson } from '@/seo/routeSeo';
+import { ogLocale } from '@/i18n/localePath';
 import { useProjectCatalog, useSiteSettings } from './ProjectCatalogProvider';
 
 function setMeta(selector: string, attribute: 'name' | 'property', key: string, content?: string) {
@@ -32,6 +33,17 @@ export function SeoManager() {
       document.head.appendChild(canonical);
     }
     canonical.href = seo.canonical;
+    document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((link) => {
+      link.remove();
+    });
+    for (const alternate of seo.alternates) {
+      const link = document.createElement('link');
+      link.rel = 'alternate';
+      link.hreflang = alternate.hreflang;
+      link.href = alternate.href;
+      document.head.appendChild(link);
+    }
+    setMeta('meta[property="og:locale"]', 'property', 'og:locale', ogLocale(seo.locale));
     setMeta('meta[name="description"]', 'name', 'description', seo.description);
     setMeta('meta[property="og:type"]', 'property', 'og:type', seo.type);
     setMeta('meta[property="og:url"]', 'property', 'og:url', seo.canonical);

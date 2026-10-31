@@ -24,6 +24,7 @@ import {
 } from '@/motion/ProjectTransitionMotion';
 import { useTransitionInputLock } from '@/hooks/useTransitionInputLock';
 import { useFilter } from './FilterContext';
+import { localeFromPath, localizePath, stripLocale } from '@/i18n/localePath';
 
 type ProjectTransitionPhase = 'idle' | 'opening' | 'project' | 'closing';
 
@@ -92,7 +93,7 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
   const { getProject } = useProjectCatalog();
   const getRouteSlug = useCallback(
     (pathname: string) => {
-      const slug = pathname.match(/^\/projects\/([^/]+)$/)?.[1];
+      const slug = stripLocale(pathname).match(/^\/projects\/([^/]+)$/)?.[1];
       return slug && getProject(slug) ? slug : null;
     },
     [getProject],
@@ -138,7 +139,10 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
   const finishOpen = useCallback(() => {
     const current = stateRef.current;
     if (current.phase !== 'opening' || !current.slug) return;
-    const path = `/projects/${current.slug}`;
+    const path = localizePath(
+      `/projects/${current.slug}`,
+      localeFromPath(locationRef.current.pathname),
+    );
     internalNavigationRef.current = path;
     commit({ ...current, phase: 'project' });
     navigate(path, {
@@ -156,12 +160,15 @@ export const ProjectTransitionProvider = ({ children }: { children: ReactNode })
     restoreGallery();
     if (closeSourceRef.current === 'pop') return;
     const origin = originRef.current;
-    const destination = origin?.url ?? '/';
+    // The language may have been switched while the project was open: return in the current one.
+    const locale = localeFromPath(currentLocation.pathname);
+    const destination = localizePath(origin?.url ?? '/', locale);
     internalNavigationRef.current = destination;
     if (
       origin &&
       projectHistoryKeyRef.current === currentLocation.key &&
-      currentLocation.pathname === `/projects/${origin.slug}`
+      localeFromPath(origin.url) === locale &&
+      stripLocale(currentLocation.pathname) === `/projects/${origin.slug}`
     ) {
       navigate(-1);
     } else {

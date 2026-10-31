@@ -1,5 +1,7 @@
 import type { ProjectDomain, SiteSettings } from '@/cms/domain';
 import type { SiteSnapshot } from '@/cms/snapshot';
+import { htmlLang, localeFromPath, localizePath, LOCALES, stripLocale } from '@/i18n/localePath';
+import type { Locale } from '@/i18n/translations';
 
 export interface RouteSeo {
   title: string;
@@ -9,6 +11,9 @@ export interface RouteSeo {
   image?: string;
   twitterCard: 'summary' | 'summary_large_image';
   project?: ProjectDomain;
+  locale: Locale;
+  /** Same page in every language, for `hreflang` (`x-default` is English). */
+  alternates: { hreflang: 'en' | 'it' | 'x-default'; href: string }[];
 }
 
 const productionOrigin = 'https://antoniosalvatorecalo.com';
@@ -35,10 +40,34 @@ const areaServed = [
   { '@type': 'Country', name: 'Italy' },
 ];
 
+const CONTACT_SEO: Record<
+  Locale,
+  { title: (name: string) => string; description: (name: string) => string }
+> = {
+  EN: {
+    title: (name) => `Contact — ${name}, Designer in Benevento`,
+    description: (name) =>
+      `Get in touch with ${name}, ${jobTitle} based in Benevento, Italy. Available for web design, UI/UX and frontend projects in Campania, across Italy and remotely.`,
+  },
+  IT: {
+    title: (name) => `Contatti — ${name}, Designer a Benevento`,
+    description: (name) =>
+      `Contatta ${name}, ${jobTitle} a Benevento. Disponibile per progetti di web design, UI/UX e frontend in Campania, in tutta Italia e da remoto.`,
+  },
+};
+
 function routePath(pathname: string): string {
-  const path = pathname.split('?')[0]?.split('#')[0] ?? '/';
+  const path = stripLocale(pathname.split('?')[0]?.split('#')[0] ?? '/');
   if (path === '/') return '/';
   return `/${path.replace(/^\/+|\/+$/g, '')}`;
+}
+
+function alternatesFor(path: string, origin: string): RouteSeo['alternates'] {
+  const links = LOCALES.map((locale) => ({
+    hreflang: htmlLang(locale),
+    href: absoluteUrl(localizePath(path, locale), origin),
+  }));
+  return [...links, { hreflang: 'x-default', href: absoluteUrl(path, origin) }];
 }
 
 function absoluteUrl(pathOrUrl: string, origin: string): string {
@@ -62,6 +91,7 @@ export function deriveRouteSeo(
   snapshot: Pick<SiteSnapshot, 'siteSettings' | 'projects'>,
 ): RouteSeo {
   const path = routePath(pathname);
+  const locale = localeFromPath(pathname);
   const settings = snapshot.siteSettings;
   const slug = path.match(/^\/projects\/([^/]+)$/)?.[1];
   const project = slug
@@ -81,27 +111,33 @@ export function deriveRouteSeo(
     return {
       title,
       description,
-      canonical: absoluteUrl(`/projects/${project.slug}`, origin),
+      canonical: absoluteUrl(localizePath(`/projects/${project.slug}`, locale), origin),
       type: 'article',
       image: image ? absoluteUrl(image, origin) : undefined,
       twitterCard: 'summary_large_image',
       project,
+      locale,
+      alternates: alternatesFor(`/projects/${project.slug}`, origin),
     };
   }
   const isContact = path === '/contact';
+  const pagePath = isContact ? '/contact' : '/';
+  const contact = CONTACT_SEO[locale];
   return {
     title: isContact
-      ? `Contact — ${settings.displayName}, Designer in Benevento`
+      ? contact.title(settings.displayName)
       : (settings.seo.title ?? settings.displayName),
     description: isContact
-      ? `Get in touch with ${settings.displayName}, ${jobTitle} based in Benevento, Italy. Available for web design, UI/UX and frontend projects in Campania, across Italy and remotely.`
+      ? contact.description(settings.displayName)
       : (settings.seo.description ?? settings.bio),
-    canonical: absoluteUrl(isContact ? '/contact' : '/', origin),
+    canonical: absoluteUrl(localizePath(pagePath, locale), origin),
     type: 'website',
     image: settings.seo.openGraphImage
       ? absoluteUrl(settings.seo.openGraphImage, origin)
       : undefined,
     twitterCard: 'summary_large_image',
+    locale,
+    alternates: alternatesFor(pagePath, origin),
   };
 }
 
@@ -110,6 +146,8 @@ export function routeStructuredData(
   settings: SiteSettings,
 ): Record<string, unknown>[] {
   const origin = getCanonicalOrigin(settings);
+  const inLanguage = htmlLang(seo.locale);
+  const homeUrl = absoluteUrl(localizePath('/', seo.locale), origin);
   const personId = `${origin}/#person`;
   const email = settings.publicContacts.find((contact) => contact.kind === 'email')?.value;
   const person = {
@@ -145,7 +183,8 @@ export function routeStructuredData(
         '@type': 'WebSite',
         '@id': `${origin}/#website`,
         name: settings.displayName,
-        url: `${origin}/`,
+        url: homeUrl,
+        inLanguage,
         description: settings.seo.description,
         publisher: { '@id': personId },
       },
@@ -162,6 +201,7 @@ export function routeStructuredData(
       name: seo.project.title,
       description: seo.project.description,
       url: seo.canonical,
+      inLanguage,
       ...(seo.image ? { image: seo.image } : {}),
       creator: { '@id': personId },
     },
@@ -169,7 +209,7 @@ export function routeStructuredData(
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
         { '@type': 'ListItem', position: 2, name: seo.project.title, item: seo.canonical },
       ],
     },

@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import { generateLlmsTxt, generateProjectMarkdown } from '../src/agentic/serialize';
-import { loadSiteSnapshot } from '../src/cms/snapshot';
+import { loadSiteSnapshot, normalizeSnapshot } from '../src/cms/snapshot';
+import { htmlLang, localeFromPath, LOCALES, localizePath, ogLocale } from '../src/i18n/localePath';
 import {
   deriveRouteSeo,
   getCanonicalOrigin,
@@ -39,16 +40,26 @@ async function main(): Promise<void> {
   const { render } = await import('../.ssr/entry-server.js');
   const template = await fs.readFile(path.join(distDir, 'index.html'), 'utf8');
   const snapshot = await loadSiteSnapshot();
-  const routes = [
+  // Same CMS content normalized per language: SEO reads the localized texts.
+  const localizedSnapshots = {
+    EN: snapshot,
+    IT: normalizeSnapshot(snapshot.rawContent, snapshot.generatedAt, 'IT'),
+  };
+  const pages = [
     '/',
     '/contact',
     ...snapshot.projects.map((project) => `/projects/${project.slug}`),
   ];
+  const routes = LOCALES.flatMap((locale) => pages.map((page) => localizePath(page, locale)));
   const snapshotScript = `<script id="__SITE_SNAPSHOT__" type="application/json">${safeJson(snapshot)}</script>`;
 
   for (const route of routes) {
     const markup = render(route, snapshot);
-    const seo = deriveRouteSeo(route, snapshot);
+    const seo = deriveRouteSeo(route, localizedSnapshots[localeFromPath(route)]);
+    const hreflangLinks = seo.alternates.map(
+      (alternate) =>
+        `<link rel="alternate" hreflang="${alternate.hreflang}" href="${alternate.href}" />`,
+    );
     const markdownAlternate = seo.project
       ? `<link rel="alternate" type="text/markdown" href="/projects/${encodeURIComponent(seo.project.slug)}.md" />`
       : null;
@@ -56,6 +67,8 @@ async function main(): Promise<void> {
       `<title>${escapeHtml(seo.title)}</title>`,
       `<meta name="description" content="${escapeHtml(seo.description)}" />`,
       `<link rel="canonical" href="${seo.canonical}" />`,
+      ...hreflangLinks,
+      `<meta property="og:locale" content="${ogLocale(seo.locale)}" />`,
       `<meta property="og:type" content="${seo.type}" />`,
       `<meta property="og:title" content="${escapeHtml(seo.title)}" />`,
       `<meta property="og:description" content="${escapeHtml(seo.description)}" />`,
@@ -75,6 +88,7 @@ async function main(): Promise<void> {
         '',
       )
       .replace(/\s*<link\s+rel="canonical"[^>]*>/i, '')
+      .replace(/<html lang="[^"]*">/i, `<html lang="${htmlLang(seo.locale)}">`)
       .replace('</head>', `    ${metadata}\n  </head>`)
       .replace('<div id="root"></div>', `<div id="root">${markup}</div>`)
       .replace('</body>', `${snapshotScript}</body>`);
@@ -83,7 +97,16 @@ async function main(): Promise<void> {
     await fs.writeFile(target, html, 'utf8');
   }
   const origin = getCanonicalOrigin(snapshot.siteSettings);
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${routes.map((route) => `<url><loc>${escapeXml(`${origin}${route}`)}</loc><lastmod>${snapshot.generatedAt}</lastmod></url>`).join('')}</urlset>`;
+  const sitemapUrl = (route: string) => {
+    const alternates = deriveRouteSeo(route, snapshot)
+      .alternates.map(
+        (alternate) =>
+          `<xhtml:link rel="alternate" hreflang="${alternate.hreflang}" href="${escapeXml(alternate.href)}"/>`,
+      )
+      .join('');
+    return `<url><loc>${escapeXml(`${origin}${route}`)}</loc><lastmod>${snapshot.generatedAt}</lastmod>${alternates}</url>`;
+  };
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${routes.map(sitemapUrl).join('')}</urlset>`;
   await fs.writeFile(path.join(distDir, 'sitemap.xml'), sitemap, 'utf8');
   await fs.writeFile(
     path.join(distDir, 'llms.txt'),
