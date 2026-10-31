@@ -16,7 +16,7 @@ _(vuoto)_
 ### GitHub
 
 - **P3** README del profilo GitHub (repo `antoniosalvatorecalo/antoniosalvatorecalo`) con link al
-  sito, servizi e città; impostare la location "Benevento, Italy" e "Available for hire".
+  sito, servizi e città. "Available for hire" (opzionale) richiede `gh auth refresh -s user`.
 
 ### SEO e visibilità
 
@@ -35,11 +35,11 @@ _(vuoto)_
 - **P2** `npm run budget:check` risultava oltre soglia: misurare e aggiornare budget o bundle.
 - **P3** `ContactFormExperience` importato sia staticamente sia dinamicamente (avviso di build).
 - **P3** Pulire regole duplicate e blocchi media vuoti in `src/index.css`.
-- **P2 [manuale]** Sanity → API → CORS origins: aggiungere `http://localhost:4173` e
-  `http://localhost:3000` per far passare `verify:prerender` e `verify:preloader`.
 
 ## Completato
 
+- 2026-10-31 — Sanity CORS: aggiunto `http://localhost:4173` (`localhost:3000` era già presente).
+- 2026-10-31 — GitHub: location del profilo impostata su "Benevento, Italy".
 - 2026-10-31 — Anteprime hover: assets interi e centrati, sfondo adattato ai bordi della foto.
 - 2026-10-31 — Anteprime in hover 16:9: niente tagli ai lati, assets verticali interi e centrati.
 - 2026-10-31 — Link dei progetti su mobile senza a capo (es. "Discover the process").
