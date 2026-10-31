@@ -24,8 +24,8 @@ _(vuoto)_
   pagine), stato della sitemap e canonico scelto da Google (deve essere senza www).
 - **P1 [manuale]** Profilo dell'Attività su Google: video di verifica inviato il 2026-10-31, esito
   atteso entro ~2026-11-05. Dopo la verifica: orari, 3–5 recensioni.
-- **P2** Dopo il deploy di `/it`: Search Console → Controllo URL su `/it` e `/it/contact`,
-  richiedere l'indicizzazione e verificare che la sitemap venga riletta con 8 URL.
+- **P2** Con il controllo del ~2026-11-05: verificare in Search Console che `/it` e `/it/contact`
+  (indicizzazione richiesta il 2026-10-31) siano indicizzate e che la sitemap risulti con 8 URL.
 - **P2** Pagine "Servizi" e "Chi sono" con testi orientati ai clienti.
 - **P2** Nuovi casi studio (obiettivo 5–6), con `seo.title`, `seo.description` e `alt` nel CMS.
 - **P3** Articoli per clienti locali (costi, tipologie di sito, come scegliere un designer).
