@@ -40,6 +40,7 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-31 — Anteprime hover: assets interi e centrati, sfondo adattato ai bordi della foto.
 - 2026-10-31 — Anteprime in hover 16:9: niente tagli ai lati, assets verticali interi e centrati.
 - 2026-10-31 — Link dei progetti su mobile senza a capo (es. "Discover the process").
 - 2026-10-31 — Anteprime in hover della gallery uniformate (stesso riquadro per tutte le foto).

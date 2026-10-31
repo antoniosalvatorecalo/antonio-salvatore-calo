@@ -10,6 +10,8 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Corretto
 
+- Anteprime in hover tutte uguali: ogni asset si vede intero e centrato nel riquadro 16:9 e le
+  bande vuote prendono i colori dei bordi della foto, senza stacco (prima Newsquest era tagliato).
 - Anteprima in hover più larga (16:9, 320 px), il formato della maggior parte degli assets: le foto
   orizzontali non vengono più tagliate ai lati; quelle quadrate o verticali (es. Bugonia menu) si
   vedono intere e centrate su fondo scuro.
