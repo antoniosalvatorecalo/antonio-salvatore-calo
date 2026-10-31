@@ -48,10 +48,28 @@ export function PreviewMediaAsset({
   const posterSrc = media.thumbnailSrc || (isVideo ? getVimeoThumbnailUrl(media.src) : '');
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [backdrop, setBackdrop] = useState<string | null>(null);
+  const imageSrc = isVideo ? posterSrc : media.src;
   useEffect(() => {
     setIsVideoLoaded(false);
     setBackdrop(null);
   }, [media.key, media.src]);
+
+  // The edge colours are read from a separate CORS request, so the visible image
+  // never depends on the CDN's CORS settings: if it is refused, the band stays dark.
+  useEffect(() => {
+    if (isVideo || !imageSrc) return undefined;
+    let cancelled = false;
+    const probe = new Image();
+    probe.crossOrigin = 'anonymous';
+    probe.onload = () => {
+      if (!cancelled) setBackdrop(getEdgeBackdrop(probe));
+    };
+    probe.src = imageSrc;
+    return () => {
+      cancelled = true;
+      probe.onload = null;
+    };
+  }, [imageSrc, isVideo]);
 
   return (
     <div
@@ -80,13 +98,7 @@ export function PreviewMediaAsset({
           />
         </div>
       ) : (
-        <img
-          src={isVideo ? posterSrc : media.src}
-          alt=""
-          className="project-preview-image"
-          crossOrigin="anonymous"
-          onLoad={(event) => setBackdrop(getEdgeBackdrop(event.currentTarget))}
-        />
+        <img src={imageSrc} alt="" className="project-preview-image" />
       )}
     </div>
   );
