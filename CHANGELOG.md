@@ -16,6 +16,8 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
   si leggono da una richiesta separata; se è bloccata le bande restano scure.
 - Lo sfondo delle anteprime compare subito all'hover: i colori dei bordi si calcolano appena la
   home è pronta, scaricando dal CDN di Sanity solo le due colonne di bordo (1×32 px).
+- Se un bordo della foto è pieno di dettagli e l'altro è uniforme (es. Newsquest Cover), la foto si
+  appoggia al lato con i dettagli: niente più strisce sfocate nella banda.
 - Anteprima in hover più larga (16:9, 320 px), il formato della maggior parte degli assets: le foto
   orizzontali non vengono più tagliate ai lati; quelle quadrate o verticali (es. Bugonia menu) si
   vedono intere e centrate su fondo scuro.

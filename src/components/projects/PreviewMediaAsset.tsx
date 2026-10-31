@@ -15,9 +15,21 @@ export function getPreviewMediaName(media: ProjectMedia): string {
 /** Rows sampled along each side edge when building the backdrop. */
 const EDGE_SAMPLES = 32;
 
+/** Luminance spread (std. deviation, 0–255) under which an edge counts as flat… */
+const FLAT_EDGE = 4;
+/** …and above which it counts as detailed (content cut by the photo's border). */
+const DETAILED_EDGE = 12;
+
+interface EdgeBackdrop {
+  /** CSS background-image continuing the photo's edge colours into the bands. */
+  image: string;
+  /** Side the photo leans on: a detailed edge stays against the frame instead of being stretched. */
+  align: 'left' | 'center' | 'right';
+}
+
 /** Edge backdrops by image URL: null means the pixels could not be read. */
-const backdropCache = new Map<string, string | null>();
-const backdropRequests = new Map<string, Promise<string | null>>();
+const backdropCache = new Map<string, EdgeBackdrop | null>();
+const backdropRequests = new Map<string, Promise<EdgeBackdrop | null>>();
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -27,6 +39,17 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     image.onerror = reject;
     image.src = src;
   });
+}
+
+function getEdgeSpread(pixels: Uint8ClampedArray, column: number): number {
+  const luminance: number[] = [];
+  for (let row = 0; row < EDGE_SAMPLES; row++) {
+    const [red = 0, green = 0, blue = 0] = pixels.subarray((row * 2 + column) * 4);
+    luminance.push(0.299 * red + 0.587 * green + 0.114 * blue);
+  }
+  const mean = luminance.reduce((sum, value) => sum + value, 0) / EDGE_SAMPLES;
+  const variance = luminance.reduce((sum, value) => sum + (value - mean) ** 2, 0) / EDGE_SAMPLES;
+  return Math.sqrt(variance);
 }
 
 function getImageSize(media: ProjectMedia, src: string): [number, number] | null {
@@ -64,10 +87,12 @@ async function drawEdgeColumns(
 /**
  * Builds a 2px-wide image from the photo's left and right edges. Stretched behind
  * the contained asset it continues the photo's own edge colours into the empty
- * bands, so there is no visible seam. Resolves to null if the pixels can't be read
- * (e.g. the CDN refuses CORS): the band then stays dark.
+ * bands, so there is no visible seam. When one edge is detailed and the other flat,
+ * the photo leans on the detailed side so only the flat edge is stretched.
+ * Resolves to null if the pixels can't be read (e.g. the CDN refuses CORS): the
+ * band then stays dark and the photo centred.
  */
-function loadEdgeBackdrop(media: ProjectMedia, src: string): Promise<string | null> {
+function loadEdgeBackdrop(media: ProjectMedia, src: string): Promise<EdgeBackdrop | null> {
   const pending = backdropRequests.get(src);
   if (pending) return pending;
   const request = (async () => {
@@ -78,7 +103,16 @@ function loadEdgeBackdrop(media: ProjectMedia, src: string): Promise<string | nu
       const context = canvas.getContext('2d');
       if (!context) return null;
       await drawEdgeColumns(context, media, src);
-      return `url(${canvas.toDataURL()})`;
+      const pixels = context.getImageData(0, 0, 2, EDGE_SAMPLES).data;
+      const left = getEdgeSpread(pixels, 0);
+      const right = getEdgeSpread(pixels, 1);
+      const align: EdgeBackdrop['align'] =
+        right > DETAILED_EDGE && left < FLAT_EDGE
+          ? 'right'
+          : left > DETAILED_EDGE && right < FLAT_EDGE
+            ? 'left'
+            : 'center';
+      return { image: `url(${canvas.toDataURL()})`, align };
     } catch {
       return null;
     }
@@ -135,7 +169,7 @@ export function PreviewMediaAsset({
   return (
     <div
       className={`project-preview-media${isVideo && !staticPreview ? ' is-video' : ''}`}
-      style={backdrop ? { backgroundImage: backdrop } : undefined}
+      style={backdrop ? { backgroundImage: backdrop.image } : undefined}
     >
       {isVideo && posterSrc && !staticPreview && (
         <img
@@ -159,7 +193,12 @@ export function PreviewMediaAsset({
           />
         </div>
       ) : (
-        <img src={imageSrc} alt="" className="project-preview-image" />
+        <img
+          src={imageSrc}
+          alt=""
+          className="project-preview-image"
+          style={backdrop ? { objectPosition: `${backdrop.align} center` } : undefined}
+        />
       )}
     </div>
   );
