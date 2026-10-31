@@ -10,6 +10,9 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Corretto
 
+- Anteprima in hover della gallery: tutte le foto e i video usano lo stesso riquadro delle
+  miniature (61:40, 280 px), quindi le immagini verticali (es. Bugonia shop) non coprono più la
+  gallery. Rimosse le eccezioni dedicate a singole immagini di Bugonia.
 - Header mobile (home e progetto): `[ EN ]` resta sempre sulla stessa riga di Email me,
   Download CV e Download Portfolio, con stessa dimensione, peso e colore; il testo scala con la
   larghezza dello schermo (verificato da 320 a 394 px, EN e IT).

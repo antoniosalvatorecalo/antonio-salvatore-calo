@@ -26,6 +26,8 @@
   align-items: flex-start;
 }
 
+/* Every preview uses the gallery thumbnail frame (61:40, cropped from the top),
+   so tall or wide assets never change the preview size. */
 .project-preview-media {
   position: relative;
   width: 100%;
@@ -35,64 +37,14 @@
   flex-shrink: 0;
 }
 
-.project-preview-media.is-video {
-  aspect-ratio: 16 / 9;
-}
-
-.project-preview-image,
-.project-preview-video {
+.project-preview-image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
-}
-
-.project-preview-image {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center top;
-}
-
-.project-preview-image--static {
-  object-position: center center;
-}
-
-/* Bugonia's tall editorial assets need an intentional inner scale in previews.
-   Keep this scoped to the three named media so Newsquest and other projects
-   retain the shared preview geometry. */
-.project-preview-image--bugonia-menu {
-  object-position: left center;
-  transform-origin: left center;
-  transform: scale(0.78);
-}
-
-.project-preview-image--bugonia-home,
-.project-preview-image--bugonia-merchandising {
-  object-position: left center;
-  transform-origin: left center;
-  transform: scale(0.62);
-}
-
-.project-preview-media--bugonia-menu,
-.project-preview-media--bugonia-home,
-.project-preview-media--bugonia-merchandising {
-  align-items: flex-start;
-}
-
-.project-preview-media--bugonia-home,
-.project-preview-media--bugonia-merchandising {
-  aspect-ratio: auto;
-  height: min(42vh, 420px);
-}
-
-.project-preview-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  pointer-events: none;
-  transition: opacity 160ms ease-out;
 }
 
 .project-preview-video-frame {
@@ -104,12 +56,17 @@
   overflow: hidden;
 }
 
+/* 16:9 player sized to cover the 61:40 frame; the sides are cropped. */
 .project-preview-video {
-  width: 100%;
+  position: relative;
+  flex-shrink: 0;
+  width: auto;
   height: 100%;
-  max-width: none;
-  max-height: none;
-  aspect-ratio: auto;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  display: block;
+  pointer-events: none;
+  transition: opacity 160ms ease-out;
 }
 
 .project-preview-name {
