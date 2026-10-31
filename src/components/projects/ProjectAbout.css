@@ -143,7 +143,9 @@
   }
 
   .project-about-cta a {
-    font-size: 0.8125rem;
+    font-size: var(--mobile-cta-size, 0.8125rem);
+    font-weight: 500;
+    letter-spacing: 0.02em;
     white-space: normal;
   }
 }

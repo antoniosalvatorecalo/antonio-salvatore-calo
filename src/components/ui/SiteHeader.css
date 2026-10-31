@@ -1423,17 +1423,21 @@
     white-space: normal;
     text-align: left;
   }
-  .site-header-ctas {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 0.35rem 0.65rem;
-    margin-top: 0;
-    white-space: nowrap;
+  /* Dimensione unica dei link d'azione mobile (CTA, lingua, Back, link progetto):
+     scala con la viewport così la riga CTA + [ EN ] non va mai a capo. */
+  .site-header {
+    --mobile-cta-size: clamp(0.6875rem, 3.2vw, 0.8125rem);
   }
 
+  .site-header-ctas,
   .site-header-inner.is-project .site-header-ctas {
-    flex-wrap: wrap;
-    gap: 0.35rem 0.65rem;
+    width: 100%;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin-top: 0;
+    white-space: nowrap;
   }
 
   .site-header-project-back--desktop {
@@ -1443,15 +1447,22 @@
   .site-header-project-back--mobile {
     display: inline-flex;
     align-self: flex-start;
-    font-size: 0.8125rem;
     white-space: nowrap;
   }
 
-  .site-header-cta-mini {
+  .site-header-cta-mini,
+  .site-header-mobile-switches .site-header-switch-btn {
     min-width: 0;
-    font-size: 0.8125rem;
+    font-size: var(--mobile-cta-size, 0.8125rem);
     line-height: 1.2;
     letter-spacing: 0.02em;
+  }
+
+  .site-header-mobile-switches .site-header-switch-btn,
+  .site-header-mobile-switches .site-header-switch-btn[aria-pressed='true'] {
+    padding: 0;
+    font-weight: 500;
+    color: var(--cta-color, var(--text-primary));
   }
 
   .site-header-cta-mobile {
@@ -1471,11 +1482,13 @@
     padding: 0 1px;
     font-size: 0.68rem;
   }
-  .site-header-mobile-switches {
+  .site-header-mobile-switches,
+  .site-header-inner.is-project .site-header-mobile-switches {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 0.2rem;
-    margin-left: auto;
+    margin-left: 0;
   }
   .site-header-col--nav > .site-header-switches,
   .site-header-nav-actions .site-header-switches {

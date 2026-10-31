@@ -8,6 +8,15 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ## [Non rilasciato]
 
+### Corretto
+
+- Header mobile (home e progetto): `[ EN ]` resta sempre sulla stessa riga di Email me,
+  Download CV e Download Portfolio, con stessa dimensione, peso e colore; il testo scala con la
+  larghezza dello schermo (verificato da 320 a 394 px, EN e IT).
+- Link d'azione mobile uniformati su tutto il sito (home, contatti, Bugonia, Newsquest): `< Back`
+  e i link dei progetti (es. "View prototype") hanno ora stessa dimensione, peso e spaziatura dei
+  link dell'header.
+
 ### SEO
 
 - H1 invisibile (`sr-only`) in Home e Contatti, con versione italiana.

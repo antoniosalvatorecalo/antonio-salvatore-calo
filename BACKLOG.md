@@ -40,6 +40,8 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-10-31 — Header mobile: switch lingua allineato; link d'azione mobile uniformati
+  su tutte le pagine (home, contatti, Bugonia, Newsquest).
 - 2026-10-29 — Bing Webmaster Tools: sito importato da Search Console, sitemap inviata.
 - 2026-10-29 — SEO title/description di `siteSettings` aggiornati in Sanity (EN e IT) e online.
 - 2026-10-29 — Profilo dell'Attività su Google creato: Web designer, 5 aree servite (Benevento,
