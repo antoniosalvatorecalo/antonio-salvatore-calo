@@ -10,6 +10,9 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Corretto
 
+- Anteprima in hover più larga (16:9, 320 px), il formato della maggior parte degli assets: le foto
+  orizzontali non vengono più tagliate ai lati; quelle quadrate o verticali (es. Bugonia menu) si
+  vedono intere e centrate su fondo scuro.
 - Link dei progetti su mobile (es. "Discover the process"): ogni link resta su una riga; se non
   c'è spazio scende intero alla riga successiva.
 - Anteprima in hover della gallery: tutte le foto e i video usano lo stesso riquadro delle

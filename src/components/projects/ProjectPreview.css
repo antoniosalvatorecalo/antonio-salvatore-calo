@@ -15,7 +15,7 @@
 }
 
 .project-preview-inner {
-  width: 280px;
+  width: 320px;
   max-width: 35vw;
   overflow: hidden;
   background: #fff;
@@ -26,12 +26,13 @@
   align-items: flex-start;
 }
 
-/* Every preview uses the gallery thumbnail frame (61:40, cropped from the top),
-   so tall or wide assets never change the preview size. */
+/* Every preview uses the same 16:9 frame (the format of most assets), so tall or
+   wide assets never change the preview size. Landscape assets fill it; square and
+   portrait ones (.is-contained) are shown whole and centred. */
 .project-preview-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 61 / 40;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: var(--bg-primary);
   flex-shrink: 0;
@@ -44,7 +45,15 @@
   height: 100%;
   display: block;
   object-fit: cover;
-  object-position: center top;
+  object-position: center;
+}
+
+.project-preview-media.is-contained {
+  background: var(--bg-inverse);
+}
+
+.project-preview-media.is-contained .project-preview-image {
+  object-fit: contain;
 }
 
 .project-preview-video-frame {
@@ -56,7 +65,7 @@
   overflow: hidden;
 }
 
-/* 16:9 player sized to cover the 61:40 frame; the sides are cropped. */
+/* 16:9 player filling the 16:9 frame. */
 .project-preview-video {
   position: relative;
   flex-shrink: 0;
