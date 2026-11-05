@@ -27,6 +27,8 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
   anche in navigazione interna; prima l'app mostrava la Home con il canonical della Home.
 - Indirizzi con `/` finale reindirizzati alla versione senza (`trailingSlash: false`).
 - Il build avvisa se un testo italiano manca nel CMS e viene mostrato in inglese.
+- Ruolo unico "Digital Frontend Developer" ovunque nel codice: `index.html`, dati strutturati,
+  H1 nascosti di Home e Contatti, ruolo nella pagina Contatti (prima "Web & UI Designer").
 
 ### Modificato
 

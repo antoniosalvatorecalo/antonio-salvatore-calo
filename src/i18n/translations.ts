@@ -162,8 +162,8 @@ const translations: TranslationMap = {
   'header.menu-cta.contact': { EN: 'Start a project', IT: 'Inizia un progetto' },
   'header.email-me': { EN: 'Email Me', IT: 'Email Me' },
   'seo.h1.home': {
-    EN: 'Digital Designer & Frontend Developer in Benevento, Italy',
-    IT: 'Digital Designer e Frontend Developer a Benevento',
+    EN: 'Digital Frontend Developer in Benevento, Italy',
+    IT: 'Digital Frontend Developer a Benevento',
   },
   'seo.h1.contact': {
     EN: 'Contact — Web Design & Frontend Projects',
@@ -279,7 +279,7 @@ const translations: TranslationMap = {
   },
 
   // ── Contact ──────────────────────────────────────────────────
-  'contact.role': { EN: 'Web & UI Designer', IT: 'Web & UI Designer' },
+  'contact.role': { EN: 'Digital Frontend Developer', IT: 'Digital Frontend Developer' },
   'contact.location': { EN: 'Based in Benevento, Italy', IT: 'Sede: Benevento, Italia' },
   'contact.email': {
     EN: 'antonio.salvatore.calo@gmail.com',

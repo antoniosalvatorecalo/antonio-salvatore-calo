@@ -20,7 +20,7 @@ export interface RouteSeo {
 
 const productionOrigin = 'https://antoniosalvatorecalo.com';
 
-const jobTitle = 'Digital Designer & Frontend Developer';
+const jobTitle = 'Digital Frontend Developer';
 const knowsAbout = [
   'Web Design',
   'UI Design',

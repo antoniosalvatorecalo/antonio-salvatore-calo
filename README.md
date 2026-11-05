@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/antoniosalvatorecalo/antonio-salvatore-calo/actions/workflows/ci.yml/badge.svg)](https://github.com/antoniosalvatorecalo/antonio-salvatore-calo/actions/workflows/ci.yml)
 
-Portfolio interattivo di un Digital Designer & Frontend Developer di Benevento.
+Portfolio interattivo di un Digital Frontend Developer di Benevento.
 Sito: <https://antoniosalvatorecalo.com>
 
 **Stack:** React 19 · Vite · TypeScript · Tailwind v4 · GSAP/Motion · Sanity CMS · Vercel.
