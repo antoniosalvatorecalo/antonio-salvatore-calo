@@ -42,8 +42,8 @@ _(vuoto)_
 
 - 2026-11-05 — Vercel Web Analytics attivato nel pannello (piano Hobby, storico 30 giorni): prima
   le visite non venivano registrate. Speed Insights già attivo (RES 89).
-- 2026-11-05 — Search Console: Controllo URL con esito "indicizzata" per `/`, `/it`,
-  `/projects/bugonia`, `/it/projects/newsquest`; sitemap letta il 2026-11-04 con 8 URL.
+- 2026-11-05 — Search Console: Controllo URL con esito "indicizzata" per tutte le 8 pagine
+  (EN e IT: home, contatti, Bugonia, Newsquest); sitemap letta il 2026-11-04 con 8 URL.
   Il report Pagine (fermo al 2026-10-23) mostra ancora `www` come canonico: si aggiornerà da solo.
 
 - 2026-10-31 — Versione italiana prerenderizzata su `/it` con `hreflang`, `lang="it"` e sitemap
