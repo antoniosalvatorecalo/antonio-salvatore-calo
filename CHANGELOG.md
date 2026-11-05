@@ -29,6 +29,8 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 - Il build avvisa se un testo italiano manca nel CMS e viene mostrato in inglese.
 - Ruolo unico "Digital Frontend Developer" ovunque nel codice: `index.html`, dati strutturati,
   H1 nascosti di Home e Contatti, ruolo nella pagina Contatti (prima "Web & UI Designer").
+- Title di Contatti: "Contact — Antonio Salvatore Calò, Digital Frontend Developer" (EN) e
+  "Contatti — …" (IT); prima "…, Designer in Benevento".
 
 ### Modificato
 

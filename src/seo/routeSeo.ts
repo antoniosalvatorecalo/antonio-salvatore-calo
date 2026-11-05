@@ -47,12 +47,12 @@ const CONTACT_SEO: Record<
   { title: (name: string) => string; description: (name: string) => string }
 > = {
   EN: {
-    title: (name) => `Contact — ${name}, Designer in Benevento`,
+    title: (name) => `Contact — ${name}, ${jobTitle}`,
     description: (name) =>
       `Contact ${name}, ${jobTitle} in Benevento, Italy: web design, UI/UX and frontend projects in Campania and remotely.`,
   },
   IT: {
-    title: (name) => `Contatti — ${name}, Designer a Benevento`,
+    title: (name) => `Contatti — ${name}, ${jobTitle}`,
     description: (name) =>
       `Contatta ${name}, ${jobTitle} a Benevento: web design, UI/UX e frontend in Campania, in tutta Italia e da remoto.`,
   },
