@@ -20,12 +20,8 @@ _(vuoto)_
 
 ### SEO e visibilità
 
-- **P2** Tra una settimana (~2026-11-05): ricontrollare in Search Console indicizzazione (obiettivo 4/4
-  pagine), stato della sitemap e canonico scelto da Google (deve essere senza www).
 - **P1 [manuale]** Profilo dell'Attività su Google: video di verifica inviato il 2026-10-31, esito
   atteso entro ~2026-11-05. Dopo la verifica: orari, 3–5 recensioni.
-- **P2** Con il controllo del ~2026-11-05: verificare in Search Console che `/it` e `/it/contact`
-  (indicizzazione richiesta il 2026-10-31) siano indicizzate e che la sitemap risulti con 8 URL.
 - **P2** Pagine "Servizi" e "Chi sono" con testi orientati ai clienti.
 - **P2** Nuovi casi studio (obiettivo 5–6), con `seo.title`, `seo.description` e `alt` nel CMS.
 - **P3** Articoli per clienti locali (costi, tipologie di sito, come scegliere un designer).
@@ -40,6 +36,12 @@ _(vuoto)_
   often marginal…"): aggiornare l'asserzione al contenuto attuale.
 
 ## Completato
+
+- 2026-11-05 — Vercel Web Analytics attivato nel pannello (piano Hobby, storico 30 giorni): prima
+  le visite non venivano registrate. Speed Insights già attivo (RES 89).
+- 2026-11-05 — Search Console: Controllo URL con esito "indicizzata" per `/`, `/it`,
+  `/projects/bugonia`, `/it/projects/newsquest`; sitemap letta il 2026-11-04 con 8 URL.
+  Il report Pagine (fermo al 2026-10-23) mostra ancora `www` come canonico: si aggiornerà da solo.
 
 - 2026-10-31 — Versione italiana prerenderizzata su `/it` con `hreflang`, `lang="it"` e sitemap
   bilingue.
