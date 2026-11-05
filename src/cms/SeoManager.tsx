@@ -27,33 +27,69 @@ export function SeoManager() {
     const seo = deriveRouteSeo(pathname, { projects, siteSettings: settings });
     document.title = seo.title;
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
+    if (seo.notFound) {
+      canonical?.remove();
+    } else {
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+      }
+      canonical.href = seo.canonical;
     }
-    canonical.href = seo.canonical;
     document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((link) => {
       link.remove();
     });
-    for (const alternate of seo.alternates) {
+    for (const alternate of seo.notFound ? [] : seo.alternates) {
       const link = document.createElement('link');
       link.rel = 'alternate';
       link.hreflang = alternate.hreflang;
       link.href = alternate.href;
       document.head.appendChild(link);
     }
+    const image = seo.image;
+    setMeta(
+      'meta[name="robots"]',
+      'name',
+      'robots',
+      seo.notFound ? 'noindex, follow' : 'index, follow, max-image-preview:large',
+    );
     setMeta('meta[property="og:locale"]', 'property', 'og:locale', ogLocale(seo.locale));
+    setMeta(
+      'meta[property="og:locale:alternate"]',
+      'property',
+      'og:locale:alternate',
+      ogLocale(seo.locale === 'EN' ? 'IT' : 'EN'),
+    );
     setMeta('meta[name="description"]', 'name', 'description', seo.description);
     setMeta('meta[property="og:type"]', 'property', 'og:type', seo.type);
-    setMeta('meta[property="og:url"]', 'property', 'og:url', seo.canonical);
+    setMeta(
+      'meta[property="og:url"]',
+      'property',
+      'og:url',
+      seo.notFound ? undefined : seo.canonical,
+    );
     setMeta('meta[property="og:title"]', 'property', 'og:title', seo.title);
     setMeta('meta[property="og:description"]', 'property', 'og:description', seo.description);
-    setMeta('meta[property="og:image"]', 'property', 'og:image', seo.image);
+    setMeta('meta[property="og:image"]', 'property', 'og:image', image?.src);
+    setMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', image?.alt);
+    setMeta(
+      'meta[property="og:image:width"]',
+      'property',
+      'og:image:width',
+      image?.height ? image.width?.toString() : undefined,
+    );
+    setMeta(
+      'meta[property="og:image:height"]',
+      'property',
+      'og:image:height',
+      image?.width ? image.height?.toString() : undefined,
+    );
     setMeta('meta[name="twitter:card"]', 'name', 'twitter:card', seo.twitterCard);
     setMeta('meta[name="twitter:title"]', 'name', 'twitter:title', seo.title);
     setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', seo.description);
-    setMeta('meta[name="twitter:image"]', 'name', 'twitter:image', seo.image);
+    setMeta('meta[name="twitter:image"]', 'name', 'twitter:image', image?.src);
+    setMeta('meta[name="twitter:image:alt"]', 'name', 'twitter:image:alt', image?.alt);
     const favicon = settings.branding?.favicon;
     const faviconLink = document.head.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (favicon && faviconLink) faviconLink.href = favicon;

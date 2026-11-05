@@ -315,9 +315,10 @@ export type AllSanitySchemaTypes =
 
 // Source: ../antonio-salvatore-calo/src/cms/queries.ts
 // Variable: PROJECTS_QUERY
-// Query: *[_type == "project"] | order(order asc){    _id,    title,    slug,    order,    service,    description,    details{_type, about},    credits[]{_key, label, values},    links[]{_key, label, href},    seo{      title,      description,      "openGraphImage": openGraphImage.asset->url    },    gallery[]{      _key,      _type,      alt,      label,      url,      image{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      },      poster{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      }    }  }
+// Query: *[_type == "project"] | order(order asc){    _id,    _updatedAt,    title,    slug,    order,    service,    description,    details{_type, about},    credits[]{_key, label, values},    links[]{_key, label, href},    seo{      title,      description,      "openGraphImage": openGraphImage.asset->url    },    gallery[]{      _key,      _type,      alt,      label,      url,      image{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      },      poster{        crop,        hotspot,        asset->{_id, url, metadata{dimensions, lqip}}      }    }  }
 export type PROJECTS_QUERY_RESULT = Array<{
   _id: string;
+  _updatedAt: string;
   title: LocalizedString | null;
   slug: Slug | null;
   order: number | null;
@@ -388,8 +389,9 @@ export type PROJECTS_QUERY_RESULT = Array<{
 
 // Source: ../antonio-salvatore-calo/src/cms/queries.ts
 // Variable: SITE_SETTINGS_QUERY
-// Query: *[_type == "siteSettings" && _id == "siteSettings"][0]{    displayName,    bio,    recognition,    publicContacts[]{_key, kind, value, href},    socials[]{_key, label, href},    downloads[]{_key, kind, label, href},    canonicalBaseUrl,    branding{themeColor, favicon{asset->{url}}},    seo{      title,      description,      "openGraphImage": openGraphImage.asset->url    }  }
+// Query: *[_type == "siteSettings" && _id == "siteSettings"][0]{    _updatedAt,    displayName,    bio,    recognition,    publicContacts[]{_key, kind, value, href},    socials[]{_key, label, href},    downloads[]{_key, kind, label, href},    canonicalBaseUrl,    branding{themeColor, favicon{asset->{url}}},    seo{      title,      description,      "openGraphImage": openGraphImage.asset->url    }  }
 export type SITE_SETTINGS_QUERY_RESULT = {
+  _updatedAt: string;
   displayName: LocalizedString | null;
   bio: LocalizedText | null;
   recognition: Array<
@@ -433,8 +435,8 @@ export type SITE_SETTINGS_QUERY_RESULT = {
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n  *[_type == "project"] | order(order asc){\n    _id,\n    title,\n    slug,\n    order,\n    service,\n    description,\n    details{_type, about},\n    credits[]{_key, label, values},\n    links[]{_key, label, href},\n    seo{\n      title,\n      description,\n      "openGraphImage": openGraphImage.asset->url\n    },\n    gallery[]{\n      _key,\n      _type,\n      alt,\n      label,\n      url,\n      image{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      },\n      poster{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      }\n    }\n  }\n': PROJECTS_QUERY_RESULT;
-    '\n  *[_type == "siteSettings" && _id == "siteSettings"][0]{\n    displayName,\n    bio,\n    recognition,\n    publicContacts[]{_key, kind, value, href},\n    socials[]{_key, label, href},\n    downloads[]{_key, kind, label, href},\n    canonicalBaseUrl,\n    branding{themeColor, favicon{asset->{url}}},\n    seo{\n      title,\n      description,\n      "openGraphImage": openGraphImage.asset->url\n    }\n  }\n': SITE_SETTINGS_QUERY_RESULT;
+    '\n  *[_type == "project"] | order(order asc){\n    _id,\n    _updatedAt,\n    title,\n    slug,\n    order,\n    service,\n    description,\n    details{_type, about},\n    credits[]{_key, label, values},\n    links[]{_key, label, href},\n    seo{\n      title,\n      description,\n      "openGraphImage": openGraphImage.asset->url\n    },\n    gallery[]{\n      _key,\n      _type,\n      alt,\n      label,\n      url,\n      image{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      },\n      poster{\n        crop,\n        hotspot,\n        asset->{_id, url, metadata{dimensions, lqip}}\n      }\n    }\n  }\n': PROJECTS_QUERY_RESULT;
+    '\n  *[_type == "siteSettings" && _id == "siteSettings"][0]{\n    _updatedAt,\n    displayName,\n    bio,\n    recognition,\n    publicContacts[]{_key, kind, value, href},\n    socials[]{_key, label, href},\n    downloads[]{_key, kind, label, href},\n    canonicalBaseUrl,\n    branding{themeColor, favicon{asset->{url}}},\n    seo{\n      title,\n      description,\n      "openGraphImage": openGraphImage.asset->url\n    }\n  }\n': SITE_SETTINGS_QUERY_RESULT;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too

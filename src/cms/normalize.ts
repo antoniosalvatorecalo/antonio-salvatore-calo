@@ -16,9 +16,21 @@ type RawSeo = NonNullable<CmsProjectResult['seo']>;
 
 const localeKey = (locale: CmsLocale) => locale.toLowerCase() as 'en' | 'it';
 
+const fallbackWarnings = new Set<string>();
+
 function localized(value: LocalizedValue, locale: CmsLocale, field: string): string {
   const selected = value?.[localeKey(locale)] ?? value?.en ?? value?.it;
   if (!selected) throw new Error(`CMS is missing ${field} for ${locale}.`);
+  // Build-time only: an /it page silently shown in English looks like duplicate content.
+  const warning = `[cms] ${field} has no ${locale} text, falling back to another language.`;
+  if (
+    typeof window === 'undefined' &&
+    !value?.[localeKey(locale)] &&
+    !fallbackWarnings.has(warning)
+  ) {
+    fallbackWarnings.add(warning);
+    console.warn(warning);
+  }
   return selected;
 }
 
@@ -121,6 +133,7 @@ export function normalizeProject(project: CmsProjectResult, locale: CmsLocale): 
     media,
     details: normalizeCmsDetails(project, locale),
     seo: normalizeSeo(project.seo, locale),
+    updatedAt: project._updatedAt,
   };
 }
 
@@ -180,5 +193,6 @@ export function normalizeSiteSettings(
         }
       : undefined,
     seo,
+    updatedAt: settings._updatedAt,
   };
 }

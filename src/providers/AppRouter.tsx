@@ -1,22 +1,35 @@
 import { Suspense, type ReactNode } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { PortfolioLayout } from '../layouts/PortfolioLayout';
 import { LanguageProvider } from './LanguageProvider';
 import { ProjectTransitionProvider } from './ProjectTransitionProvider';
 import { FilterProvider } from './FilterContext';
-import { ProjectCatalogGate, ProjectCatalogProvider } from '@/cms/ProjectCatalogProvider';
+import {
+  ProjectCatalogGate,
+  ProjectCatalogProvider,
+  useProjectCatalog,
+} from '@/cms/ProjectCatalogProvider';
 import { SeoManager } from '@/cms/SeoManager';
 import type { SiteSnapshot } from '@/cms/snapshot';
+import { stripLocale } from '@/i18n/localePath';
+import { NotFoundPage } from '@/pages/not-found/NotFoundPage';
 
 const FALLBACK = <div style={{ padding: 40, color: 'var(--text-primary)' }}>Loading…</div>;
 
-const PortfolioRouteLayout = () => (
-  <FilterProvider>
-    <ProjectTransitionProvider>
-      <PortfolioLayout />
-    </ProjectTransitionProvider>
-  </FilterProvider>
-);
+const PortfolioRouteLayout = () => {
+  const { pathname } = useLocation();
+  const { projects } = useProjectCatalog();
+  const slug = stripLocale(pathname).match(/^\/projects\/([^/]+)\/?$/)?.[1];
+  if (slug && !projects.some((project) => project.slug === decodeURIComponent(slug)))
+    return <NotFoundPage />;
+  return (
+    <FilterProvider>
+      <ProjectTransitionProvider>
+        <PortfolioLayout />
+      </ProjectTransitionProvider>
+    </FilterProvider>
+  );
+};
 
 export interface AppRoutesProps {
   initialSnapshot?: SiteSnapshot;
@@ -39,6 +52,7 @@ export function AppRoutes({ initialSnapshot, contactElement }: AppRoutesProps) {
               path="/it?/contact"
               element={<Suspense fallback={FALLBACK}>{contactElement}</Suspense>}
             />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </ProjectCatalogGate>
       </ProjectCatalogProvider>

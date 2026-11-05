@@ -37,6 +37,9 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-11-05 — Audit SEO del codice: JSON-LD localizzato, alt delle immagini OG, fallback
+  immagine, title/description, `lastmod` reale, pagina 404 `noindex`, `trailingSlash` (CHANGELOG).
+
 - 2026-11-05 — Vercel Web Analytics attivato nel pannello (piano Hobby, storico 30 giorni): prima
   le visite non venivano registrate. Speed Insights già attivo (RES 89).
 - 2026-11-05 — Search Console: Controllo URL con esito "indicizzata" per `/`, `/it`,

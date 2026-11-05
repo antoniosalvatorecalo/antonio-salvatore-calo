@@ -8,8 +8,10 @@ export interface RouteSeo {
   description: string;
   canonical: string;
   type: 'website' | 'article';
-  image?: string;
+  image?: { src: string; alt: string; width?: number; height?: number };
   twitterCard: 'summary' | 'summary_large_image';
+  /** Unknown URL: `noindex`, no canonical or `hreflang`. */
+  notFound: boolean;
   project?: ProjectDomain;
   locale: Locale;
   /** Same page in every language, for `hreflang` (`x-default` is English). */
@@ -47,14 +49,38 @@ const CONTACT_SEO: Record<
   EN: {
     title: (name) => `Contact — ${name}, Designer in Benevento`,
     description: (name) =>
-      `Get in touch with ${name}, ${jobTitle} based in Benevento, Italy. Available for web design, UI/UX and frontend projects in Campania, across Italy and remotely.`,
+      `Contact ${name}, ${jobTitle} in Benevento, Italy: web design, UI/UX and frontend projects in Campania and remotely.`,
   },
   IT: {
     title: (name) => `Contatti — ${name}, Designer a Benevento`,
     description: (name) =>
-      `Contatta ${name}, ${jobTitle} a Benevento. Disponibile per progetti di web design, UI/UX e frontend in Campania, in tutta Italia e da remoto.`,
+      `Contatta ${name}, ${jobTitle} a Benevento: web design, UI/UX e frontend in Campania, in tutta Italia e da remoto.`,
   },
 };
+
+const NOT_FOUND_SEO: Record<Locale, { title: string; description: string }> = {
+  EN: { title: 'Page not found', description: 'This page does not exist or has been moved.' },
+  IT: { title: 'Pagina non trovata', description: 'Questa pagina non esiste o è stata spostata.' },
+};
+
+const MAX_DESCRIPTION_LENGTH = 160;
+
+/** Search engines cut descriptions around 160 characters: cut at a word, not mid-word. */
+export function clampDescription(text: string): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= MAX_DESCRIPTION_LENGTH) return clean;
+  const cut = clean.slice(0, MAX_DESCRIPTION_LENGTH - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.—-]+$/, '')}…`;
+}
+
+const MAX_TITLE_LENGTH = 60;
+
+/** Adds the brand when it fits: a cut-off title loses it anyway in search results. */
+function withName(title: string, name: string): string {
+  const branded = `${title} — ${name}`;
+  return title.includes(name) || branded.length > MAX_TITLE_LENGTH ? title : branded;
+}
 
 function routePath(pathname: string): string {
   const path = stripLocale(pathname.split('?')[0]?.split('#')[0] ?? '/');
@@ -79,11 +105,14 @@ export function getCanonicalOrigin(settings: SiteSettings): string {
   return (configured ? configured : productionOrigin).replace(/\/+$/, '');
 }
 
-function projectImage(project: ProjectDomain): string | undefined {
-  const media = project.media.find(
-    (item) => item.type === 'image' && (item.thumbnailSrc || item.src),
-  );
-  return media?.thumbnailSrc ?? media?.src;
+/** First image, else the poster of the first video (a Vimeo `src` is not an image). */
+function projectImage(project: ProjectDomain): RouteSeo['image'] {
+  const media =
+    project.media.find((item) => item.type === 'image') ??
+    project.media.find((item) => item.thumbnailSrc);
+  const src = media?.type === 'image' ? media.src : media?.thumbnailSrc;
+  if (!media || !src) return undefined;
+  return { src, alt: media.alt, width: media.width, height: media.height };
 }
 
 export function deriveRouteSeo(
@@ -98,44 +127,62 @@ export function deriveRouteSeo(
     ? snapshot.projects.find((item) => item.slug === decodeURIComponent(slug))
     : undefined;
   const origin = getCanonicalOrigin(settings);
+  const siteImage = settings.seo.openGraphImage;
+  const absoluteImage = (image: RouteSeo['image']) =>
+    image ? { ...image, src: absoluteUrl(image.src, origin) } : undefined;
   if (project) {
-    const title =
+    const title = withName(
       project.seo?.title && project.seo.title !== settings.seo.title
         ? project.seo.title
-        : project.title;
+        : project.title,
+      settings.displayName,
+    );
     const description =
       project.seo?.description && project.seo.description !== settings.seo.description
         ? project.seo.description
         : project.description;
-    const image = project.seo?.openGraphImage ?? projectImage(project);
+    const image = absoluteImage(
+      project.seo?.openGraphImage
+        ? { src: project.seo.openGraphImage, alt: project.title }
+        : (projectImage(project) ?? (siteImage ? { src: siteImage, alt: title } : undefined)),
+    );
     return {
       title,
-      description,
+      description: clampDescription(description),
       canonical: absoluteUrl(localizePath(`/projects/${project.slug}`, locale), origin),
       type: 'article',
-      image: image ? absoluteUrl(image, origin) : undefined,
-      twitterCard: 'summary_large_image',
+      image,
+      twitterCard: image ? 'summary_large_image' : 'summary',
+      notFound: false,
       project,
       locale,
       alternates: alternatesFor(`/projects/${project.slug}`, origin),
     };
   }
   const isContact = path === '/contact';
+  const notFound = !isContact && path !== '/';
   const pagePath = isContact ? '/contact' : '/';
   const contact = CONTACT_SEO[locale];
-  return {
-    title: isContact
+  const title = notFound
+    ? withName(NOT_FOUND_SEO[locale].title, settings.displayName)
+    : isContact
       ? contact.title(settings.displayName)
-      : (settings.seo.title ?? settings.displayName),
-    description: isContact
-      ? contact.description(settings.displayName)
-      : (settings.seo.description ?? settings.bio),
+      : (settings.seo.title ?? settings.displayName);
+  const image = absoluteImage(siteImage ? { src: siteImage, alt: title } : undefined);
+  return {
+    title,
+    description: clampDescription(
+      notFound
+        ? NOT_FOUND_SEO[locale].description
+        : isContact
+          ? contact.description(settings.displayName)
+          : (settings.seo.description ?? settings.bio),
+    ),
     canonical: absoluteUrl(localizePath(pagePath, locale), origin),
     type: 'website',
-    image: settings.seo.openGraphImage
-      ? absoluteUrl(settings.seo.openGraphImage, origin)
-      : undefined,
-    twitterCard: 'summary_large_image',
+    image,
+    twitterCard: image ? 'summary_large_image' : 'summary',
+    notFound,
     locale,
     alternates: alternatesFor(pagePath, origin),
   };
@@ -170,7 +217,7 @@ export function routeStructuredData(
       name: `${settings.displayName} — ${jobTitle}`,
       url: `${origin}/`,
       description: settings.seo.description ?? settings.bio,
-      ...(seo.image ? { image: seo.image } : {}),
+      ...(seo.image ? { image: seo.image.src } : {}),
       ...(email ? { email } : {}),
       address,
       areaServed,
@@ -202,7 +249,7 @@ export function routeStructuredData(
       description: seo.project.description,
       url: seo.canonical,
       inLanguage,
-      ...(seo.image ? { image: seo.image } : {}),
+      ...(seo.image ? { image: seo.image.src } : {}),
       creator: { '@id': personId },
     },
     {

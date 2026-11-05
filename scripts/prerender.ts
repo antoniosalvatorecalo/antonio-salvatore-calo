@@ -22,8 +22,11 @@ function escapeHtml(value: string): string {
   );
 }
 
+const NOT_FOUND_ROUTE = '/404';
+
 function outputPath(route: string): string {
   if (route === '/') return path.join(distDir, 'index.html');
+  if (route === NOT_FOUND_ROUTE) return path.join(distDir, '404.html');
   return path.join(distDir, route.replace(/^\//, ''), 'index.html');
 }
 
@@ -53,38 +56,67 @@ async function main(): Promise<void> {
   const routes = LOCALES.flatMap((locale) => pages.map((page) => localizePath(page, locale)));
   const snapshotScript = `<script id="__SITE_SNAPSHOT__" type="application/json">${safeJson(snapshot)}</script>`;
 
-  for (const route of routes) {
-    const markup = render(route, snapshot);
-    const seo = deriveRouteSeo(route, localizedSnapshots[localeFromPath(route)]);
-    const hreflangLinks = seo.alternates.map(
-      (alternate) =>
-        `<link rel="alternate" hreflang="${alternate.hreflang}" href="${alternate.href}" />`,
-    );
+  // Vercel serves `404.html` for every unknown URL, with a real 404 status. Its root stays
+  // empty: the client renders the 404 in the URL's language instead of hydrating English markup.
+  for (const route of [...routes, NOT_FOUND_ROUTE]) {
+    const markup = route === NOT_FOUND_ROUTE ? '' : render(route, snapshot);
+    const localized = localizedSnapshots[localeFromPath(route)];
+    const seo = deriveRouteSeo(route, localized);
+    const hreflangLinks = seo.notFound
+      ? []
+      : seo.alternates.map(
+          (alternate) =>
+            `<link rel="alternate" hreflang="${alternate.hreflang}" href="${alternate.href}" />`,
+        );
     const markdownAlternate = seo.project
       ? `<link rel="alternate" type="text/markdown" href="/projects/${encodeURIComponent(seo.project.slug)}.md" />`
       : null;
+    const image = seo.image;
+    const imageAlt = image ? escapeHtml(image.alt) : '';
+    const themeColor = localized.siteSettings.branding?.themeColor;
     const metadata = [
       `<title>${escapeHtml(seo.title)}</title>`,
       `<meta name="description" content="${escapeHtml(seo.description)}" />`,
-      `<link rel="canonical" href="${seo.canonical}" />`,
+      `<meta name="robots" content="${seo.notFound ? 'noindex, follow' : 'index, follow, max-image-preview:large'}" />`,
+      ...(seo.notFound ? [] : [`<link rel="canonical" href="${seo.canonical}" />`]),
       ...hreflangLinks,
       `<meta property="og:locale" content="${ogLocale(seo.locale)}" />`,
+      ...LOCALES.filter((locale) => locale !== seo.locale).map(
+        (locale) => `<meta property="og:locale:alternate" content="${ogLocale(locale)}" />`,
+      ),
       `<meta property="og:type" content="${seo.type}" />`,
       `<meta property="og:title" content="${escapeHtml(seo.title)}" />`,
       `<meta property="og:description" content="${escapeHtml(seo.description)}" />`,
-      `<meta property="og:url" content="${seo.canonical}" />`,
-      ...(seo.image ? [`<meta property="og:image" content="${seo.image}" />`] : []),
+      ...(seo.notFound ? [] : [`<meta property="og:url" content="${seo.canonical}" />`]),
+      ...(image
+        ? [
+            `<meta property="og:image" content="${image.src}" />`,
+            `<meta property="og:image:alt" content="${imageAlt}" />`,
+            ...(image.width && image.height
+              ? [
+                  `<meta property="og:image:width" content="${image.width}" />`,
+                  `<meta property="og:image:height" content="${image.height}" />`,
+                ]
+              : []),
+          ]
+        : []),
       `<meta name="twitter:card" content="${seo.twitterCard}" />`,
       `<meta name="twitter:title" content="${escapeHtml(seo.title)}" />`,
       `<meta name="twitter:description" content="${escapeHtml(seo.description)}" />`,
-      ...(seo.image ? [`<meta name="twitter:image" content="${seo.image}" />`] : []),
+      ...(image
+        ? [
+            `<meta name="twitter:image" content="${image.src}" />`,
+            `<meta name="twitter:image:alt" content="${imageAlt}" />`,
+          ]
+        : []),
+      ...(themeColor ? [`<meta name="theme-color" content="${escapeHtml(themeColor)}" />`] : []),
       ...(markdownAlternate ? [markdownAlternate] : []),
-      `<script type="application/ld+json" data-route-jsonld>${safeJson(routeStructuredData(seo, snapshot.siteSettings))}</script>`,
+      `<script type="application/ld+json" data-route-jsonld>${safeJson(routeStructuredData(seo, localized.siteSettings))}</script>`,
     ].join('\n    ');
     const html = template
       .replace(/\s*<title>[\s\S]*?<\/title>/i, '')
       .replace(
-        /\s*<meta\s+(?:name="description"|property="og:[^"]+"|name="twitter:[^"]+")[^>]*>/gi,
+        /\s*<meta\s+(?:name="(?:description|robots|theme-color)"|property="og:[^"]+"|name="twitter:[^"]+")[^>]*>/gi,
         '',
       )
       .replace(/\s*<link\s+rel="canonical"[^>]*>/i, '')
@@ -97,14 +129,22 @@ async function main(): Promise<void> {
     await fs.writeFile(target, html, 'utf8');
   }
   const origin = getCanonicalOrigin(snapshot.siteSettings);
+  // Real content dates, not the build time: a project page changes with its project,
+  // Home and Contact with anything (they list projects and site settings).
+  const latestUpdate = [snapshot.siteSettings, ...snapshot.projects]
+    .map((item) => item.updatedAt)
+    .sort()
+    .at(-1);
   const sitemapUrl = (route: string) => {
-    const alternates = deriveRouteSeo(route, snapshot)
-      .alternates.map(
+    const seo = deriveRouteSeo(route, snapshot);
+    const alternates = seo.alternates
+      .map(
         (alternate) =>
           `<xhtml:link rel="alternate" hreflang="${alternate.hreflang}" href="${escapeXml(alternate.href)}"/>`,
       )
       .join('');
-    return `<url><loc>${escapeXml(`${origin}${route}`)}</loc><lastmod>${snapshot.generatedAt}</lastmod>${alternates}</url>`;
+    const lastmod = seo.project ? seo.project.updatedAt : latestUpdate;
+    return `<url><loc>${escapeXml(`${origin}${route}`)}</loc><lastmod>${lastmod}</lastmod>${alternates}</url>`;
   };
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${routes.map(sitemapUrl).join('')}</urlset>`;
   await fs.writeFile(path.join(distDir, 'sitemap.xml'), sitemap, 'utf8');

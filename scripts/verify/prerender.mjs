@@ -32,6 +32,16 @@ for (const route of routes) {
   ]) {
     if ((html.match(pattern) ?? []).length !== 1) throw new Error(`Invalid metadata in ${file}`);
   }
+  // Count characters as shown, not as HTML entities (`&amp;` is one character).
+  const description = (html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '').replace(
+    /&[#\w]+;/g,
+    '_',
+  );
+  if (description.length > 160) throw new Error(`Description over 160 characters in ${file}`);
+  if (!html.includes('<meta name="robots" content="index, follow'))
+    throw new Error(`Missing indexable robots meta in ${file}`);
+  if (html.includes('property="og:image"') && !html.includes('property="og:image:alt"'))
+    throw new Error(`og:image without og:image:alt in ${file}`);
   const jsonLd = [
     ...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi),
   ];
@@ -54,6 +64,12 @@ for (const route of routes) {
       throw new Error(`Legacy preloader marker ${legacy} remains in ${file}`);
   }
 }
+const notFoundHtml = await fs.readFile('dist/404.html', 'utf8');
+if (
+  !notFoundHtml.includes('<meta name="robots" content="noindex') ||
+  notFoundHtml.includes('rel="canonical"')
+)
+  throw new Error('dist/404.html must be noindex without canonical.');
 const sitemap = await fs.readFile('dist/sitemap.xml', 'utf8');
 if ((sitemap.match(/<loc>/g) ?? []).length !== routes.length)
   throw new Error('Sitemap route count mismatch.');

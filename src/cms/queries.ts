@@ -3,6 +3,7 @@ import { defineQuery } from 'groq';
 export const PROJECTS_QUERY = defineQuery(`
   *[_type == "project"] | order(order asc){
     _id,
+    _updatedAt,
     title,
     slug,
     order,
@@ -38,6 +39,7 @@ export const PROJECTS_QUERY = defineQuery(`
 
 export const SITE_SETTINGS_QUERY = defineQuery(`
   *[_type == "siteSettings" && _id == "siteSettings"][0]{
+    _updatedAt,
     displayName,
     bio,
     recognition,

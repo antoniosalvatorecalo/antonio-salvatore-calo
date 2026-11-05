@@ -372,6 +372,14 @@ const translations: TranslationMap = {
     IT: 'Invio del messaggio non riuscito. Riprova.',
   },
 
+  // ── 404 ──────────────────────────────────────────────────────
+  'notfound.title': { EN: 'Page not found', IT: 'Pagina non trovata' },
+  'notfound.text': {
+    EN: 'This page does not exist or has been moved.',
+    IT: 'Questa pagina non esiste o è stata spostata.',
+  },
+  'notfound.back': { EN: 'Back to the portfolio', IT: 'Torna al portfolio' },
+
   // ── Work Page ────────────────────────────────────────────────
   'work.label-bugonia': { EN: 'BUGONIA', IT: 'BUGONIA' },
   'work.label-newsquest': { EN: 'NEWSQUEST', IT: 'NEWSQUEST' },

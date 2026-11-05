@@ -14,6 +14,19 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
   testi italiani dal CMS, prerenderizzate con `lang="it"`. Gli indirizzi inglesi non cambiano.
 - `hreflang` (en, it, x-default) in ogni pagina e nella sitemap, che ora elenca anche le pagine
   italiane; `og:locale` e `inLanguage` nei dati strutturati.
+- Dati strutturati (JSON-LD) in italiano nelle pagine `/it` (prima `Person`, `WebSite` e
+  `ProfessionalService` restavano in inglese).
+- `og:image:alt` e `twitter:image:alt` tornano nell'HTML prerenderizzato (il prerender li
+  cancellava); aggiunti `og:locale:alternate`, `og:image:width`/`height` quando noti e `theme-color`.
+- Immagine di condivisione sempre presente: nei progetti senza foto si usa la copertina del video,
+  poi l'immagine OG del sito; senza immagine la card Twitter diventa `summary`.
+- Title dei progetti con " — Antonio Salvatore Calò" quando resta entro 60 caratteri; description
+  tagliate a parola entro 160 caratteri; description di Contatti accorciata.
+- Sitemap con `lastmod` reale (ultima modifica in Sanity), non più l'ora della build.
+- Pagina 404 (`dist/404.html`, `noindex`, senza canonical) per indirizzi e progetti inesistenti,
+  anche in navigazione interna; prima l'app mostrava la Home con il canonical della Home.
+- Indirizzi con `/` finale reindirizzati alla versione senza (`trailingSlash: false`).
+- Il build avvisa se un testo italiano manca nel CMS e viene mostrato in inglese.
 
 ### Modificato
 

@@ -38,6 +38,8 @@ export interface ProjectDomain {
   media: ProjectMedia[];
   details?: ProjectDetail[];
   seo?: SeoContent;
+  /** ISO date of the last CMS edit (sitemap `lastmod`). */
+  updatedAt: string;
 }
 
 export interface SeoContent {
@@ -56,4 +58,5 @@ export interface SiteSettings {
   canonicalBaseUrl?: string;
   branding?: { favicon?: string; themeColor?: string };
   seo: SeoContent;
+  updatedAt: string;
 }

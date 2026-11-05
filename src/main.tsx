@@ -50,5 +50,5 @@ const app = (
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Application root element is missing.');
-if (initialSnapshot) hydrateRoot(root, app);
+if (initialSnapshot && root.hasChildNodes()) hydrateRoot(root, app);
 else createRoot(root).render(app);

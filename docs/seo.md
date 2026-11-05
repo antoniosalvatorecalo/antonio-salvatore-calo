@@ -12,6 +12,7 @@
 | Inserimento nell'HTML statico                                                          | `scripts/prerender.ts`                                 |
 | Aggiornamento in navigazione SPA                                                       | `src/cms/SeoManager.tsx`                               |
 | H1 di Home e Contatti (invisibile, `sr-only`)                                          | `src/components/ui/SiteHeader.tsx` + chiavi `seo.h1.*` |
+| Pagina 404 (`noindex`, servita da Vercel come `404.html`)                              | `src/pages/not-found/NotFoundPage.tsx` + prerender     |
 | `robots.txt`                                                                           | `public/robots.txt`                                    |
 | `sitemap.xml`, `llms.txt`                                                              | generati da `scripts/prerender.ts`                     |
 | Testi SEO per progetto/sito                                                            | Sanity (campi `seo` di `project` e `siteSettings`)     |
@@ -26,6 +27,10 @@
   aggiornano lì e nei testi `seo.h1.*` di `src/i18n/translations.ts`.
 - Title ≤ 60 caratteri circa, description 120–160. Ogni progetto deve avere `seo.title` e
   `seo.description` propri nel CMS, e un `alt` descrittivo per ogni immagine.
+- Il codice aggiunge " — <nome>" ai title dei progetti solo se resta entro 60 caratteri e taglia
+  le description oltre 160 (`clampDescription`): meglio scriverle giuste nel CMS.
+- `lastmod` della sitemap = `_updatedAt` di Sanity (progetto; Home e Contatti la modifica più
+  recente). URL senza `/` finale (`trailingSlash: false` in `vercel.json`).
 - I file `.md` dei progetti sono per gli agenti/LLM e hanno `X-Robots-Tag: noindex` (`vercel.json`).
 - Lingue: inglese alla radice (`/`, `/contact`, `/projects/<slug>`), italiano sotto `/it`
   (`/it`, `/it/contact`, `/it/projects/<slug>`). La lingua la decide l'URL
