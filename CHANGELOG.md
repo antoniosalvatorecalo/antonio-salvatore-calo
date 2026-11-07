@@ -8,6 +8,10 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ## [Non rilasciato]
 
+## 2026-11-07
+
+Deploy di produzione Vercel del commit `2682e05`.
+
 ### SEO
 
 - Versione italiana del sito su `/it` (`/it/contact`, `/it/projects/<slug>`): stesse pagine,
