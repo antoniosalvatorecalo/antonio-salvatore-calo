@@ -8,6 +8,11 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ## [Non rilasciato]
 
+### Corretto
+
+- Con “Riduci movimento” attivo i filtri non compaiono più sopra l’intro della Home: testi e
+  filtri entrano a fine intro con la stessa animazione di sempre (solo al primo ingresso).
+
 ## 2026-11-07
 
 Deploy di produzione Vercel del commit `2682e05`.

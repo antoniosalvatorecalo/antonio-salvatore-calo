@@ -34,7 +34,7 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({
   const { navProjectMedia } = useNavHover();
   const { startProjectTransition, phase, homeRevealReady } = useProjectTransition();
   const reducedMotion = useReducedMotionPreference();
-  const [homeFilterEntranceReady, setHomeFilterEntranceReady] = useState(reducedMotion);
+  const [homeFilterEntranceReady, setHomeFilterEntranceReady] = useState(false);
   const { projects } = useProjectCatalog();
 
   // Hover previews only exist on desktop; prepare their backdrops once the page is idle.
@@ -52,10 +52,16 @@ export const ProjectIndex: React.FC<ProjectIndexProps> = ({
 
   useLayoutEffect(() => {
     if (reducedMotion) {
-      setHomeFilterEntranceReady(true);
-    } else if (phase === 'opening' || phase === 'closing') {
+      // Con riduci movimento le miniature non hanno la reveal CSS: i filtri entrano a fine intro.
+      const show = () => setHomeFilterEntranceReady(true);
+      if (document.documentElement.dataset.introComplete === 'true') show();
+      window.addEventListener('portfolio:intro-complete', show);
+      return () => window.removeEventListener('portfolio:intro-complete', show);
+    }
+    if (phase === 'opening' || phase === 'closing') {
       setHomeFilterEntranceReady(false);
     }
+    return undefined;
   }, [phase, reducedMotion]);
 
   const handleFirstMediaRevealPresence = useCallback(() => {

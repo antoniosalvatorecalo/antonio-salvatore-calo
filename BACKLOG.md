@@ -9,8 +9,9 @@ Attività del progetto. Regole:
 
 ## In corso
 
-- **P2 [manuale]** Verificare su iPhone Safari l’intro con “Riduci movimento” attivo; il fix è in
-  produzione. Playwright e smoke test Chromium mobile con preferenza attiva sono passati.
+- **P2 [manuale]** Verificare su iPhone Safari l’intro con “Riduci movimento” attivo: ora anche
+  testi e filtri entrano a fine intro (non ancora in produzione). Playwright con preferenza attiva
+  superato.
 
 ## Da fare
 

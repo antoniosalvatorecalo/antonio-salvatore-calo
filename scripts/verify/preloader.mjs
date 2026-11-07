@@ -195,8 +195,10 @@ try {
     reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
     cards: document.querySelectorAll('.entrance-intro__card').length,
     counter: document.querySelector('.entrance-intro__counter')?.textContent ?? '',
+    filterOpacity: getComputedStyle(document.querySelector('.filter-bar-summary')).opacity,
   }));
   assert.equal(reducedPlaying.reducedMotion, true);
+  assert.equal(reducedPlaying.filterOpacity, '0', 'filters must stay hidden during the deck');
   assert.ok(reducedPlaying.cards > 0, 'reduced motion must not skip the home intro');
   assert.match(reducedPlaying.counter, /^\[\d{1,3}%\]$/);
   await reduced.page.waitForFunction(
@@ -204,7 +206,19 @@ try {
     null,
     { timeout: 20000 },
   );
+  // testi e filtri entrano con la stessa animazione di sempre, non di scatto
+  const reducedEntering = await reduced.page.evaluate(() => ({
+    filterOpacity: Number(getComputedStyle(document.querySelector('.filter-bar-summary')).opacity),
+    bioClip: getComputedStyle(document.querySelector('.site-header-bio')).clipPath,
+  }));
+  assert.ok(reducedEntering.filterOpacity < 1, 'filters must animate in after the intro');
+  assert.notEqual(reducedEntering.bioClip, 'inset(0px 0px 0% 0px)', 'texts must animate in');
   await reduced.page.locator('.entrance-intro').waitFor({ state: 'detached', timeout: 3000 });
+  await reduced.page.waitForTimeout(1500);
+  const reducedSettled = await reduced.page.evaluate(
+    () => getComputedStyle(document.querySelector('.filter-bar-summary')).opacity,
+  );
+  assert.equal(reducedSettled, '1');
   const reducedState = await reduced.page.evaluate(() => ({
     complete: document.documentElement.dataset.introComplete,
     events: window.__introTrace.events.length,

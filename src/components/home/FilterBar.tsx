@@ -1,9 +1,8 @@
-import { motion } from 'motion/react';
+import { MotionConfig, motion } from 'motion/react';
 import { useFilter } from '@/providers/FilterContext';
 import { useProjectCatalog } from '@/cms/ProjectCatalogProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { TEXT_MOTION } from '@/motion/TextRevealMotion';
-import { useReducedMotionPreference } from '@/providers/MotionPreferenceProvider';
 import { FilterDisclosureOptions } from '@/components/FilterDisclosureOptions';
 import './FilterBar.css';
 
@@ -19,7 +18,6 @@ export function FilterBar({ entranceReady }: { entranceReady: boolean }) {
   const { active, setActive, isOpen, setIsOpen } = useFilter();
   const { projects } = useProjectCatalog();
   const { locale } = useLanguage();
-  const reducedMotion = useReducedMotionPreference();
 
   const servicesWithCounts = projects.reduce<Array<{ name: string; count: number }>>(
     (services, project) => {
@@ -53,7 +51,6 @@ export function FilterBar({ entranceReady }: { entranceReady: boolean }) {
   ];
   const mobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
   const hiddenY = mobile ? 10 : 18;
-  const isEntranceVisible = entranceReady || reducedMotion;
 
   return (
     <nav
@@ -61,33 +58,34 @@ export function FilterBar({ entranceReady }: { entranceReady: boolean }) {
       data-motion-home-surface
       aria-label={locale === 'IT' ? 'Filtri progetti' : 'Project filters'}
     >
-      <motion.div
-        className="filter-bar-summary"
-        initial={reducedMotion ? false : { opacity: 0, y: hiddenY }}
-        animate={isEntranceVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: hiddenY }}
-        transition={{
-          duration: reducedMotion ? 0 : TEXT_MOTION.enterDuration,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-      >
-        <button
-          type="button"
-          className="filter-bar-toggle"
-          aria-expanded={isOpen}
-          aria-controls={panelId}
-          onClick={() => setIsOpen(!isOpen)}
+      {/* L'ingresso della home è uguale anche con riduci movimento (con riduci movimento
+          entranceReady diventa vero una sola volta, a fine intro, e non si anima più). */}
+      <MotionConfig reducedMotion="never">
+        <motion.div
+          className="filter-bar-summary"
+          initial={{ opacity: 0, y: hiddenY }}
+          animate={entranceReady ? { opacity: 1, y: 0 } : { opacity: 0, y: hiddenY }}
+          transition={{ duration: TEXT_MOTION.enterDuration, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span>{locale === 'IT' ? 'Filtri' : 'Filter'}</span>
-          <span className="filter-bar-symbol" aria-hidden="true">
-            {isOpen ? '−' : '+'}
-          </span>
-        </button>
-        {!isOpen && (
-          <span className="filter-bar-current" aria-live="polite">
-            {activeLabel} <span className="filter-bar-count">[{activeCount}]</span>
-          </span>
-        )}
-      </motion.div>
+          <button
+            type="button"
+            className="filter-bar-toggle"
+            aria-expanded={isOpen}
+            aria-controls={panelId}
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <span>{locale === 'IT' ? 'Filtri' : 'Filter'}</span>
+            <span className="filter-bar-symbol" aria-hidden="true">
+              {isOpen ? '−' : '+'}
+            </span>
+          </button>
+          {!isOpen && (
+            <span className="filter-bar-current" aria-live="polite">
+              {activeLabel} <span className="filter-bar-count">[{activeCount}]</span>
+            </span>
+          )}
+        </motion.div>
+      </MotionConfig>
       <FilterDisclosureOptions
         open={isOpen}
         panelId={panelId}

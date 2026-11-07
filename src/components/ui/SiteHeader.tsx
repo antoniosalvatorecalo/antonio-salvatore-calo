@@ -51,6 +51,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
 }) => {
   const headerRef = useRef<HTMLElement>(null);
   const motionTimelineRef = useRef<gsap.core.Timeline | null>(null);
+  // L'ingresso dei testi dopo l'intro si anima anche con riduci movimento, una volta sola.
+  const entrancePlayedRef = useRef(false);
   const startProjectButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
   const { locale, t, localize } = useLanguage();
@@ -232,7 +234,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     // When the page turn still plays (touch layouts), its text must exit with it;
     // otherwise the outgoing page lingers on screen for the whole turn.
     const pageTurn = transitionPhase === 'opening' || transitionPhase === 'closing';
-    if (prefersReducedMotion && !(pageTurn && playsPageTurn(prefersReducedMotion))) {
+    if (
+      prefersReducedMotion &&
+      entrancePlayedRef.current &&
+      !(pageTurn && playsPageTurn(prefersReducedMotion))
+    ) {
       setTextMotionVisible(targets);
       return;
     }
@@ -241,7 +247,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       motionTimelineRef.current =
         transitionPhase === 'opening' || (transitionPhase === 'closing' && isProjectPage)
           ? createTextExitTimeline(targets, { mobile })
-          : createTextEnterTimeline(targets, { mobile });
+          : createTextEnterTimeline(targets, { mobile }).eventCallback('onComplete', () => {
+              entrancePlayedRef.current = true;
+            });
     }, header);
     return () => {
       motionTimelineRef.current?.kill();
