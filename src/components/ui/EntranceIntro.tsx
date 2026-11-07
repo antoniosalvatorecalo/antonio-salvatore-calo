@@ -28,13 +28,6 @@ const rectOf = (element: Element): Rect => {
   return { left, top, width, height };
 };
 
-function prefersReducedMotion() {
-  return (
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
-    document.documentElement.dataset.motion === 'reduced'
-  );
-}
-
 /** Miniature della home già impaginate (la griglia può impiegare qualche frame). */
 function waitForGridItems(isCancelled: () => boolean): Promise<HTMLElement[]> {
   return new Promise((resolve) => {
@@ -268,7 +261,7 @@ export function EntranceIntro({ ready, error }: EntranceIntroProps) {
     };
 
     const onHome = stripLocale(window.location.pathname).replace(/\/+$/, '') === '';
-    if (error || !onHome || prefersReducedMotion()) {
+    if (error || !onHome) {
       finish();
       return;
     }

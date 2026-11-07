@@ -9,7 +9,8 @@ Attività del progetto. Regole:
 
 ## In corso
 
-_(vuoto)_
+- **P2** Forzare l’intro della Home con “Riduci movimento” attivo. Verifica Playwright superata;
+  deploy di produzione in attesa. Safari reale non è disponibile in questo ambiente.
 
 ## Da fare
 

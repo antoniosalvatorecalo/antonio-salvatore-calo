@@ -183,17 +183,40 @@ try {
   assert.deepEqual(innerErrors, [], `inner page errors: ${innerErrors.join(' | ')}`);
   await inner.context.close();
 
-  // Reduced motion: niente pila, sblocco immediato.
-  const reduced = await openPage({ viewport: sizes[1], reducedMotion: 'reduce' });
-  await reduced.page.locator('.entrance-intro').waitFor({ state: 'detached', timeout: 4000 });
+  // Reduced motion must not suppress the home intro.
+  const reduced = await openPage({
+    viewport: sizes[2],
+    isMobile: true,
+    hasTouch: true,
+    reducedMotion: 'reduce',
+  });
+  await reduced.page.locator('.entrance-intro[data-phase="playing"]').waitFor({ timeout: 8000 });
+  const reducedPlaying = await reduced.page.evaluate(() => ({
+    reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    cards: document.querySelectorAll('.entrance-intro__card').length,
+    counter: document.querySelector('.entrance-intro__counter')?.textContent ?? '',
+  }));
+  assert.equal(reducedPlaying.reducedMotion, true);
+  assert.ok(reducedPlaying.cards > 0, 'reduced motion must not skip the home intro');
+  assert.match(reducedPlaying.counter, /^\[\d{1,3}%\]$/);
+  await reduced.page.waitForFunction(
+    () => document.documentElement.dataset.introComplete === 'true',
+    null,
+    { timeout: 20000 },
+  );
+  await reduced.page.locator('.entrance-intro').waitFor({ state: 'detached', timeout: 3000 });
   const reducedState = await reduced.page.evaluate(() => ({
     complete: document.documentElement.dataset.introComplete,
     events: window.__introTrace.events.length,
     maxCards: window.__introTrace.maxCards,
+    counterReached100: window.__introTrace.counters.has('[100%]'),
+    running: document.documentElement.dataset.introRunning ?? null,
   }));
   assert.equal(reducedState.complete, 'true');
   assert.equal(reducedState.events, 1);
-  assert.equal(reducedState.maxCards, 0, 'reduced motion must skip the deck');
+  assert.ok(reducedState.maxCards > 0, 'reduced motion must play the deck');
+  assert.ok(reducedState.counterReached100);
+  assert.equal(reducedState.running, null);
   assert.deepEqual(reduced.errors, [], `reduced-motion errors: ${reduced.errors.join(' | ')}`);
   await reduced.context.close();
 

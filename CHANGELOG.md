@@ -8,6 +8,11 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ## [Non rilasciato]
 
+### Corretto
+
+- L’intro della Home si riproduce anche con “Riduci movimento” attivo; la preferenza continua a
+  regolare le altre animazioni del sito.
+
 ## 2026-11-07
 
 Deploy di produzione Vercel del commit `2682e05`.
