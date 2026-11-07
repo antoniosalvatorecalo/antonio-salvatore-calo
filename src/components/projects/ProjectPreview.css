@@ -1,8 +1,11 @@
 .project-preview {
+  /* Centred by layout, not translate(-50%): an odd height would land on a half
+     pixel and blur the bottom edge into a hairline under the name. */
   position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  margin: auto;
+  width: fit-content;
+  height: fit-content;
   z-index: 200;
   pointer-events: none;
   opacity: 0;
@@ -27,8 +30,9 @@
 }
 
 /* Every preview uses the same 16:9 frame (the format of most assets) and the same
-   rule: the asset is shown whole and centred, never cropped. The empty bands take
-   the photo's own edge colours (inline backdrop from PreviewMediaAsset). */
+   rule for photos: shown whole and centred, never cropped. The empty bands take
+   the photo's own edge colours (inline backdrop from PreviewMediaAsset; needs the
+   origin in Sanity CORS, else the bands stay dark). Videos cover the frame (below). */
 .project-preview-media {
   position: relative;
   width: 100%;
@@ -49,16 +53,23 @@
   object-position: center;
 }
 
+/* Videos (is-cover) fill the frame instead of leaving dark side bands
+   (e.g. 3:2 videos in the 16:9 frame). */
+.project-preview-media.is-cover .project-preview-image {
+  object-fit: cover;
+}
+
 .project-preview-video-frame {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
-/* 16:9 player filling the 16:9 frame. */
+/* Player at the video's own ratio (inline), covering the 16:9 frame: a wider video
+   fills the height, a taller one (is-tall) fills the width. */
 .project-preview-video {
   position: relative;
   flex-shrink: 0;
@@ -69,6 +80,11 @@
   display: block;
   pointer-events: none;
   transition: opacity 160ms ease-out;
+}
+
+.project-preview-video.is-tall {
+  width: 100%;
+  height: auto;
 }
 
 .project-preview-name {

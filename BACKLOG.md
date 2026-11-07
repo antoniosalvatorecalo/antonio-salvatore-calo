@@ -40,6 +40,9 @@ _(vuoto)_
 
 ## Completato
 
+- 2026-11-07 — Anteprime hover: video 3:2 a tutto riquadro e riga sotto il nome rimossa
+  (CHANGELOG). Audit: non 16:9 i video Bugonia "Home-Mobile" e "Booking-Form"; le foto Newsquest
+  (3:2) restano intere con le bande verdi dei bordi (nere solo su origini fuori dal CORS Sanity).
 - 2026-11-07 — Nuova intro della home (pila di foto, contatore, placement nella griglia) al posto
   del preloader, con campo CMS `introOrder` (CHANGELOG). Valori scritti nel dataset production:
   Newsquest "Visual 3", "Visual 2", "Visual 1", poi Bugonia "Quote", "Shop-Mobile", "Home-Mobile",

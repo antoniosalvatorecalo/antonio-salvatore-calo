@@ -44,6 +44,10 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Corretto
 
+- Anteprime in hover dei video a tutto riquadro: copertina e player riempiono il 16:9 anche
+  quando il video è 3:2 (Bugonia "Home-Mobile", "Booking-Form"), senza bande scure ai lati.
+- Anteprime in hover: niente più riga sottile sotto il nome `[…]` su schermi grandi (il riquadro
+  finiva a mezzo pixel).
 - Anteprime in hover tutte uguali: ogni asset si vede intero e centrato nel riquadro 16:9 e le
   bande vuote prendono i colori dei bordi della foto, senza stacco (prima Newsquest era tagliato).
 - Le foto delle anteprime non dipendono più dalle impostazioni CORS di Sanity: i colori dei bordi

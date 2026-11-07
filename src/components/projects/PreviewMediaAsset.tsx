@@ -149,6 +149,10 @@ export function PreviewMediaAsset({
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [, setBackdropVersion] = useState(0);
   const imageSrc = isVideo ? posterSrc : media.src;
+  // The CMS poster shares the video's ratio; without one assume 16:9.
+  const videoRatio = media.width && media.height ? media.width / media.height : 16 / 9;
+  // Videos fill the frame (no edge backdrop for them); photos stay whole on their backdrop.
+  const cover = isVideo;
   const backdropSrc = getBackdropSource(media);
   const backdrop = backdropCache.get(backdropSrc) ?? null;
   useEffect(() => setIsVideoLoaded(false), [media.key, media.src]);
@@ -168,7 +172,7 @@ export function PreviewMediaAsset({
 
   return (
     <div
-      className={`project-preview-media${isVideo && !staticPreview ? ' is-video' : ''}`}
+      className={`project-preview-media${cover ? ' is-cover' : ''}`}
       style={backdrop ? { backgroundImage: backdrop.image } : undefined}
     >
       {isVideo && posterSrc && !staticPreview && (
@@ -183,13 +187,16 @@ export function PreviewMediaAsset({
         <div className="project-preview-video-frame">
           <iframe
             key={media.key}
-            className="project-preview-video"
+            className={`project-preview-video${videoRatio < 16 / 9 ? ' is-tall' : ''}`}
             src={getVimeoEmbedUrl(media.src)}
             title={getPreviewMediaName(media)}
             allow="autoplay; fullscreen; picture-in-picture"
             tabIndex={-1}
             onLoad={() => setIsVideoLoaded(true)}
-            style={{ opacity: posterSrc ? (isVideoLoaded ? 1 : 0) : 1 }}
+            style={{
+              aspectRatio: videoRatio,
+              opacity: posterSrc ? (isVideoLoaded ? 1 : 0) : 1,
+            }}
           />
         </div>
       ) : (
@@ -197,7 +204,7 @@ export function PreviewMediaAsset({
           src={imageSrc}
           alt=""
           className="project-preview-image"
-          style={backdrop ? { objectPosition: `${backdrop.align} center` } : undefined}
+          style={backdrop && !cover ? { objectPosition: `${backdrop.align} center` } : undefined}
         />
       )}
     </div>
