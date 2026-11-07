@@ -8,11 +8,6 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ## [Non rilasciato]
 
-### Corretto
-
-- L’intro della Home si riproduce anche con “Riduci movimento” attivo; la preferenza continua a
-  regolare le altre animazioni del sito.
-
 ## 2026-11-07
 
 Deploy di produzione Vercel del commit `2682e05`.
@@ -53,6 +48,8 @@ Deploy di produzione Vercel del commit `2682e05`.
 
 ### Corretto
 
+- L’intro della Home si riproduce anche con “Riduci movimento” attivo; la preferenza continua a
+  regolare le altre animazioni del sito.
 - Anteprime in hover dei video a tutto riquadro: copertina e player riempiono il 16:9 anche
   quando il video è 3:2 (Bugonia "Home-Mobile", "Booking-Form"), senza bande scure ai lati.
 - Anteprime in hover: niente più riga sottile sotto il nome `[…]` su schermi grandi (il riquadro

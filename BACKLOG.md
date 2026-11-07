@@ -9,8 +9,8 @@ Attività del progetto. Regole:
 
 ## In corso
 
-- **P2** Forzare l’intro della Home con “Riduci movimento” attivo. Verifica Playwright superata;
-  deploy di produzione in attesa. Safari reale non è disponibile in questo ambiente.
+- **P2 [manuale]** Verificare su iPhone Safari l’intro con “Riduci movimento” attivo; il fix è in
+  produzione. Playwright e smoke test Chromium mobile con preferenza attiva sono passati.
 
 ## Da fare
 
@@ -41,6 +41,8 @@ Attività del progetto. Regole:
 
 ## Completato
 
+- 2026-11-07 — Intro della Home attiva anche con “Riduci movimento” attivo; commit `50c8522`,
+  deploy Vercel riuscito e smoke test Chromium mobile superato.
 - 2026-11-07 — Anteprime hover: video 3:2 a tutto riquadro e riga sotto il nome rimossa
   (CHANGELOG). Audit: non 16:9 i video Bugonia "Home-Mobile" e "Booking-Form"; le foto Newsquest
   (3:2) restano intere con le bande verdi dei bordi (nere solo su origini fuori dal CORS Sanity).
