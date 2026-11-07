@@ -9,9 +9,7 @@ Attività del progetto. Regole:
 
 ## In corso
 
-- **P2 [manuale]** Verificare su iPhone Safari l’intro con “Riduci movimento” attivo: ora anche
-  testi e filtri entrano a fine intro (non ancora in produzione). Playwright con preferenza attiva
-  superato.
+_(vuoto)_
 
 ## Da fare
 
@@ -42,6 +40,8 @@ Attività del progetto. Regole:
 
 ## Completato
 
+- 2026-11-07 — Con “Riduci movimento” testi e filtri entrano a fine intro; commit `1b4b390`,
+  verificato su iPhone Safari.
 - 2026-11-07 — Intro della Home attiva anche con “Riduci movimento” attivo; commit `50c8522`,
   deploy Vercel riuscito e smoke test Chromium mobile superato.
 - 2026-11-07 — Anteprime hover: video 3:2 a tutto riquadro e riga sotto il nome rimossa
