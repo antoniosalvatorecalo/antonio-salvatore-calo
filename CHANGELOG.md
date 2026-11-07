@@ -34,6 +34,11 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Modificato
 
+- Nuova intro della home al posto del preloader: le foto scelte nel CMS scorrono in un contenitore
+  fisso al centro con un contatore `[0%]`–`[100%]` nel grigio delle etichette, poi tutte le
+  miniature visibili volano al proprio posto nella griglia e solo alla fine entrano i testi. Foto e
+  ordine dal nuovo campo CMS **Intro order**; senza valori si usano le prime 5 miniature. Pagine
+  interne e reduced motion si aprono senza animazione. `verify:preloader` riscritta.
 - Lo switch `[ EN ]`/`[ IT ]` porta alla stessa pagina nell'altra lingua (la lingua la decide
   l'indirizzo); header e scena restano montati, anche dentro un progetto aperto.
 
@@ -95,6 +100,8 @@ Categorie: **Aggiunto**, **Modificato**, **Corretto**, **Rimosso**, **SEO**, **D
 
 ### Rimosso
 
+- Vecchio preloader (nome, ruolo, viewport, data, ora, barra di avanzamento) e `StaggerWipe`,
+  usato solo da lui.
 - Componenti mai utilizzati `CountUp` e `ProjectTransitionPreview`, la funzione duplicata
   `api/sitemap.ts` e la verifica `gallery-entrance`, che controllava proprio quel componente.
 - Cartella locale `.kilo/`, `tasks/` (piano archiviato in `docs/archivio/`), installer hook

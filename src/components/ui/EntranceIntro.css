@@ -1,153 +1,44 @@
-html:not([data-intro-complete='true']) body {
-  background-color: #0a0a0a;
-}
-
+/* Copre la pagina (anche nell'HTML prerenderizzato) finché i dati non sono pronti; poi diventa
+   trasparente e ospita solo le carte e il contatore dell'intro. */
 .entrance-intro {
   position: fixed;
   inset: 0;
   z-index: 1100;
-  width: 100%;
-  height: 100%;
   overflow: hidden;
-  color: #f5f5f5;
-  background: #0a0a0a;
-  font-family: 'TT Interphases Pro', sans-serif;
-  isolation: isolate;
-  pointer-events: auto;
-}
-
-.entrance-intro[data-wipe-active='true'] {
+  background: var(--bg-primary);
   pointer-events: none;
 }
 
-.entrance-intro[data-wipe-active='true'] .entrance-intro__identity,
-.entrance-intro[data-wipe-active='true'] .entrance-intro__loader {
-  visibility: hidden;
+.entrance-intro[data-phase='playing'] {
+  background: transparent;
 }
 
-.entrance-intro__identity {
-  position: absolute;
-  z-index: 2;
-  top: clamp(1.25rem, 4vw, 3rem);
-  left: clamp(1rem, 2.5vw, 2.25rem);
-  display: flex;
-  flex-direction: column;
-  gap: 0.12em;
-  font-size: clamp(14px, 0.95vw, 15px);
-  font-weight: 400;
-  line-height: 1.22;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-
-.entrance-intro__identity strong {
-  font-weight: 400;
-}
-
-.entrance-intro__line-mask {
+.entrance-intro__card {
+  position: fixed;
   overflow: hidden;
-  padding-block: 0.08em;
-  margin-block: -0.08em;
+  transform-origin: 0 0;
+  will-change: transform, clip-path;
 }
 
-.entrance-intro__line-inner {
-  display: block;
-  will-change: transform, opacity;
-}
-
-.entrance-intro__numeric-line {
-  white-space: nowrap;
-}
-
-.entrance-intro__digit {
-  display: inline-block;
-  width: 0.7em;
-  height: 1.15em;
-  margin-right: 0.03em;
-  overflow: hidden;
-  vertical-align: bottom;
-  font-variant-numeric: tabular-nums;
-}
-
-.entrance-intro__digit-value {
-  display: block;
-  height: 1.15em;
-  line-height: 1.15em;
-  text-align: center;
-}
-
-.entrance-intro__separator {
-  display: inline-block;
-  min-width: 0.34ch;
-  text-align: center;
-}
-
-.entrance-intro__line-gap {
-  margin-top: 0.78em;
-}
-
-.entrance-intro__metadata {
-  display: flex;
-  flex-direction: column;
-  gap: 0.14em;
-  margin-top: 0.18em;
-  color: inherit;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-
-.entrance-intro__loader {
-  position: absolute;
-  z-index: 2;
-  bottom: clamp(1.5rem, 4vw, 3rem);
-  left: 50%;
-  width: min(10rem, calc(100vw - 4rem));
-  transform: translateX(-50%);
-}
-
-.entrance-intro__bar {
-  width: 100%;
-  height: 2px;
-  overflow: hidden;
-  background: rgb(245 245 245 / 28%);
-}
-
-.entrance-intro__bar span {
+.entrance-intro__card img {
   display: block;
   width: 100%;
   height: 100%;
-  background: #f5f5f5;
-  transform-origin: left center;
+  object-fit: cover;
 }
 
-@media (max-width: 767px) {
-  .entrance-intro__identity {
-    top: 1.25rem;
-    left: 1rem;
-    font-size: clamp(13px, 3.4vw, 14px);
-  }
-
-  .entrance-intro__digit {
-    width: 0.74em;
-    margin-right: 0.03em;
-  }
-
-  .entrance-intro__metadata {
-    font-size: 13px;
-  }
-
-  .entrance-intro__loader {
-    bottom: 1.5rem;
-    width: min(10rem, calc(100vw - 4rem));
-  }
+.entrance-intro__counter {
+  position: fixed;
+  top: 50%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  font-size: var(--ui-label-size);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  color: var(--ui-label-color);
+  transform: translateY(-50%);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .entrance-intro__line-inner {
-    opacity: 1;
-    transform: none;
-  }
+.entrance-intro__counter span {
+  display: block;
 }

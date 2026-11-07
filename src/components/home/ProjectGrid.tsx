@@ -197,6 +197,7 @@ export function GalleryGrid({
                   onMouseLeave={handleMouseLeave}
                   data-project-id={item.projectId}
                   data-project-transition-key={`${item.projectId}-${item.key}`}
+                  data-intro-order={item.introOrder}
                   initial={false}
                 >
                   <GalleryMediaReveal

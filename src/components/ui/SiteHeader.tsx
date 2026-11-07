@@ -110,7 +110,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     // Protect against a missed intro event on mobile Safari. The fallback only
     // runs once and updates the same global state used by the gallery CSS.
     const fallback = window.setTimeout(() => {
-      if (root.dataset.introComplete !== 'true') completeIntro();
+      // EntranceIntro dura più di 3 s e chiude da sola: niente fallback mentre è in corso.
+      if (root.dataset.introComplete !== 'true' && !root.dataset.introRunning) completeIntro();
     }, 3000);
     return () => {
       window.clearTimeout(fallback);

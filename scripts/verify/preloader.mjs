@@ -1,3 +1,5 @@
+// Verifica l'intro della home (EntranceIntro): copertura iniziale, pila con contatore,
+// placement nelle miniature, testi solo alla fine; pagine interne e reduced motion senza pila.
 import assert from 'node:assert/strict';
 import path from 'node:path';
 
@@ -18,31 +20,20 @@ const summaries = [];
 
 async function installTrace(page) {
   await page.addInitScript(() => {
-    window.__preloaderTrace = { startedAt: performance.now(), wipeActiveAt: null, events: [] };
-    const observe = () => {
-      const wipe = document.querySelector('.stagger-wipe');
-      if (
-        wipe?.getAttribute('data-active') === 'true' &&
-        window.__preloaderTrace.wipeActiveAt === null
-      ) {
-        window.__preloaderTrace.wipeActiveAt = performance.now();
-      }
-    };
-    new MutationObserver(observe).observe(document, {
-      attributes: true,
-      childList: true,
-      subtree: true,
-    });
+    window.__introTrace = { events: [], maxCards: 0, counters: new Set(), textBeforeEnd: false };
+    new MutationObserver(() => {
+      const trace = window.__introTrace;
+      trace.maxCards = Math.max(
+        trace.maxCards,
+        document.querySelectorAll('.entrance-intro__card').length,
+      );
+      const counter = document.querySelector('.entrance-intro__counter')?.textContent;
+      if (counter) trace.counters.add(counter);
+    }).observe(document, { childList: true, subtree: true, characterData: true });
     window.addEventListener('portfolio:intro-complete', () => {
-      const intro = document.querySelector('.entrance-intro');
-      const strips = [...document.querySelectorAll('.stagger-wipe__strip')];
-      window.__preloaderTrace.events.push({
+      window.__introTrace.events.push({
         at: performance.now(),
-        dataset: document.documentElement.dataset.introComplete,
-        introMounted: Boolean(intro),
-        wipeActive: document.querySelector('.stagger-wipe')?.getAttribute('data-active') === 'true',
-        transforms: strips.map((strip) => getComputedStyle(strip).transform),
-        scales: strips.map((strip) => new DOMMatrixReadOnly(getComputedStyle(strip).transform).m22),
+        cards: document.querySelectorAll('.entrance-intro__card').length,
       });
     });
   });
@@ -52,7 +43,11 @@ async function stubExternalRequests(page) {
   const localOrigin = new URL(baseURL).origin;
   await page.route('**/*', (route) => {
     const request = route.request();
-    if (new URL(request.url()).origin === localOrigin) return route.continue();
+    const url = new URL(request.url());
+    // Vercel Analytics esiste solo su Vercel: in `vite preview` darebbe 404 in console.
+    if (url.pathname.startsWith('/_vercel/'))
+      return route.fulfill({ status: 200, contentType: 'text/javascript', body: '' });
+    if (url.origin === localOrigin) return route.continue();
     if (request.resourceType() === 'image') {
       return route.fulfill({
         status: 200,
@@ -64,199 +59,152 @@ async function stubExternalRequests(page) {
   });
 }
 
+async function openPage(options, url = baseURL) {
+  const context = await browser.newContext(options);
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
+  page.on('pageerror', (error) => errors.push(error.message));
+  await stubExternalRequests(page);
+  await installTrace(page);
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  return { context, page, errors };
+}
+
 try {
   for (const size of sizes) {
-    const context = await browser.newContext({ viewport: size, reducedMotion: 'no-preference' });
-    const page = await context.newPage();
-    const consoleErrors = [];
-    page.on('console', (message) => {
-      if (message.type() === 'error') consoleErrors.push(message.text());
+    const { context, page, errors } = await openPage({
+      viewport: size,
+      reducedMotion: 'no-preference',
     });
-    page.on('pageerror', (error) => consoleErrors.push(error.message));
-    await stubExternalRequests(page);
-    await installTrace(page);
-    await page.goto(baseURL, { waitUntil: 'domcontentloaded' });
+
+    // 1. Copertura: dall'HTML iniziale la pagina è nascosta sotto lo sfondo del sito.
     await page.locator('.entrance-intro').waitFor();
-
     const initial = await page.evaluate(() => ({
-      introBackground: getComputedStyle(document.querySelector('.entrance-intro')).backgroundColor,
-      bodyBackground: getComputedStyle(document.body).backgroundColor,
+      phase: document.querySelector('.entrance-intro').dataset.phase,
+      cover: getComputedStyle(document.querySelector('.entrance-intro')).backgroundColor,
+      body: getComputedStyle(document.body).backgroundColor,
       complete: document.documentElement.dataset.introComplete,
-      identitySize: getComputedStyle(document.querySelector('.entrance-intro__identity')).fontSize,
-      metadataSize: getComputedStyle(document.querySelector('.entrance-intro__metadata')).fontSize,
-      width: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
     }));
-    assert.equal(initial.introBackground, 'rgb(10, 10, 10)', 'preloader must paint black');
-    assert.equal(
-      initial.bodyBackground,
-      'rgb(10, 10, 10)',
-      'body must paint black before introComplete',
-    );
-    assert.equal(initial.complete, undefined, 'introComplete must be absent before the wipe');
-    assert.ok(
-      initial.width <= initial.viewportWidth,
-      'preloader must not create horizontal overflow',
-    );
+    assert.equal(initial.complete, undefined, 'introComplete must be absent at first paint');
+    // su un caricamento veloce la pila può essere già partita (copertura trasparente)
+    if (initial.phase === 'cover')
+      assert.equal(initial.cover, initial.body, 'intro cover must match the page background');
 
-    const slug = `${size.width}x${size.height}`;
-    await page.waitForTimeout(1350);
-    await page.screenshot({ path: path.join(screenshotDir, `${slug}-preloader.png`) });
-    await page.locator('.stagger-wipe[data-active="true"]').waitFor({ timeout: 5000 });
-
-    const whileWiping = await page.evaluate(() => ({
-      introMounted: Boolean(document.querySelector('.entrance-intro')),
-      complete: document.documentElement.dataset.introComplete,
-      eventCount: window.__preloaderTrace.events.length,
-      revealAnimation: getComputedStyle(document.querySelector('.gallery-media-reveal'))
-        .animationName,
-      wipeBackground: getComputedStyle(document.querySelector('.stagger-wipe__strip'))
-        .backgroundColor,
-      homeBackground: getComputedStyle(document.querySelector('.gallery-grid-wrap'))
-        .backgroundColor,
-    }));
-    assert.equal(whileWiping.introMounted, true, 'intro must remain mounted throughout the wipe');
-    assert.equal(
-      whileWiping.complete,
-      undefined,
-      'introComplete must remain unset during the wipe',
-    );
-    assert.equal(whileWiping.eventCount, 0, 'intro event must not fire before full cover');
-    assert.equal(
-      whileWiping.revealAnimation,
-      'none',
-      'gallery entrance must stay inactive during the wipe',
-    );
-    assert.equal(
-      whileWiping.wipeBackground,
-      whileWiping.homeBackground,
-      'wipe and Home surfaces must match',
-    );
-
-    await page.waitForFunction(() => {
-      const transforms = [...document.querySelectorAll('.stagger-wipe__strip')].map(
-        (strip) => getComputedStyle(strip).transform,
-      );
-      return new Set(transforms).size >= 2;
+    // 2. Pila: le carte scorrono al centro con il contatore, testi e griglia ancora nascosti.
+    await page.locator('.entrance-intro[data-phase="playing"]').waitFor({ timeout: 8000 });
+    await page.waitForTimeout(900);
+    const playing = await page.evaluate(() => {
+      const cards = [...document.querySelectorAll('.entrance-intro__card')];
+      const frame = cards.at(-1)?.getBoundingClientRect();
+      return {
+        complete: document.documentElement.dataset.introComplete,
+        cards: cards.length,
+        centered: frame
+          ? Math.abs(frame.left + frame.width / 2 - innerWidth / 2) < 2 &&
+            Math.abs(frame.top + frame.height / 2 - innerHeight / 2) < 2
+          : false,
+        counter: document.querySelector('.entrance-intro__counter')?.textContent ?? '',
+        hiddenThumbs: [...document.querySelectorAll('.gallery-grid-item')].filter(
+          (item) => item.style.visibility === 'hidden',
+        ).length,
+      };
     });
-    await page.waitForFunction(() => {
-      const trace = window.__preloaderTrace;
-      return trace.wipeActiveAt !== null && performance.now() - trace.wipeActiveAt >= 450;
+    assert.equal(playing.complete, undefined, 'header text must wait for the placement');
+    assert.ok(playing.cards > 0, 'the deck must create cards from the gallery');
+    assert.ok(playing.centered, 'the deck frame must sit in the viewport centre');
+    assert.match(playing.counter, /^\[\d{1,3}%\]$/, 'counter must read like [42%]');
+    assert.equal(playing.hiddenThumbs, playing.cards, 'each card hides its own thumbnail');
+    await page.screenshot({
+      path: path.join(screenshotDir, `deck-${size.width}x${size.height}.png`),
     });
-    await page.screenshot({ path: path.join(screenshotDir, `${slug}-staircase.png`) });
-    await page.waitForFunction(() => document.documentElement.dataset.introComplete === 'true');
-    const completion = await page.evaluate(() => window.__preloaderTrace.events.at(-1));
-    assert.ok(completion, 'completion event must be observed');
-    assert.equal(completion.dataset, 'true');
-    assert.equal(
-      completion.introMounted,
-      true,
-      'intro must remain mounted when complete is emitted',
+
+    // 3. Fine: un solo evento, carte rimosse, miniature visibili e già aperte, testi visibili.
+    await page.waitForFunction(
+      () => document.documentElement.dataset.introComplete === 'true',
+      null,
+      {
+        timeout: 20000,
+      },
     );
-    assert.equal(
-      completion.wipeActive,
-      true,
-      'wipe must remain active until the covered frame is handed off',
-    );
-    assert.equal(completion.transforms.length, 16, 'all 16 columns must be present at completion');
-    assert.ok(
-      completion.scales.every((scale) => Math.abs(scale - 1) < 0.01),
-      'all columns must be fully scaled at completion',
-    );
-    await page.locator('.entrance-intro').waitFor({ state: 'detached' });
-    await page.waitForTimeout(750);
-    await page.screenshot({ path: path.join(screenshotDir, `${slug}-home.png`) });
-    const finalState = await page.evaluate(() => ({
-      events: window.__preloaderTrace.events.length,
-      elapsed:
-        ((window.__preloaderTrace.events[0]?.at ?? 0) - window.__preloaderTrace.startedAt) / 1000,
-      wipeDuration:
-        ((window.__preloaderTrace.events[0]?.at ?? 0) - window.__preloaderTrace.wipeActiveAt) /
-        1000,
-      introRemoved: !document.querySelector('.entrance-intro'),
-      overflow: document.documentElement.scrollWidth > window.innerWidth,
-      header: (() => {
-        const bio = document.querySelector('.site-header-bio');
-        const ctas = document.querySelector('.site-header-ctas');
-        if (!bio || !ctas) return null;
-        const bioStyle = getComputedStyle(bio);
-        const ctaStyle = getComputedStyle(ctas);
-        return {
-          bioVisible: bioStyle.opacity === '1' && !bioStyle.clipPath.includes('100%'),
-          ctasVisible: ctaStyle.opacity === '1' && !ctaStyle.clipPath.includes('100%'),
-        };
-      })(),
-      galleryScrollbar: getComputedStyle(document.querySelector('.gallery-grid-wrap'))
-        .scrollbarWidth,
-      galleryScrollbarDisplay: getComputedStyle(
-        document.querySelector('.gallery-grid-wrap'),
-        '::-webkit-scrollbar',
-      ).display,
-      centerElement: (() => {
-        const element = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-        if (!(element instanceof HTMLElement)) return null;
-        const rect = element.getBoundingClientRect();
-        const style = getComputedStyle(element);
-        return {
-          tag: element.tagName,
-          className: element.className,
-          background: style.backgroundColor,
-          color: style.color,
-          rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
-        };
-      })(),
-    }));
+    await page.locator('.entrance-intro').waitFor({ state: 'detached', timeout: 3000 });
+    await page.waitForTimeout(1200);
+    const finalState = await page.evaluate(() => {
+      const trace = window.__introTrace;
+      const bio = document.querySelector('.site-header-bio');
+      const bioStyle = bio ? getComputedStyle(bio) : null;
+      return {
+        events: trace.events.length,
+        counterReached100: trace.counters.has('[100%]'),
+        running: document.documentElement.dataset.introRunning ?? null,
+        hiddenThumbs: [...document.querySelectorAll('.gallery-grid-item')].filter(
+          (item) => item.style.visibility === 'hidden',
+        ).length,
+        closedThumbs: [...document.querySelectorAll('.gallery-grid .gallery-media-reveal')]
+          .filter((el) => el.getBoundingClientRect().top < innerHeight)
+          .filter(
+            (el) => !/^(none|inset\(0(px)? 0(px)? 0(px|%)?\))$/.test(getComputedStyle(el).clipPath),
+          ).length,
+        bioVisible: bioStyle
+          ? bioStyle.opacity === '1' && !bioStyle.clipPath.includes('100%')
+          : false,
+        overflow: document.documentElement.scrollWidth > innerWidth,
+      };
+    });
     assert.equal(finalState.events, 1, 'intro completion event must fire exactly once');
-    assert.equal(finalState.introRemoved, true);
+    assert.ok(finalState.counterReached100, 'counter must reach [100%]');
+    assert.equal(finalState.running, null, 'introRunning must be cleared');
+    assert.equal(finalState.hiddenThumbs, 0, 'every thumbnail must be visible after the intro');
+    assert.equal(finalState.closedThumbs, 0, 'thumbnails must not replay their reveal');
+    assert.ok(finalState.bioVisible, 'header bio must be visible after the intro');
     assert.equal(finalState.overflow, false);
-    assert.ok(finalState.header?.bioVisible, 'header bio must be visible after intro');
-    assert.ok(finalState.header?.ctasVisible, 'header CTAs must be visible after intro');
-    if (size.width <= 767) {
-      assert.equal(finalState.galleryScrollbar, 'none');
-      assert.equal(finalState.galleryScrollbarDisplay, 'none');
-    }
-    assert.ok(
-      finalState.wipeDuration >= 0.85 && finalState.wipeDuration <= 1.1,
-      `unexpected wipe duration ${finalState.wipeDuration}`,
-    );
-    assert.deepEqual(consoleErrors, [], `browser console errors: ${consoleErrors.join(' | ')}`);
+    assert.deepEqual(errors, [], `browser console errors: ${errors.join(' | ')}`);
+    await page.screenshot({
+      path: path.join(screenshotDir, `home-${size.width}x${size.height}.png`),
+    });
 
-    summaries.push({ size, ...initial, ...finalState });
+    summaries.push({ size, cards: playing.cards, ...finalState });
     await context.close();
   }
 
-  const reducedContext = await browser.newContext({
-    viewport: sizes[1],
-    reducedMotion: 'reduce',
-  });
-  const reducedPage = await reducedContext.newPage();
-  const reducedErrors = [];
-  reducedPage.on('console', (message) => {
-    if (message.type() === 'error') reducedErrors.push(message.text());
-  });
-  reducedPage.on('pageerror', (error) => reducedErrors.push(error.message));
-  await stubExternalRequests(reducedPage);
-  await installTrace(reducedPage);
-  await reducedPage.goto(baseURL, { waitUntil: 'domcontentloaded' });
-  await reducedPage.locator('.entrance-intro').waitFor({ state: 'detached', timeout: 1500 });
-  const reducedState = await reducedPage.evaluate(() => ({
+  // Pagina interna: niente pila, l'intro si chiude appena i dati sono pronti.
+  const inner = await openPage({ viewport: sizes[1] }, new URL('/contact', baseURL).href);
+  await inner.page.locator('.entrance-intro').waitFor({ state: 'detached', timeout: 4000 });
+  const innerState = await inner.page.evaluate(() => ({
     complete: document.documentElement.dataset.introComplete,
-    events: window.__preloaderTrace.events.length,
-    wipeActive: document.querySelector('.stagger-wipe')?.getAttribute('data-active'),
+    maxCards: window.__introTrace.maxCards,
+  }));
+  assert.equal(innerState.complete, 'true');
+  assert.equal(innerState.maxCards, 0, 'inner pages must not play the deck');
+  // React #418 (idratazione) sulle pagine interne esiste già prima di questa intro: vedi BACKLOG.
+  const innerErrors = inner.errors.filter((message) => !message.includes('React error #418'));
+  assert.deepEqual(innerErrors, [], `inner page errors: ${innerErrors.join(' | ')}`);
+  await inner.context.close();
+
+  // Reduced motion: niente pila, sblocco immediato.
+  const reduced = await openPage({ viewport: sizes[1], reducedMotion: 'reduce' });
+  await reduced.page.locator('.entrance-intro').waitFor({ state: 'detached', timeout: 4000 });
+  const reducedState = await reduced.page.evaluate(() => ({
+    complete: document.documentElement.dataset.introComplete,
+    events: window.__introTrace.events.length,
+    maxCards: window.__introTrace.maxCards,
   }));
   assert.equal(reducedState.complete, 'true');
   assert.equal(reducedState.events, 1);
-  assert.notEqual(reducedState.wipeActive, 'true');
-  assert.deepEqual(
-    reducedErrors,
-    [],
-    `reduced-motion browser errors: ${reducedErrors.join(' | ')}`,
-  );
-  await reducedContext.close();
+  assert.equal(reducedState.maxCards, 0, 'reduced motion must skip the deck');
+  assert.deepEqual(reduced.errors, [], `reduced-motion errors: ${reduced.errors.join(' | ')}`);
+  await reduced.context.close();
 
   console.log(
     JSON.stringify(
-      { screenshots: screenshotDir, reducedMotion: reducedState, viewports: summaries },
+      {
+        screenshots: screenshotDir,
+        inner: innerState,
+        reducedMotion: reducedState,
+        viewports: summaries,
+      },
       null,
       2,
     ),

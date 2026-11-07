@@ -22,6 +22,7 @@ export const PROJECTS_QUERY = defineQuery(`
       _type,
       alt,
       label,
+      introOrder,
       url,
       image{
         crop,

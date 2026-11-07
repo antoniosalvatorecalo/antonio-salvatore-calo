@@ -49,17 +49,17 @@ for (const route of routes) {
   for (const match of jsonLd) JSON.parse(match[1]);
   if (html.includes('localhost') || html.includes('vercel.app-git-'))
     throw new Error(`Invalid canonical origin in ${file}`);
-  for (const required of [
-    'entrance-intro__identity',
-    'entrance-intro__line-mask',
-    'entrance-intro__line-inner',
-    'entrance-intro__metadata',
-    'Digital Frontend Developer',
-  ]) {
+  for (const required of ['class="entrance-intro"', 'Digital Frontend Developer']) {
     if (!html.includes(required))
       throw new Error(`Missing preloader marker ${required} in ${file}`);
   }
-  for (const legacy of ['entrance-intro__voices', 'entrance-intro__percentage', 'voice-cycle']) {
+  for (const legacy of [
+    'entrance-intro__voices',
+    'entrance-intro__percentage',
+    'voice-cycle',
+    'entrance-intro__identity',
+    'stagger-wipe',
+  ]) {
     if (html.includes(legacy))
       throw new Error(`Legacy preloader marker ${legacy} remains in ${file}`);
   }

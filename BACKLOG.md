@@ -32,11 +32,18 @@ _(vuoto)_
 - **P2** `npm run budget:check` risultava oltre soglia: misurare e aggiornare budget o bundle.
 - **P3** `ContactFormExperience` importato sia staticamente sia dinamicamente (avviso di build).
 - **P3** Pulire regole duplicate e blocchi media vuoti in `src/index.css`.
+- **P2** Errore React #418 (idratazione) su `/contact` e sulle pagine progetto, presente già prima
+  della nuova intro: l'HTML prerenderizzato non coincide con il primo render nel browser.
+  `verify:preloader` lo ignora solo sulla pagina interna.
 - **P3** `verify:cms` cerca su Bugonia un testo che nel CMS non c'è più ("Cinema ticketing is
   often marginal…"): aggiornare l'asserzione al contenuto attuale.
 
 ## Completato
 
+- 2026-11-07 — Nuova intro della home (pila di foto, contatore, placement nella griglia) al posto
+  del preloader, con campo CMS `introOrder` (CHANGELOG). Valori scritti nel dataset production:
+  Newsquest "Visual 3", "Visual 2", "Visual 1", poi Bugonia "Quote", "Shop-Mobile", "Home-Mobile",
+  "Home Scroll", "Cover" (1–8).
 - 2026-11-05 — Audit SEO del codice: JSON-LD localizzato, alt delle immagini OG, fallback
   immagine, title/description, `lastmod` reale, pagina 404 `noindex`, `trailingSlash` (CHANGELOG).
 

@@ -18,6 +18,8 @@ Le letture pubbliche usano il CDN Sanity e non richiedono variabili d'ambiente.
 (categoria canonica), gallery con almeno un elemento. Sezioni localizzate: Contesto, Problema,
 Soluzione, crediti, link, media, override SEO opzionali (title, description, immagine OG).
 Media immagine e Vimeo richiedono `alt` e `label` EN/IT; Vimeo richiede URL valido e poster.
+Il campo opzionale `introOrder` (immagini e Vimeo) sceglie le foto della pila nell'intro della home
+e il loro ordine (1 = prima, confronto tra tutti i progetti); vuoto = esclusa.
 
 **`siteSettings`** (singleton) — nome, bio, contatti pubblici, social, download (CV/portfolio),
 origine canonica, SEO globale, favicon e theme color opzionali.

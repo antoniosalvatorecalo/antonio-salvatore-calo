@@ -10,6 +10,8 @@ export interface ProjectMedia {
   width?: number;
   height?: number;
   lqip?: string;
+  /** Posizione nella pila dell'intro della home; assente = esclusa. */
+  introOrder?: number;
 }
 
 export interface ProjectCreditGroup {

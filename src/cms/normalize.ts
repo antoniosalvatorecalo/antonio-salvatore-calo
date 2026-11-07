@@ -106,6 +106,7 @@ export function normalizeProject(project: CmsProjectResult, locale: CmsLocale): 
         width: item.image?.asset?.metadata?.dimensions?.width,
         height: item.image?.asset?.metadata?.dimensions?.height,
         lqip: item.image?.asset?.metadata?.lqip ?? undefined,
+        introOrder: item.introOrder ?? undefined,
       };
     }
 
@@ -121,6 +122,7 @@ export function normalizeProject(project: CmsProjectResult, locale: CmsLocale): 
       width: item.poster?.asset?.metadata?.dimensions?.width,
       height: item.poster?.asset?.metadata?.dimensions?.height,
       lqip: item.poster?.asset?.metadata?.lqip ?? undefined,
+      introOrder: item.introOrder ?? undefined,
     };
   });
 
